@@ -1,0 +1,11 @@
+commonLabels:
+  app.kubernetes.io/name: volume-group-operator
+  app.kubernetes.io/instance: volume-group-operator
+  app.kubernetes.io/managed-by: volume-group-operator
+  release: v1.11.0
+
+resources:
+  - bases/csi.ibm.com_volumegroups.yaml
+  - bases/csi.ibm.com_volumegroupclasses.yaml
+  - bases/csi.ibm.com_volumegroupcontents.yaml
+#+kubebuilder:scaffold:crdkustomizeresource
