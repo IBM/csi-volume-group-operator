@@ -1,0 +1,11 @@
+commonLabels:
+  app.kubernetes.io/instance: volume-group-operator
+  app.kubernetes.io/managed-by: volume-group-operator
+
+resources:
+  - service_account.yaml
+  - role.yaml
+  - role_binding.yaml
+
+patchesStrategicMerge:
+  - role_labels_patch.yaml
