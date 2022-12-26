@@ -36,12 +36,12 @@ func AddMatchingPVToMatchingVGC(logger logr.Logger, client client.Client,
 func GetVolumeGroupContent(client client.Client, logger logr.Logger, vg *volumegroupv1.VolumeGroup) (*volumegroupv1.VolumeGroupContent, error) {
 	logger.Info(fmt.Sprintf(messages.GetVolumeGroupContentOfVolumeGroup, vg.Name, vg.Namespace))
 	vgc := &volumegroupv1.VolumeGroupContent{}
-	VolumeGroupContentName := *vg.Spec.Source.VolumeGroupContentName
-	namespacedVGC := types.NamespacedName{Name: VolumeGroupContentName, Namespace: vg.Namespace}
+	volumeGroupContentName := *vg.Spec.Source.VolumeGroupContentName
+	namespacedVGC := types.NamespacedName{Name: volumeGroupContentName, Namespace: vg.Namespace}
 	err := client.Get(context.TODO(), namespacedVGC, vgc)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Error(err, "VolumeGroupContent not found", "VolumeGroupContent Name", VolumeGroupContentName)
+			logger.Error(err, "VolumeGroupContent not found", "VolumeGroupContent Name", volumeGroupContentName)
 		}
 		return nil, err
 	}
@@ -49,8 +49,8 @@ func GetVolumeGroupContent(client client.Client, logger logr.Logger, vg *volumeg
 	return vgc, nil
 }
 
-func CreateVolumeGroupContent(client client.Client, logger logr.Logger, vgcObj *volumegroupv1.VolumeGroupContent) error {
-	err := client.Create(context.TODO(), vgcObj)
+func CreateVolumeGroupContent(client client.Client, logger logr.Logger, vgClass *volumegroupv1.VolumeGroupContent) error {
+	err := client.Create(context.TODO(), vgClass)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
 			logger.Info("VolumeGroupContent is already exists")
@@ -77,22 +77,22 @@ func updateVolumeGroupContentStatusFields(vgc *volumegroupv1.VolumeGroupContent,
 	vgc.Status.Ready = &ready
 }
 
-func GenerateVolumeGroupContent(vgname string, instance *volumegroupv1.VolumeGroup, vgcObj *volumegroupv1.VolumeGroupClass, resp *volumegroup.Response, secretName string, secretNamespace string) *volumegroupv1.VolumeGroupContent {
+func GenerateVolumeGroupContent(vgname string, instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, resp *volumegroup.Response, secretName string, secretNamespace string) *volumegroupv1.VolumeGroupContent {
 	return &volumegroupv1.VolumeGroupContent{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      vgname,
 			Namespace: instance.Namespace,
 		},
-		Spec: generateVolumeGroupContentSpec(instance, vgcObj, resp, secretName, secretNamespace),
+		Spec: generateVolumeGroupContentSpec(instance, vgClass, resp, secretName, secretNamespace),
 	}
 }
 
-func generateVolumeGroupContentSpec(instance *volumegroupv1.VolumeGroup, vgcObj *volumegroupv1.VolumeGroupClass,
+func generateVolumeGroupContentSpec(instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass,
 	resp *volumegroup.Response, secretName string, secretNamespace string) volumegroupv1.VolumeGroupContentSpec {
 	return volumegroupv1.VolumeGroupContentSpec{
 		VolumeGroupClassName: instance.Spec.VolumeGroupClassName,
 		VolumeGroupRef:       generateObjectReference(instance),
-		Source:               generateVolumeGroupContentSource(vgcObj, resp),
+		Source:               generateVolumeGroupContentSource(vgClass, resp),
 		VolumeGroupSecretRef: generateSecretReference(secretName, secretNamespace),
 	}
 }
@@ -115,10 +115,10 @@ func generateSecretReference(secretName string, secretNamespace string) *corev1.
 	}
 }
 
-func generateVolumeGroupContentSource(vgcObj *volumegroupv1.VolumeGroupClass, resp *volumegroup.Response) *volumegroupv1.VolumeGroupContentSource {
+func generateVolumeGroupContentSource(vgClass *volumegroupv1.VolumeGroupClass, resp *volumegroup.Response) *volumegroupv1.VolumeGroupContentSource {
 	CreateVolumeGroupResponse := resp.Response.(*csi.CreateVolumeGroupResponse)
 	return &volumegroupv1.VolumeGroupContentSource{
-		Driver:                vgcObj.Driver,
+		Driver:                vgClass.Driver,
 		VolumeGroupHandle:     CreateVolumeGroupResponse.VolumeGroup.VolumeGroupId,
 		VolumeGroupAttributes: CreateVolumeGroupResponse.VolumeGroup.VolumeGroupContext,
 	}
@@ -173,4 +173,25 @@ func appendPersistentVolume(pvListInVGC []corev1.PersistentVolume, pv corev1.Per
 	}
 	pvListInVGC = append(pvListInVGC, pv)
 	return pvListInVGC
+}
+
+func UpdateStaticVGC(client client.Client, vg *volumegroupv1.VolumeGroup,
+	vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
+	vgc, err := GetVolumeGroupContent(client, logger, vg)
+	if err != nil {
+		return err
+	}
+	updateStaticVGCSpec(vgClass, vgc, vg)
+	if err = UpdateObject(client, vgc); err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateStaticVGCSpec(vgClass *volumegroupv1.VolumeGroupClass, vgc *volumegroupv1.VolumeGroupContent, vg *volumegroupv1.VolumeGroup) {
+	secretName, secretNamespace := GetSecretCred(vgClass)
+	vgc.Spec.VolumeGroupClassName = vg.Spec.VolumeGroupClassName
+	vgc.Spec.VolumeGroupRef = generateObjectReference(vg)
+	vgc.Spec.Source.Driver = vgClass.Driver
+	vgc.Spec.VolumeGroupSecretRef = generateSecretReference(secretName, secretNamespace)
 }

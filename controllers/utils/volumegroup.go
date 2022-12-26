@@ -31,10 +31,10 @@ import (
 )
 
 func UpdateVolumeGroupSourceContent(client client.Client, instance *volumegroupv1.VolumeGroup,
-	vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
-	instance.Spec.Source.VolumeGroupContentName = &vgc.Name
+	vgcName string, logger logr.Logger) error {
+	instance.Spec.Source.VolumeGroupContentName = &vgcName
 	if err := UpdateObject(client, instance); err != nil {
-		logger.Error(err, "failed to update status")
+		logger.Error(err, "failed to update source", "VGName", instance.Name)
 		return err
 	}
 	return nil
