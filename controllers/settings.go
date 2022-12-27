@@ -1,5 +1,5 @@
 package controllers
 
 var (
-	addingPVC   = "addPVC"
+	addingPVC = "addPVC"
 )
