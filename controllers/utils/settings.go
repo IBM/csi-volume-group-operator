@@ -14,4 +14,5 @@ const (
 	warningEventType                      = "Warning"
 	normalEventType                       = "Normal"
 	storageClassVGParameter               = "volume_group"
+	addingPVC                             = "addPVC"
 )

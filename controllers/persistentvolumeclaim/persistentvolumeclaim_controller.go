@@ -216,11 +216,11 @@ func (r PersistentVolumeClaimReconciler) addPersistentVolumeClaimToVolumeGroupOb
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 			}
 			if isPVCMatchesVG {
-				err := r.addVolumeToVolumeGroup(logger, pvc, &vg)
+				err := utils.AddVolumeToVolumeGroup(logger, r.Client, r.VolumeGroupClient, pvc, &vg)
 				if err != nil {
 					return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 				}
-				err = r.addVolumeToPvcListAndPvList(logger, pvc, &vg)
+				err = utils.AddVolumeToPvcListAndPvList(logger, r.Client, pvc, &vg)
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 			}
 		}
@@ -239,44 +239,6 @@ func (r PersistentVolumeClaimReconciler) isPVCCanBeAddedToVG(logger logr.Logger,
 		return hErr
 	}
 	return err
-}
-
-func (r PersistentVolumeClaimReconciler) addVolumeToVolumeGroup(logger logr.Logger,
-	pvc *corev1.PersistentVolumeClaim, vg *csiv1.VolumeGroup) error {
-	logger.Info(fmt.Sprintf(messages.AddVolumeToVolumeGroup, vg.Namespace, vg.Name))
-	vg.Status.PVCList = utils.AppendPVC(vg.Status.PVCList, *pvc)
-
-	err := utils.ModifyVolumeGroup(logger, r.Client, vg, r.VolumeGroupClient)
-	if err != nil {
-		return err
-	}
-	logger.Info(fmt.Sprintf(messages.AddedVolumeToVolumeGroup, vg.Namespace, vg.Name))
-	return nil
-}
-
-func (r PersistentVolumeClaimReconciler) addVolumeToPvcListAndPvList(logger logr.Logger,
-	pvc *corev1.PersistentVolumeClaim, vg *csiv1.VolumeGroup) error {
-	err := utils.AddPVCToVG(logger, r.Client, pvc, vg)
-	if err != nil {
-		return err
-	}
-
-	err = utils.AddMatchingPVToMatchingVGC(logger, r.Client, pvc, vg)
-	if err != nil {
-		return err
-	}
-
-	if err = utils.AddFinalizerToPVC(r.Client, logger, pvc); err != nil {
-		return err
-	}
-
-	return r.addSuccessAddEvent(logger, pvc, vg)
-}
-
-func (r PersistentVolumeClaimReconciler) addSuccessAddEvent(logger logr.Logger,
-	pvc *corev1.PersistentVolumeClaim, vg *csiv1.VolumeGroup) error {
-	message := fmt.Sprintf(messages.AddedPersistentVolumeClaimToVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
-	return utils.HandleSuccessMessage(logger, r.Client, vg, message, addingPVC)
 }
 
 func (r *PersistentVolumeClaimReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {

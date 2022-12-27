@@ -25,6 +25,7 @@ import (
 	"github.com/IBM/volume-group-operator/controllers/volumegroup"
 	"github.com/IBM/volume-group-operator/pkg/config"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -157,7 +158,9 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err = utils.UpdateVolumeGroupContentStatus(r.Client, logger, vgc, groupCreationTime, true); err != nil {
 		return ctrl.Result{}, err
 	}
-	//TODO CSI-4986 add all PVCs that have the VG label to VG
+	if err = r.addMatchingVolumesToVG(logger, instance); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -210,6 +213,62 @@ func makeVolumeGroupName(prefix string, volumeGroupUID string) (string, error) {
 		return "", fmt.Errorf("Corrupted volumeGroup object, it is missing UID")
 	}
 	return fmt.Sprintf("%s-%s", prefix, volumeGroupUID), nil
+}
+
+func (r *VolumeGroupReconciler) addMatchingVolumesToVG(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
+	if err != nil {
+		return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
+	}
+
+	for _, pvc := range pvcList.Items {
+		isPVCShouldBeAddedToVg, err := r.isPVCShouldBeAddedToVg(logger, *vg, &pvc)
+		if err != nil {
+			return err
+		}
+		if isPVCShouldBeAddedToVg {
+			err := utils.AddVolumeToVolumeGroup(logger, r.Client, r.VolumeGroupClient, &pvc, vg)
+			if err != nil {
+				return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
+			}
+			err = utils.AddVolumeToPvcListAndPvList(logger, r.Client, &pvc, vg)
+			return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
+		}
+	}
+	return nil
+}
+
+func (r *VolumeGroupReconciler) isPVCShouldBeAddedToVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
+	pvc *corev1.PersistentVolumeClaim) (bool, error) {
+	if utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
+		return false, nil
+	}
+
+	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
+	if err != nil {
+		return false, utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
+	}
+	if !isPVCMatchesVG {
+		return false, nil
+	}
+
+	if err := r.isPVCCanBeAddedToVG(logger, pvc); err != nil {
+		return false, utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
+	}
+	return true, nil
+}
+
+func (r VolumeGroupReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim) error {
+	if r.DriverConfig.MultipleVGsToPVC == "true" {
+		return nil
+	}
+
+	vgList, err := utils.GetVGList(logger, r.Client, r.DriverConfig.DriverName)
+	if err != nil {
+		return err
+	}
+	err = utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.Items)
+	return err
 }
 
 func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {

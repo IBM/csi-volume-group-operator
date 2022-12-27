@@ -6,7 +6,12 @@ import (
 	"math/rand"
 	"time"
 
+	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
+	grpcClient "github.com/IBM/volume-group-operator/pkg/client"
+	"github.com/IBM/volume-group-operator/pkg/messages"
+	"github.com/go-logr/logr"
 	"google.golang.org/grpc/status"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -42,4 +47,37 @@ func generateString() string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func AddVolumeToVolumeGroup(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
+	pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+	logger.Info(fmt.Sprintf(messages.AddVolumeToVolumeGroup, vg.Namespace, vg.Name))
+	vg.Status.PVCList = AppendPVC(vg.Status.PVCList, *pvc)
+
+	err := ModifyVolumeGroup(logger, client, vg, vgClient)
+	if err != nil {
+		return err
+	}
+	logger.Info(fmt.Sprintf(messages.AddedVolumeToVolumeGroup, vg.Namespace, vg.Name))
+	return nil
+}
+
+func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
+	pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+	err := AddPVCToVG(logger, client, pvc, vg)
+	if err != nil {
+		return err
+	}
+
+	err = AddMatchingPVToMatchingVGC(logger, client, pvc, vg)
+	if err != nil {
+		return err
+	}
+
+	if err = AddFinalizerToPVC(client, logger, pvc); err != nil {
+		return err
+	}
+
+	message := fmt.Sprintf(messages.AddedPersistentVolumeClaimToVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
+	return HandleSuccessMessage(logger, client, vg, message, addingPVC)
 }
