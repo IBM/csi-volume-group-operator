@@ -81,3 +81,47 @@ func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
 	message := fmt.Sprintf(messages.AddedPersistentVolumeClaimToVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
 	return HandleSuccessMessage(logger, client, vg, message, addingPVC)
 }
+
+func RemoveVolumeFromVolumeGroup(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
+	pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+	logger.Info(fmt.Sprintf(messages.RemoveVolumeFromVolumeGroup, vg.Namespace, vg.Name))
+	vg.Status.PVCList = RemoveFromPVCList(pvc, vg.Status.PVCList)
+
+	err := ModifyVolumeGroup(logger, client, vg, vgClient)
+	if err != nil {
+		return err
+	}
+	logger.Info(fmt.Sprintf(messages.RemovedVolumeFromVolumeGroup, vg.Namespace, vg.Name))
+	return nil
+}
+
+func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, driver string,
+	pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) error {
+	err := RemovePVCFromVG(logger, client, pvc, &vg)
+	if err != nil {
+		return err
+	}
+	pv, err := GetPVFromPVC(logger, client, pvc)
+	if err != nil {
+		return err
+	}
+	vgc, err := GetVolumeGroupContent(client, logger, &vg)
+	if err != nil {
+		return err
+	}
+
+	if pv != nil {
+		err = RemovePVFromVGC(logger, client, pv, vgc)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = RemoveFinalizerFromPVC(client, logger, driver, pvc)
+	if err != nil {
+		return err
+	}
+
+	message := fmt.Sprintf(messages.RemovedPersistentVolumeClaimFromVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
+	return HandleSuccessMessage(logger, client, &vg, message, addingPVC)
+}

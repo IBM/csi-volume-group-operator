@@ -158,6 +158,10 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err = utils.UpdateVolumeGroupContentStatus(r.Client, logger, vgc, groupCreationTime, true); err != nil {
 		return ctrl.Result{}, err
 	}
+
+	if err = r.removeVolumesFromVG(logger, instance); err != nil {
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
+	}
 	if err = r.addMatchingVolumesToVG(logger, instance); err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
 	}
@@ -213,6 +217,42 @@ func makeVolumeGroupName(prefix string, volumeGroupUID string) (string, error) {
 		return "", fmt.Errorf("Corrupted volumeGroup object, it is missing UID")
 	}
 	return fmt.Sprintf("%s-%s", prefix, volumeGroupUID), nil
+}
+
+func (r *VolumeGroupReconciler) removeVolumesFromVG(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
+	if err != nil {
+		return err
+	}
+
+	for _, pvc := range pvcList.Items {
+		isPVCShouldBeRemovedFromVg, err := r.isPVCShouldBeRemovedFromVg(logger, *vg, &pvc)
+		if err != nil {
+			return err
+		}
+		if isPVCShouldBeRemovedFromVg {
+			err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient, &pvc, vg)
+			if err != nil {
+				return err
+			}
+			err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, &pvc, *vg)
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
+	pvc *corev1.PersistentVolumeClaim) (bool, error) {
+	if !utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
+		return false, nil
+	}
+
+	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
+	if err != nil {
+		return false, err
+	}
+	return !isPVCMatchesVG, nil
 }
 
 func (r *VolumeGroupReconciler) addMatchingVolumesToVG(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
