@@ -224,7 +224,7 @@ func (r *VolumeGroupReconciler) addMatchingVolumesToVG(logger logr.Logger, vg *v
 	for _, pvc := range pvcList.Items {
 		isPVCShouldBeAddedToVg, err := r.isPVCShouldBeAddedToVg(logger, *vg, &pvc)
 		if err != nil {
-			return err
+			return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
 		}
 		if isPVCShouldBeAddedToVg {
 			err := utils.AddVolumeToVolumeGroup(logger, r.Client, r.VolumeGroupClient, &pvc, vg)
@@ -246,14 +246,14 @@ func (r *VolumeGroupReconciler) isPVCShouldBeAddedToVg(logger logr.Logger, vg vo
 
 	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 	if err != nil {
-		return false, utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
+		return false, err
 	}
 	if !isPVCMatchesVG {
 		return false, nil
 	}
 
 	if err := r.isPVCCanBeAddedToVG(logger, pvc); err != nil {
-		return false, utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
+		return false, err
 	}
 	return true, nil
 }
