@@ -159,7 +159,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 	if err = r.addMatchingVolumesToVG(logger, instance); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
 	}
 
 	return ctrl.Result{}, nil
@@ -218,21 +218,21 @@ func makeVolumeGroupName(prefix string, volumeGroupUID string) (string, error) {
 func (r *VolumeGroupReconciler) addMatchingVolumesToVG(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
 	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
 	if err != nil {
-		return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
+		return err
 	}
 
 	for _, pvc := range pvcList.Items {
 		isPVCShouldBeAddedToVg, err := r.isPVCShouldBeAddedToVg(logger, *vg, &pvc)
 		if err != nil {
-			return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
+			return err
 		}
 		if isPVCShouldBeAddedToVg {
 			err := utils.AddVolumeToVolumeGroup(logger, r.Client, r.VolumeGroupClient, &pvc, vg)
 			if err != nil {
-				return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
+				return err
 			}
 			err = utils.AddVolumeToPvcListAndPvList(logger, r.Client, &pvc, vg)
-			return utils.HandleErrorMessage(logger, r.Client, vg, err, addingPVC)
+			return err
 		}
 	}
 	return nil
