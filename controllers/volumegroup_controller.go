@@ -160,7 +160,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	if err = r.removeVolumesFromVG(logger, instance); err != nil {
-		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, removingPVC)
 	}
 	if err = r.addMatchingVolumesToVG(logger, instance); err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
