@@ -220,6 +220,9 @@ func makeVolumeGroupName(prefix string, volumeGroupUID string) (string, error) {
 }
 
 func (r *VolumeGroupReconciler) removeVolumesFromVG(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+	if len(vg.Status.PVCList) == 0 {
+		return nil
+	}
 	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
 	if err != nil {
 		return err
