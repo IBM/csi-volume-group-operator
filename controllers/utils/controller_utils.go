@@ -123,5 +123,5 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 	}
 
 	message := fmt.Sprintf(messages.RemovedPersistentVolumeClaimFromVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
-	return HandleSuccessMessage(logger, client, &vg, message, addingPVC)
+	return HandleSuccessMessage(logger, client, &vg, message, removingPVC)
 }
