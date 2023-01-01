@@ -29,7 +29,7 @@ func HandleSuccessMessage(logger logr.Logger, client client.Client, vg *volumegr
 	if err != nil {
 		return err
 	}
-	err = createSuccessVolumeGroupEvent(logger, client, vg, message, reason)
+	err = createSuccessNamespacedObjectEvent(logger, client, vg, message, reason)
 	if err != nil {
 		return err
 	}
@@ -41,6 +41,17 @@ func HandlePVCErrorMessage(logger logr.Logger, client client.Client, pvc *corev1
 	if err != nil {
 		errorMessage := GetMessageFromError(err)
 		if uErr := createNamespacedObjectErrorEvent(logger, client, pvc, errorMessage, reason); uErr != nil {
+			return uErr
+		}
+	}
+	return nil
+}
+
+func HandleVGCErrorMessage(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent,
+	err error, reason string) error {
+	if err != nil {
+		errorMessage := GetMessageFromError(err)
+		if uErr := createNamespacedObjectErrorEvent(logger, client, vgc, errorMessage, reason); uErr != nil {
 			return uErr
 		}
 	}

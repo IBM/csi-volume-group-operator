@@ -24,6 +24,7 @@ import (
 	"github.com/IBM/volume-group-operator/controllers/utils"
 	"github.com/IBM/volume-group-operator/controllers/volumegroup"
 	"github.com/IBM/volume-group-operator/pkg/config"
+	"github.com/IBM/volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -80,10 +81,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	vgcObj, err := utils.GetVolumeGroupClass(r.Client, logger, *instance.Spec.VolumeGroupClassName)
 	if err != nil {
-		if uErr := utils.UpdateVolumeGroupStatusError(r.Client, instance, logger, err.Error()); uErr != nil {
-			return ctrl.Result{}, uErr
-		}
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 
 	if r.DriverConfig.DriverName != vgcObj.Driver {
@@ -92,27 +90,24 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	if err = utils.ValidatePrefixedParameters(vgcObj.Parameters); err != nil {
 		logger.Error(err, "failed to validate parameters of volumegroupClass", "VGClassName", vgcObj.Name)
-		if uErr := utils.UpdateVolumeGroupStatusError(r.Client, instance, logger, err.Error()); uErr != nil {
-			return ctrl.Result{}, uErr
-		}
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 	parameters := utils.FilterPrefixedParameters(utils.VolumeGroupAsPrefix, vgcObj.Parameters)
 
 	secret, err := utils.GetSecretDataFromClass(r.Client, vgcObj, logger, instance)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 
 	if instance.GetDeletionTimestamp().IsZero() {
 		if err = utils.AddFinalizerToVG(r.Client, logger, instance); err != nil {
-			return ctrl.Result{}, err
+			return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVG)
 		}
 
 	} else {
 		if utils.Contains(instance.GetFinalizers(), utils.VolumeGroupFinalizer) {
 			if err = r.removeInstance(logger, instance, secret); err != nil {
-				return ctrl.Result{}, err
+				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
 			}
 		}
 		logger.Info("volumeGroup object is terminated, skipping reconciliation")
@@ -122,41 +117,37 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	groupCreationTime := getCurrentTime()
 	volumeGroupName, err := makeVolumeGroupName(utils.VolumeGroupNamePrefix, string(instance.UID))
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVG)
 	}
 
 	createVolumeGroupResponse := r.createVolumeGroup(volumeGroupName, parameters, secret)
 	if createVolumeGroupResponse.Error != nil {
 		logger.Error(createVolumeGroupResponse.Error, "failed to create volume group")
-		msg := utils.GetMessageFromError(createVolumeGroupResponse.Error)
-		if uErr := utils.UpdateVolumeGroupStatusError(r.Client, instance, logger, msg); uErr != nil {
-			return ctrl.Result{}, uErr
-		}
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, createVolumeGroupResponse.Error, createVG)
 	}
 	secretName, secretNamespace := utils.GetSecretCred(vgcObj)
 	vgc := utils.GenerateVolumeGroupContent(volumeGroupName, instance, vgcObj, createVolumeGroupResponse, secretName, secretNamespace)
 	logger.Info("GenerateVolumeGroupContent", "vgc", vgc)
 	if err = utils.CreateVolumeGroupContent(r.Client, logger, vgc); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVGC)
 	}
 
 	if err = utils.UpdateVolumeGroupSourceContent(r.Client, instance, vgc, logger); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, updateVGC)
 	}
 	if uErr := utils.UpdateVolumeGroupStatus(r.Client, instance, vgc, groupCreationTime, true, logger); uErr != nil {
-		return ctrl.Result{}, uErr
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, updateStatusVG)
 	}
 	vgc, err = utils.GetVolumeGroupContent(r.Client, logger, instance)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 	if err = utils.AddFinalizerToVGC(r.Client, logger, vgc); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, updateVGC)
 	}
 
 	if err = utils.UpdateVolumeGroupContentStatus(r.Client, logger, vgc, groupCreationTime, true); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, updateStatusVGC)
 	}
 
 	if err = r.removeVolumesFromVG(logger, instance); err != nil {
@@ -166,7 +157,8 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
 	}
 
-	return ctrl.Result{}, nil
+	r.createSuccessVolumeGroupEvent(logger, instance)
+	return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 }
 
 func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *volumegroupv1.VolumeGroup, secret map[string]string) error {
@@ -312,6 +304,15 @@ func (r VolumeGroupReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *core
 	}
 	err = utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.Items)
 	return err
+}
+
+func (r VolumeGroupReconciler) createSuccessVolumeGroupEvent(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+	message := fmt.Sprintf(messages.VolumeGroupCreated, vg.Namespace, vg.Name)
+	err := utils.HandleSuccessMessage(logger, r.Client, vg, message, vgReconcile)
+	if err != nil {
+		return nil
+	}
+	return nil
 }
 
 func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {

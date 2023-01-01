@@ -15,5 +15,8 @@ const (
 	normalEventType                       = "Normal"
 	storageClassVGParameter               = "volume_group"
 	addingPVC                             = "addPVC"
-	removingPVC = "removePVC"
+	removingPVC                           = "removePVC"
+	createVGC                             = "creatingVGC"
+	volumeGroupContentKind                = "VolumeGroupContent"
+	APIVersion                            = "csi.ibm.com/v1"
 )
