@@ -128,6 +128,7 @@ func defineFlags(cfg *config.DriverConfig) {
 	flag.StringVar(&cfg.DriverEndpoint, "csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
 	flag.DurationVar(&cfg.RPCTimeout, "rpc-timeout", defaultTimeout, "The timeout for RPCs to the CSI driver.")
 	flag.StringVar(&cfg.MultipleVGsToPVC, "multiple-vgs-to-pvc", "true", "Can PVC be assigned to multiple VolumeGroups.")
+	flag.StringVar(&cfg.DisableDeletePvcs, "disable-delete-pvcs", "false", "Does volumeGroup deletion delete all its PVCs.")
 }
 
 func getControllerGrpcClient(cfg *config.DriverConfig, log logr.Logger) (*grpcClient.Client, error) {

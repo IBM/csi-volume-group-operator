@@ -113,6 +113,9 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			if err = r.removeInstance(logger, instance, secret); err != nil {
 				return ctrl.Result{}, err
 			}
+			if r.DriverConfig.DisableDeletePvcs == "false" {
+				//TODO CSI-5167 Delete all VG's PVCs
+			}
 		}
 		logger.Info("volumeGroup object is terminated, skipping reconciliation")
 		return ctrl.Result{}, nil
