@@ -151,7 +151,7 @@ func IsPVCMatchesVG(logger logr.Logger, client client.Client,
 func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.RemovePersistentVolumeClaimFromVolumeGroup,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	vg.Status.PVCList = RemoveFromPVCList(pvc, vg.Status.PVCList)
+	vg.Status.PVCList = removeFromPVCList(pvc, vg.Status.PVCList)
 	err := client.Status().Update(context.TODO(), vg)
 	if err != nil {
 		logger.Error(err, fmt.Sprintf(messages.FailedToRemovePersistentVolumeClaimFromVolumeGroup,
@@ -163,7 +163,15 @@ func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.Persi
 	return nil
 }
 
-func RemoveFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
+func removeMultiplePVCs(pvcList []corev1.PersistentVolumeClaim,
+	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
+	for _, pvc := range pvcs {
+		pvcList = removeFromPVCList(&pvc, pvcList)
+	}
+	return pvcList
+}
+
+func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
 	for index, pvcFromList := range pvcList {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
 			pvcList = removeByIndexFromPVCList(pvcList, index)
@@ -184,7 +192,7 @@ func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeG
 func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.AddPersistentVolumeClaimToVolumeGroup,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	vg.Status.PVCList = AppendPVC(vg.Status.PVCList, *pvc)
+	vg.Status.PVCList = appendPVC(vg.Status.PVCList, *pvc)
 	err := updateVolumeGroupStatus(client, vg, logger)
 	if err != nil {
 		logger.Error(err, fmt.Sprintf(messages.FailedToAddPersistentVolumeClaimToVolumeGroup,
@@ -196,7 +204,15 @@ func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.Persistent
 	return nil
 }
 
-func AppendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
+func appendMultiplePVCs(pvcListInVG []corev1.PersistentVolumeClaim,
+	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
+	for _, pvc := range pvcs {
+		pvcListInVG = appendPVC(pvcListInVG, pvc)
+	}
+	return pvcListInVG
+}
+
+func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
 	for _, pvcFromList := range pvcListInVG {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
 			return pvcListInVG

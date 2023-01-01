@@ -122,7 +122,8 @@ func (r PersistentVolumeClaimReconciler) removePersistentVolumeClaimFromVolumeGr
 		}
 
 		if !IsPVCMatchesVG {
-			err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient, pvc, &vg)
+			err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient,
+				[]corev1.PersistentVolumeClaim{*pvc}, &vg)
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
 			}
@@ -152,7 +153,8 @@ func (r PersistentVolumeClaimReconciler) addPersistentVolumeClaimToVolumeGroupOb
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 			}
 			if isPVCMatchesVG {
-				err := utils.AddVolumeToVolumeGroup(logger, r.Client, r.VolumeGroupClient, pvc, &vg)
+				err := utils.AddVolumesToVolumeGroup(logger, r.Client, r.VolumeGroupClient,
+					[]corev1.PersistentVolumeClaim{*pvc}, &vg)
 				if err != nil {
 					return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 				}

@@ -18,6 +18,7 @@ package messages
 
 var (
 	ReconcilePersistentVolumeClaim                   = "Reconciling PersistentVolumeClaim"
+	ReconcileVolumeGroup                             = "Reconciling VolumeGroup"
 	RequestName                                      = "Request.Name"
 	RequestNamespace                                 = "Request.Namespace"
 	UnableToCreatePVCController                      = "Unable to create persistentvolumeclaim controller"
