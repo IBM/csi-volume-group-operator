@@ -19,7 +19,7 @@ package utils
 import (
 	"context"
 
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
