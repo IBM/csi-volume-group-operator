@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
-	grpcClient "github.com/IBM/volume-group-operator/pkg/client"
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
