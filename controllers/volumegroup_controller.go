@@ -215,22 +215,22 @@ func (r *VolumeGroupReconciler) removeVolumesFromVG(logger logr.Logger, vg *volu
 	if len(vg.Status.PVCList) == 0 {
 		return nil
 	}
-	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
-	if err != nil {
-		return err
-	}
 
-	for _, pvc := range pvcList.Items {
-		isPVCShouldBeRemovedFromVg, err := r.isPVCShouldBeRemovedFromVg(logger, *vg, &pvc)
+	for _, pvcInList := range vg.Status.PVCList {
+		pvc, err := utils.GetPersistentVolumeClaim(logger, r.Client, pvcInList.Name, pvcInList.Namespace)
+		if err != nil {
+			return err
+		}
+		isPVCShouldBeRemovedFromVg, err := r.isPVCShouldBeRemovedFromVg(logger, *vg, pvc)
 		if err != nil {
 			return err
 		}
 		if isPVCShouldBeRemovedFromVg {
-			err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient, &pvc, vg)
+			err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient, pvc, vg)
 			if err != nil {
 				return err
 			}
-			err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, &pvc, *vg)
+			err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, pvc, *vg)
 			return err
 		}
 	}
