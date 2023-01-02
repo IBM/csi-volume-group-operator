@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
-	"github.com/IBM/volume-group-operator/controllers/volumegroup"
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

@@ -1,4 +1,4 @@
-module github.com/IBM/volume-group-operator
+module github.com/IBM/csi-volume-group-operator
 
 go 1.19
 
