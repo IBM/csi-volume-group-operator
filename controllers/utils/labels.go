@@ -17,7 +17,7 @@ limitations under the License.
 package utils
 
 import (
-	"github.com/IBM/volume-group-operator/pkg/errors"
+	"github.com/IBM/csi-volume-group-operator/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"

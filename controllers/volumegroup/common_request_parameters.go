@@ -1,6 +1,6 @@
 package volumegroup
 
-import "github.com/IBM/volume-group-operator/pkg/client"
+import "github.com/IBM/csi-volume-group-operator/pkg/client"
 
 type CommonRequestParameters struct {
 	Name          string
