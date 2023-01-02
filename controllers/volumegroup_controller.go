@@ -216,19 +216,19 @@ func (r *VolumeGroupReconciler) removeVolumesFromVG(logger logr.Logger, vg *volu
 	if len(vg.Status.PVCList) == 0 {
 		return nil
 	}
-	pvcsToRemove := []corev1.PersistentVolumeClaim{}
-	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
-	if err != nil {
-		return err
-	}
 
-	for _, pvc := range pvcList.Items {
-		isPVCShouldBeRemovedFromVg, err := r.isPVCShouldBeRemovedFromVg(logger, *vg, &pvc)
+	pvcsToRemove := []corev1.PersistentVolumeClaim{}
+	for _, pvcInList := range vg.Status.PVCList {
+		pvc, err := utils.GetPersistentVolumeClaim(logger, r.Client, pvcInList.Name, pvcInList.Namespace)
+		if err != nil {
+			return err
+		}
+		isPVCShouldBeRemovedFromVg, err := r.isPVCShouldBeRemovedFromVg(logger, *vg, pvc)
 		if err != nil {
 			return err
 		}
 		if isPVCShouldBeRemovedFromVg {
-			pvcsToRemove = append(pvcsToRemove, pvc)
+			pvcsToRemove = append(pvcsToRemove, *pvc)
 		}
 	}
 	return r.removeUnMatchedVolumes(logger, pvcsToRemove, vg)
