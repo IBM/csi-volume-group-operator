@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/types"
