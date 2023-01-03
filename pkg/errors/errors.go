@@ -19,7 +19,7 @@ package errors
 import (
 	"fmt"
 
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 )
 
 type MatchingLabelsAndLabelSelectorError struct {

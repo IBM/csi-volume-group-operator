@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getPVCListVolumeIds(logger logr.Logger, client client.Client, pvcList []corev1.PersistentVolumeClaim) ([]string, error) {
+func getPVCListVolumeIds(logger logr.Logger, client runtimeclient.Client, pvcList []corev1.PersistentVolumeClaim) ([]string, error) {
 	volumeIds := []string{}
 	for _, pvc := range pvcList {
 		pv, err := GetPVFromPVC(logger, client, &pvc)
@@ -27,7 +27,7 @@ func getPVCListVolumeIds(logger logr.Logger, client client.Client, pvcList []cor
 	return volumeIds, nil
 }
 
-func GetPersistentVolumeClaim(logger logr.Logger, client client.Client, name, namespace string) (*corev1.PersistentVolumeClaim, error) {
+func GetPersistentVolumeClaim(logger logr.Logger, client runtimeclient.Client, name, namespace string) (*corev1.PersistentVolumeClaim, error) {
 	logger.Info(fmt.Sprintf(messages.GetPersistentVolumeClaim, namespace, name))
 	pvc := &corev1.PersistentVolumeClaim{}
 	namespacedPVC := types.NamespacedName{Name: name, Namespace: namespace}
@@ -43,7 +43,7 @@ func GetPersistentVolumeClaim(logger logr.Logger, client client.Client, name, na
 	return pvc, nil
 }
 
-func IsPVCCanBeAddedToVG(logger logr.Logger, client client.Client,
+func IsPVCCanBeAddedToVG(logger logr.Logger, client runtimeclient.Client,
 	pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) error {
 	vgsWithPVC := []string{}
 	newVGsForPVC := []string{}
@@ -72,19 +72,67 @@ func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeCl
 	return nil
 }
 
-func IsPVCHasMatchingDriver(logger logr.Logger, client client.Client,
+func IsPVCInStaticVG(logger logr.Logger, client runtimeclient.Client, pvc *corev1.PersistentVolumeClaim) (bool, error) {
+	sc, err := getStorageClass(logger, client, *pvc.Spec.StorageClassName)
+	if err != nil {
+		return false, err
+	}
+	return isSCHasParam(sc, storageClassVGParameter), nil
+}
+
+func GetPVCList(logger logr.Logger, client runtimeclient.Client, driver string) (corev1.PersistentVolumeClaimList, error) {
+	pvcList, err := getPVCList(logger, client)
+	if err != nil {
+		return corev1.PersistentVolumeClaimList{}, err
+	}
+	boundPVCList, err := getBoundPVCList(pvcList)
+	if err != nil {
+		return corev1.PersistentVolumeClaimList{}, err
+	}
+
+	return getProvisionedPVCList(logger, client, driver, boundPVCList)
+}
+
+func getPVCList(logger logr.Logger, client runtimeclient.Client) (corev1.PersistentVolumeClaimList, error) {
+	logger.Info(messages.ListPersistentVolumeClaim)
+	pvcList := &corev1.PersistentVolumeClaimList{}
+	if err := client.List(context.TODO(), pvcList); err != nil {
+		logger.Error(err, messages.FailedToListPersistentVolumeClaim)
+		return corev1.PersistentVolumeClaimList{}, err
+	}
+	return *pvcList, nil
+}
+
+func getBoundPVCList(pvcList corev1.PersistentVolumeClaimList) (corev1.PersistentVolumeClaimList, error) {
+	newPVCList := corev1.PersistentVolumeClaimList{}
+	for _, pvc := range pvcList.Items {
+		if pvc.Status.Phase == corev1.ClaimBound {
+			newPVCList.Items = append(newPVCList.Items, pvc)
+		}
+	}
+	return newPVCList, nil
+}
+
+func getProvisionedPVCList(logger logr.Logger, client runtimeclient.Client, driver string,
+	pvcList corev1.PersistentVolumeClaimList) (corev1.PersistentVolumeClaimList, error) {
+	newPVCList := corev1.PersistentVolumeClaimList{}
+	for _, pvc := range pvcList.Items {
+		isPVCHasMatchingDriver, err := IsPVCHasMatchingDriver(logger, client, &pvc, driver)
+		if err != nil {
+			return corev1.PersistentVolumeClaimList{}, err
+		}
+		if isPVCHasMatchingDriver {
+			newPVCList.Items = append(newPVCList.Items, pvc)
+		}
+	}
+	return newPVCList, nil
+}
+
+func IsPVCHasMatchingDriver(logger logr.Logger, client runtimeclient.Client,
 	pvc *corev1.PersistentVolumeClaim, driver string) (bool, error) {
 	scProvisioner, err := getStorageClassProvisioner(logger, client, *pvc.Spec.StorageClassName)
 	if err != nil {
 		return false, err
 	}
 	return scProvisioner == driver, nil
-}
-
-func IsPVCInStaticVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim) (bool, error) {
-	sc, err := getStorageClass(logger, client, *pvc.Spec.StorageClassName)
-	if err != nil {
-		return false, err
-	}
-	return isSCHasParam(sc, storageClassVGParameter), nil
 }

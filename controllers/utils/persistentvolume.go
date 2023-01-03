@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	vgerrors "github.com/IBM/volume-group-operator/pkg/errors"
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	vgerrors "github.com/IBM/csi-volume-group-operator/pkg/errors"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

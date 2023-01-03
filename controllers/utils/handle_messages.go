@@ -1,7 +1,7 @@
 package utils
 
 import (
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,7 +29,7 @@ func HandleSuccessMessage(logger logr.Logger, client client.Client, vg *volumegr
 	if err != nil {
 		return err
 	}
-	err = createSuccessVolumeGroupEvent(logger, client, vg, message, reason)
+	err = createSuccessNamespacedObjectEvent(logger, client, vg, message, reason)
 	if err != nil {
 		return err
 	}
@@ -38,9 +38,22 @@ func HandleSuccessMessage(logger logr.Logger, client client.Client, vg *volumegr
 
 func HandlePVCErrorMessage(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim,
 	err error, reason string) error {
-	errorMessage := GetMessageFromError(err)
-	if uErr := createNamespacedObjectErrorEvent(logger, client, pvc, errorMessage, reason); uErr != nil {
-		return uErr
+	if err != nil {
+		errorMessage := GetMessageFromError(err)
+		if uErr := createNamespacedObjectErrorEvent(logger, client, pvc, errorMessage, reason); uErr != nil {
+			return uErr
+		}
+	}
+	return nil
+}
+
+func HandleVGCErrorMessage(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent,
+	err error, reason string) error {
+	if err != nil {
+		errorMessage := GetMessageFromError(err)
+		if uErr := createNamespacedObjectErrorEvent(logger, client, vgc, errorMessage, reason); uErr != nil {
+			return uErr
+		}
 	}
 	return nil
 }

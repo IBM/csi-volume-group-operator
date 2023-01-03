@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
-	"github.com/IBM/volume-group-operator/controllers/volumegroup"
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -22,7 +22,7 @@ func AddMatchingPVToMatchingVGC(logger logr.Logger, client client.Client,
 	if err != nil {
 		return err
 	}
-	vgc, err := GetVolumeGroupContent(client, logger, vg)
+	vgc, err := GetVolumeGroupContent(client, logger, *vg.Spec.Source.VolumeGroupContentName, vg.Name, vg.Namespace)
 	if err != nil {
 		return err
 	}
@@ -33,11 +33,11 @@ func AddMatchingPVToMatchingVGC(logger logr.Logger, client client.Client,
 	return nil
 }
 
-func GetVolumeGroupContent(client client.Client, logger logr.Logger, vg *volumegroupv1.VolumeGroup) (*volumegroupv1.VolumeGroupContent, error) {
-	logger.Info(fmt.Sprintf(messages.GetVolumeGroupContentOfVolumeGroup, vg.Name, vg.Namespace))
+func GetVolumeGroupContent(client client.Client, logger logr.Logger,
+	volumeGroupContentName string, vgName string, vgNamespace string) (*volumegroupv1.VolumeGroupContent, error) {
+	logger.Info(fmt.Sprintf(messages.GetVolumeGroupContentOfVolumeGroup, vgName, vgNamespace))
 	vgc := &volumegroupv1.VolumeGroupContent{}
-	volumeGroupContentName := *vg.Spec.Source.VolumeGroupContentName
-	namespacedVGC := types.NamespacedName{Name: volumeGroupContentName, Namespace: vg.Namespace}
+	namespacedVGC := types.NamespacedName{Name: volumeGroupContentName, Namespace: vgNamespace}
 	err := client.Get(context.TODO(), namespacedVGC, vgc)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -49,8 +49,8 @@ func GetVolumeGroupContent(client client.Client, logger logr.Logger, vg *volumeg
 	return vgc, nil
 }
 
-func CreateVolumeGroupContent(client client.Client, logger logr.Logger, vgClass *volumegroupv1.VolumeGroupContent) error {
-	err := client.Create(context.TODO(), vgClass)
+func CreateVolumeGroupContent(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
+	err := client.Create(context.TODO(), vgc)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
 			logger.Info("VolumeGroupContent is already exists")
@@ -59,7 +59,18 @@ func CreateVolumeGroupContent(client client.Client, logger logr.Logger, vgClass 
 		logger.Error(err, "VolumeGroupContent creation failed", "VolumeGroupContent Name")
 		return err
 	}
+	err = createSuccessVolumeGroupContentEvent(logger, client, vgc)
+	return err
+}
 
+func createSuccessVolumeGroupContentEvent(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent) error {
+	vgc.APIVersion = APIVersion
+	vgc.Kind = volumeGroupContentKind
+	message := fmt.Sprintf(messages.VolumeGroupContentCreated, vgc.Namespace, vgc.Name)
+	err := createSuccessNamespacedObjectEvent(logger, client, vgc, message, createVGC)
+	if err != nil {
+		return nil
+	}
 	return nil
 }
 
@@ -177,7 +188,7 @@ func appendPersistentVolume(pvListInVGC []corev1.PersistentVolume, pv corev1.Per
 
 func UpdateStaticVGC(client client.Client, vg *volumegroupv1.VolumeGroup,
 	vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
-	vgc, err := GetVolumeGroupContent(client, logger, vg)
+	vgc, err := GetVolumeGroupContent(client, logger, *vg.Spec.Source.VolumeGroupContentName, vg.Name, vg.Namespace)
 	if err != nil {
 		return err
 	}

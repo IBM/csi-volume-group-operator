@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	//+kubebuilder:scaffold:imports
 )
 
