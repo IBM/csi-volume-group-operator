@@ -21,10 +21,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/IBM/volume-group-operator/controllers/persistentvolumeclaim"
-	grpcClient "github.com/IBM/volume-group-operator/pkg/client"
-	"github.com/IBM/volume-group-operator/pkg/config"
-	"github.com/IBM/volume-group-operator/pkg/messages"
+	"github.com/IBM/csi-volume-group-operator/controllers/persistentvolumeclaim"
+	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
+	"github.com/IBM/csi-volume-group-operator/pkg/config"
+	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 
 	uberzap "go.uber.org/zap"
@@ -39,8 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
-	"github.com/IBM/volume-group-operator/controllers"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	"github.com/IBM/csi-volume-group-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
