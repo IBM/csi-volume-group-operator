@@ -14,19 +14,32 @@ RUN go mod download
 # Copy the go source
 COPY main.go main.go
 COPY api/ api/
-COPY controllers/ controllers/
 COPY pkg/ pkg/
+COPY controllers/ controllers/
 
 # Build
-# the GOARCH has not a default value to allow the binary be built according to the host where the command
-# was called. For example, if we call make docker-build in a local env which has the Apple Silicon M1 SO
-# the docker BUILDPLATFORM arg will be linux/arm64 when for Apple x86 it will be linux/amd64. Therefore,
-# by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM gcr.io/distroless/static:nonroot
+
+ARG VERSION=1.11.0
+ARG BUILD_NUMBER=0
+
+###Required Labels
+LABEL name="IBM volume group operator" \
+    vendor="IBM" \
+    version=$VERSION \
+    release=$BUILD_NUMBER \
+    summary="Manages VolumeGroup objects in kubernetes and openshift" \
+    description="The IBM volume group operator enables container orchestrators to use volumeGroup object and to manage them in their storage." \
+    io.k8s.display-name="IBM volume group operator" \
+    io.k8s.description="The IBM volume group operator enables container orchestrators to use volumeGroup object and to manage them in their storage." \
+    io.openshift.tags=ibm,csi,volume-group-operator
+
+COPY ./LICENSE /licenses/
+
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
