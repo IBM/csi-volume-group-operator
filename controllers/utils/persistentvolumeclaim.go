@@ -73,7 +73,11 @@ func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeCl
 }
 
 func IsPVCInStaticVG(logger logr.Logger, client runtimeclient.Client, pvc *corev1.PersistentVolumeClaim) (bool, error) {
-	sc, err := getStorageClass(logger, client, *pvc.Spec.StorageClassName)
+	storageClassName, sErr := GetPersistentVolumeClaimClass(pvc)
+	if sErr != nil {
+		return false, sErr
+	}
+	sc, err := getStorageClass(logger, client, storageClassName)
 	if err != nil {
 		return false, err
 	}
