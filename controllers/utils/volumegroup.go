@@ -125,6 +125,9 @@ func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegr
 	driver string) (bool, error) {
 	vgClassDriver, err := getVGClassDriver(client, logger, *vg.Spec.VolumeGroupClassName)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	return vgClassDriver == driver, nil
