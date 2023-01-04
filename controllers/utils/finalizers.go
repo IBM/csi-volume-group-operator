@@ -17,7 +17,7 @@ limitations under the License.
 package utils
 
 import (
-	volumegroupv1 "github.com/IBM/volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -88,8 +88,14 @@ func AddFinalizerToPVC(client client.Client, logger logr.Logger, pvc *corev1.Per
 	return nil
 }
 
-func RemoveFinalizerFromPVC(client client.Client, logger logr.Logger, pvc *corev1.PersistentVolumeClaim) error {
-	if Contains(pvc.ObjectMeta.Finalizers, pvcVolumeGroupFinalizer) {
+func RemoveFinalizerFromPVC(client client.Client, logger logr.Logger, driver string,
+	pvc *corev1.PersistentVolumeClaim) error {
+	removeFinalizer, err := isFinalizerShouldBeREmovedFromPVC(logger, client, driver, pvc)
+	if err != nil {
+		return err
+	}
+
+	if removeFinalizer {
 		logger.Info("removing finalizer from PersistentVolumeClaim object", "Namespace", pvc.Namespace, "Name", pvc.Name, "Finalizer", pvcVolumeGroupFinalizer)
 		pvc.ObjectMeta.Finalizers = remove(pvc.ObjectMeta.Finalizers, pvcVolumeGroupFinalizer)
 		if err := UpdateObject(client, pvc); err != nil {
@@ -99,4 +105,13 @@ func RemoveFinalizerFromPVC(client client.Client, logger logr.Logger, pvc *corev
 	}
 
 	return nil
+}
+
+func isFinalizerShouldBeREmovedFromPVC(logger logr.Logger, client client.Client, driver string,
+	pvc *corev1.PersistentVolumeClaim) (bool, error) {
+	vgList, err := GetVGList(logger, client, driver)
+	if err != nil {
+		return false, err
+	}
+	return !IsPVCPartAnyVG(pvc, vgList.Items) && Contains(pvc.ObjectMeta.Finalizers, pvcVolumeGroupFinalizer), nil
 }

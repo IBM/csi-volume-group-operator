@@ -18,6 +18,7 @@ package messages
 
 var (
 	ReconcilePersistentVolumeClaim                   = "Reconciling PersistentVolumeClaim"
+	ReconcileVolumeGroup                             = "Reconciling VolumeGroup"
 	RequestName                                      = "Request.Name"
 	RequestNamespace                                 = "Request.Namespace"
 	UnableToCreatePVCController                      = "Unable to create persistentvolumeclaim controller"
@@ -51,4 +52,7 @@ var (
 	AddedVolumeToVolumeGroup                         = "Successfully added volume of persistentVolumeClaim to %s/%s volumeGroup"
 	PersistentVolumeClaimIsNotInBoundPhase           = "PersistentVolumeClaim is not in bound phase, stopping the reconcile, when it will be in bound phase, reconcile will continue"
 	StorageClassHasVGParameter                       = "StorageClass %s contain parameter volume_group for claim %s/%s. volumegroup feature is not supported"
+	ListPersistentVolumeClaim                        = "Listing PersistentVolumeClaims"
+	VolumeGroupCreated                               = "Successfully Created  %s/%s volumeGroup"
+	VolumeGroupContentCreated                        = "Successfully Created  %s/%s volumeGroupContent"
 )
