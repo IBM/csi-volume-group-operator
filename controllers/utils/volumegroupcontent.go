@@ -59,7 +59,18 @@ func CreateVolumeGroupContent(client client.Client, logger logr.Logger, vgcObj *
 		logger.Error(err, "VolumeGroupContent creation failed", "VolumeGroupContent Name")
 		return err
 	}
+	err = createSuccessVolumeGroupContentEvent(logger, client, vgcObj)
+	return err
+}
 
+func createSuccessVolumeGroupContentEvent(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent) error {
+	vgc.APIVersion = APIVersion
+	vgc.Kind = volumeGroupContentKind
+	message := fmt.Sprintf(messages.VolumeGroupContentCreated, vgc.Namespace, vgc.Name)
+	err := createSuccessNamespacedObjectEvent(logger, client, vgc, message, createVGC)
+	if err != nil {
+		return nil
+	}
 	return nil
 }
 

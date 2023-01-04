@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -13,10 +12,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func createSuccessVolumeGroupEvent(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup,
+func createSuccessNamespacedObjectEvent(logger logr.Logger, client client.Client, object client.Object,
 	message, reason string) error {
-	event := generateEvent(vg, reason, message, normalEventType)
-	logger.Info(fmt.Sprintf(messages.CreateEventForNamespacedObject, vg.Name, vg.Namespace, vg.Kind, message))
+	event := generateEvent(object, reason, message, normalEventType)
+	logger.Info(fmt.Sprintf(messages.CreateEventForNamespacedObject, object.GetNamespace(), object.GetName(),
+		object.GetObjectKind().GroupVersionKind().Kind, message))
 	return createEvent(logger, client, event)
 }
 

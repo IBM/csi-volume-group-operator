@@ -30,4 +30,5 @@ var (
 	PersistentVolumeClaimIsAlreadyBelongToGroup          = "Failed to add %s/%s persistentVolumeClaim to VolumeGroups %v Because it belongs to other VolumeGroups %v"
 	PersistentVolumeClaimMatchedWithMultipleNewGroups    = "Failed to add %s/%s persistentVolumeClaim to VolumeGroups %v Because it matched more than one new VolumeGroups"
 	FailedToGetStorageClass                              = "Failed to get %s storageClass"
+	FailedToListPersistentVolumeClaim                    = "Failed to list persistentVolumeClaim"
 )
