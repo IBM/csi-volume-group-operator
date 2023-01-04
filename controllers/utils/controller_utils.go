@@ -105,7 +105,7 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 	if err != nil {
 		return err
 	}
-	vgc, err := GetVolumeGroupContent(client, logger, &vg)
+	vgc, err := GetVolumeGroupContent(client, logger, *vg.Spec.Source.VolumeGroupContentName, vg.Name, vg.Namespace)
 	if err != nil {
 		return err
 	}
