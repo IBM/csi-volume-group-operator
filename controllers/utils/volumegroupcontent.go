@@ -7,7 +7,7 @@ import (
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
-	"github.com/container-storage-interface/spec/lib/go/csi"
+	csi "github.com/IBM/csi-volume-group/lib/go/volumegroup"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
