@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -53,21 +52,28 @@ func updateVolumeGroupStatus(client client.Client, instance *volumegroupv1.Volum
 	return nil
 }
 
-func UpdateVolumeGroupStatus(client client.Client, instance *volumegroupv1.VolumeGroup, vgc *volumegroupv1.VolumeGroupContent,
+func UpdateVolumeGroupStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgc *volumegroupv1.VolumeGroupContent,
 	groupCreationTime *metav1.Time, ready bool, logger logr.Logger) error {
-	instance.Status.BoundVolumeGroupContentName = &vgc.Name
-	instance.Status.GroupCreationTime = groupCreationTime
-	instance.Status.Ready = &ready
-	instance.Status.Error = nil
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		vg.Status.BoundVolumeGroupContentName = &vgc.Name
+		vg.Status.GroupCreationTime = groupCreationTime
+		vg.Status.Ready = &ready
+		vg.Status.Error = nil
+		err := vgRetryOnConflictFunc(client, vg, logger)
+		return err
+	})
+	if err != nil {
+		return err
+	}
 
-	return updateVolumeGroupStatus(client, instance, logger)
+	return updateVolumeGroupStatus(client, vg, logger)
 }
 
 func updateVolumeGroupStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger,
 	pvcList []corev1.PersistentVolumeClaim) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vg.Status.PVCList = pvcList
-		err := updateFunc(client, vg, logger)
+		err := vgRetryOnConflictFunc(client, vg, logger)
 		return err
 	})
 	if err != nil {
@@ -80,7 +86,7 @@ func updateVolumeGroupStatusPVCList(client client.Client, vg *volumegroupv1.Volu
 func UpdateVolumeGroupStatusError(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger, message string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vg.Status.Error = &volumegroupv1.VolumeGroupError{Message: &message}
-		err := updateFunc(client, vg, logger)
+		err := vgRetryOnConflictFunc(client, vg, logger)
 		return err
 	})
 	if err != nil {
@@ -90,25 +96,16 @@ func UpdateVolumeGroupStatusError(client client.Client, vg *volumegroupv1.Volume
 	return nil
 }
 
-func updateFunc(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger) error {
+func vgRetryOnConflictFunc(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger) error {
 	err := updateVolumeGroupStatus(client, vg, logger)
 	if apierrors.IsConflict(err) {
-		uErr := getVolumeGroup(client, vg)
+		uErr := getNamespacedObject(client, vg)
 		if uErr != nil {
 			return uErr
 		}
 		logger.Info(fmt.Sprintf(messages.RetryUpdateVolumeGroupStatus, vg.Namespace, vg.Name))
 	}
 	return err
-}
-
-func getVolumeGroup(client client.Client, vg *volumegroupv1.VolumeGroup) error {
-	namespacedVG := types.NamespacedName{Name: vg.Name, Namespace: vg.Namespace}
-	err := client.Get(context.TODO(), namespacedVG, vg)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func GetVGList(logger logr.Logger, client client.Client, driver string) (volumegroupv1.VolumeGroupList, error) {

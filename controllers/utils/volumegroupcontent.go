@@ -11,8 +11,10 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -139,8 +141,9 @@ func RemovePVFromVGC(logger logr.Logger, client client.Client, pv *corev1.Persis
 	logger.Info(fmt.Sprintf(messages.RemovePersistentVolumeFromVolumeGroupContent,
 		pv.Namespace, pv.Name, vgc.Namespace, vgc.Name))
 	vgc.Status.PVList = removeFromPVList(pv, vgc.Status.PVList)
-	err := client.Status().Update(context.TODO(), vgc)
+	err := updateVolumeGroupContentStatusPVList(client, vgc, logger, vgc.Status.PVList)
 	if err != nil {
+		vgc.Status.PVList = appendPersistentVolume(vgc.Status.PVList, *pv)
 		logger.Error(err, fmt.Sprintf(messages.FailedToRemovePersistentVolumeFromVolumeGroupContent,
 			pv.Name, vgc.Namespace, vgc.Name))
 		return err
@@ -165,8 +168,9 @@ func addPVToVGC(logger logr.Logger, client client.Client, pv *corev1.PersistentV
 	logger.Info(fmt.Sprintf(messages.AddPersistentVolumeToVolumeGroupContent,
 		pv.Name, vgc.Namespace, vgc.Name))
 	vgc.Status.PVList = appendPersistentVolume(vgc.Status.PVList, *pv)
-	err := client.Status().Update(context.TODO(), vgc)
+	err := updateVolumeGroupContentStatusPVList(client, vgc, logger, vgc.Status.PVList)
 	if err != nil {
+		vgc.Status.PVList = removeFromPVList(pv, vgc.Status.PVList)
 		logger.Error(err, fmt.Sprintf(messages.FailedToAddPersistentVolumeToVolumeGroupContent,
 			pv.Name, vgc.Namespace, vgc.Name))
 		return err
@@ -184,6 +188,32 @@ func appendPersistentVolume(pvListInVGC []corev1.PersistentVolume, pv corev1.Per
 	}
 	pvListInVGC = append(pvListInVGC, pv)
 	return pvListInVGC
+}
+
+func updateVolumeGroupContentStatusPVList(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger,
+	pvList []corev1.PersistentVolume) error {
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		vgc.Status.PVList = pvList
+		err := vgcRetryOnConflictFunc(client, vgc, logger)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
+	err := UpdateObjectStatus(client, vgc)
+	if apierrors.IsConflict(err) {
+		uErr := getNamespacedObject(client, vgc)
+		if uErr != nil {
+			return uErr
+		}
+		logger.Info(fmt.Sprintf(messages.RetryUpdateVolumeGroupStatus, vgc.Namespace, vgc.Name))
+	}
+	return err
 }
 
 func UpdateStaticVGC(client client.Client, vg *volumegroupv1.VolumeGroup,

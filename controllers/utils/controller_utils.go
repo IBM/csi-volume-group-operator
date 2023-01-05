@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,6 +30,15 @@ func UpdateObjectStatus(client client.Client, updateObject client.Object) error 
 			return err
 		}
 		return fmt.Errorf("failed to update %s (%s/%s) status %w", updateObject.GetObjectKind(), updateObject.GetNamespace(), updateObject.GetName(), err)
+	}
+	return nil
+}
+
+func getNamespacedObject(client client.Client, obj client.Object) error {
+	namespacedObject := types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
+	err := client.Get(context.TODO(), namespacedObject, obj)
+	if err != nil {
+		return err
 	}
 	return nil
 }
