@@ -102,6 +102,10 @@ func RemoveFinalizerFromPVC(client runtimeclient.Client, logger logr.Logger, dri
 
 	if removeFinalizer {
 		logger.Info("removing finalizer from PersistentVolumeClaim object", "Namespace", pvc.Namespace, "Name", pvc.Name, "Finalizer", pvcVolumeGroupFinalizer)
+		uErr := getNamespacedObject(client, pvc)
+		if uErr != nil {
+			return uErr
+		}
 		pvc.ObjectMeta.Finalizers = remove(pvc.ObjectMeta.Finalizers, pvcVolumeGroupFinalizer)
 		if err := updateFinalizer(logger, client, pvc.ObjectMeta.Finalizers, pvc); err != nil {
 			logger.Error(err, "failed to remove finalizer to PersistentVolumeClaim resource", "finalizer", VolumeGroupFinalizer)
