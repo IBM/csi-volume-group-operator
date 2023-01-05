@@ -60,6 +60,7 @@ func AddVolumesToVolumeGroup(logger logr.Logger, client client.Client, vgClient 
 
 	err := ModifyVolumeGroup(logger, client, vg, vgClient)
 	if err != nil {
+		vg.Status.PVCList = removeMultiplePVCs(vg.Status.PVCList, pvcs)
 		return err
 	}
 	logger.Info(fmt.Sprintf(messages.AddedVolumeToVolumeGroup, vg.Namespace, vg.Name))
@@ -93,6 +94,7 @@ func RemoveVolumeFromVolumeGroup(logger logr.Logger, client client.Client, vgCli
 
 	err := ModifyVolumeGroup(logger, client, vg, vgClient)
 	if err != nil {
+		vg.Status.PVCList = appendMultiplePVCs(vg.Status.PVCList, pvcs)
 		return err
 	}
 	logger.Info(fmt.Sprintf(messages.RemovedVolumeFromVolumeGroup, vg.Namespace, vg.Name))

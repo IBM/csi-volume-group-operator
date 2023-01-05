@@ -65,7 +65,6 @@ func UpdateVolumeGroupStatus(client client.Client, instance *volumegroupv1.Volum
 
 func updateVolumeGroupStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger,
 	pvcList []corev1.PersistentVolumeClaim) error {
-	logger.Info(fmt.Sprintf(messages.UpdateVolumeGroupPVCListStatus, vg.Namespace, vg.Name))
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vg.Status.PVCList = pvcList
 		err := updateFunc(client, vg, logger)
@@ -177,6 +176,7 @@ func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.Persi
 	vg.Status.PVCList = removeFromPVCList(pvc, vg.Status.PVCList)
 	err := updateVolumeGroupStatusPVCList(client, vg, logger, vg.Status.PVCList)
 	if err != nil {
+		vg.Status.PVCList = appendPVC(vg.Status.PVCList, *pvc)
 		logger.Error(err, fmt.Sprintf(messages.FailedToRemovePersistentVolumeClaimFromVolumeGroup,
 			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 		return err
@@ -218,6 +218,7 @@ func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.Persistent
 	vg.Status.PVCList = appendPVC(vg.Status.PVCList, *pvc)
 	err := updateVolumeGroupStatusPVCList(client, vg, logger, vg.Status.PVCList)
 	if err != nil {
+		vg.Status.PVCList = removeFromPVCList(pvc, vg.Status.PVCList)
 		logger.Error(err, fmt.Sprintf(messages.FailedToAddPersistentVolumeClaimToVolumeGroup,
 			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 		return err

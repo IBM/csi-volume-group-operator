@@ -120,20 +120,17 @@ func (r PersistentVolumeClaimReconciler) removePersistentVolumeClaimFromVolumeGr
 		if !utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
 			continue
 		}
-		logger.Info(fmt.Sprintf("matan3 remove pvc %s", pvc.Name))
 		IsPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 		if err != nil {
 			return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
 		}
 
 		if !IsPVCMatchesVG {
-			logger.Info(fmt.Sprintf("matan remove pvc %s", pvc.Name))
 			err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient,
 				[]corev1.PersistentVolumeClaim{*pvc}, &vg)
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
 			}
-			logger.Info(fmt.Sprintf("matan2 remove pvc %s", pvc.Name))
 			err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, pvc, vg)
 			return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
 		}
@@ -155,19 +152,16 @@ func (r PersistentVolumeClaimReconciler) addPersistentVolumeClaimToVolumeGroupOb
 
 	for _, vg := range vgList.Items {
 		if !utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
-			logger.Info(fmt.Sprintf("matan3 add pvc %s", pvc.Name))
 			isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 			}
 			if isPVCMatchesVG {
-				logger.Info(fmt.Sprintf("matan add pvc %s", pvc.Name))
 				err := utils.AddVolumesToVolumeGroup(logger, r.Client, r.VolumeGroupClient,
 					[]corev1.PersistentVolumeClaim{*pvc}, &vg)
 				if err != nil {
 					return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 				}
-				logger.Info(fmt.Sprintf("matan2 add pvc %s", pvc.Name))
 				err = utils.AddVolumeToPvcListAndPvList(logger, r.Client, pvc, &vg)
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)
 			}
