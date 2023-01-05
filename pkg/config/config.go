@@ -22,10 +22,11 @@ import (
 )
 
 type DriverConfig struct {
-	DriverEndpoint string
-	DriverName     string
-	RPCTimeout     time.Duration
-	MultipleVGsToPVC string
+	DriverEndpoint    string
+	DriverName        string
+	RPCTimeout        time.Duration
+	MultipleVGsToPVC  string
+	DisableDeletePvcs string
 }
 
 func NewDriverConfig() *DriverConfig {
