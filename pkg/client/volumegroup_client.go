@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
+	csi "github.com/IBM/csi-volume-group/lib/go/volumegroup"
 	"google.golang.org/grpc"
 )
 
