@@ -354,7 +354,6 @@ func (r VolumeGroupReconciler) addMatchedVolumes(logger logr.Logger, pvcs []core
 		return err
 	}
 	for _, pvc := range pvcs {
-		logger.Info("")
 		err = utils.AddVolumeToPvcListAndPvList(logger, r.Client, &pvc, vg)
 		return err
 	}
