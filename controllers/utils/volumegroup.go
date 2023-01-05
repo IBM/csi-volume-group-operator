@@ -27,6 +27,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -43,8 +44,10 @@ func UpdateVolumeGroupSourceContent(client client.Client, instance *volumegroupv
 func updateVolumeGroupStatus(client client.Client, instance *volumegroupv1.VolumeGroup, logger logr.Logger) error {
 	logger.Info(fmt.Sprintf(messages.UpdateVolumeGroupStatus, instance.Namespace, instance.Name))
 	if err := UpdateObjectStatus(client, instance); err != nil {
+		if apierrors.IsConflict(err) {
+			return err
+		}
 		logger.Error(err, "failed to update volumeGroup status", "VGName", instance.Name)
-
 		return err
 	}
 	return nil
@@ -60,36 +63,53 @@ func UpdateVolumeGroupStatus(client client.Client, instance *volumegroupv1.Volum
 	return updateVolumeGroupStatus(client, instance, logger)
 }
 
-func UpdateVolumeGroupStatusError(client client.Client, instance *volumegroupv1.VolumeGroup, logger logr.Logger, message string) error {
-	instance.Status.Error = &volumegroupv1.VolumeGroupError{Message: &message}
-	err := updateVolumeGroupStatus(client, instance, logger)
+func updateVolumeGroupStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger,
+	pvcList []corev1.PersistentVolumeClaim) error {
+	logger.Info(fmt.Sprintf(messages.UpdateVolumeGroupPVCListStatus, vg.Namespace, vg.Name))
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		vg.Status.PVCList = pvcList
+		err := updateFunc(client, vg, logger)
+		return err
+	})
 	if err != nil {
-		if apierrors.IsConflict(err) {
-			vg, uErr := getVolumeGroup(client, instance)
-			if uErr != nil {
-				return uErr
-			}
-			vg.Status.Error = &volumegroupv1.VolumeGroupError{Message: &message}
-			uErr = updateVolumeGroupStatus(client, vg, logger)
-			if uErr != nil {
-				return uErr
-			}
-			return nil
-		}
 		return err
 	}
 
 	return nil
 }
 
-func getVolumeGroup(client client.Client, instance *volumegroupv1.VolumeGroup) (*volumegroupv1.VolumeGroup, error) {
-	vg := &volumegroupv1.VolumeGroup{}
-	namespacedVG := types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}
+func UpdateVolumeGroupStatusError(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger, message string) error {
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		vg.Status.Error = &volumegroupv1.VolumeGroupError{Message: &message}
+		err := updateFunc(client, vg, logger)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateFunc(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger) error {
+	err := updateVolumeGroupStatus(client, vg, logger)
+	if apierrors.IsConflict(err) {
+		uErr := getVolumeGroup(client, vg)
+		if uErr != nil {
+			return uErr
+		}
+		logger.Info(fmt.Sprintf(messages.RetryUpdateVolumeGroupStatus, vg.Namespace, vg.Name))
+	}
+	return err
+}
+
+func getVolumeGroup(client client.Client, vg *volumegroupv1.VolumeGroup) error {
+	namespacedVG := types.NamespacedName{Name: vg.Name, Namespace: vg.Namespace}
 	err := client.Get(context.TODO(), namespacedVG, vg)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return vg, nil
+	return nil
 }
 
 func GetVGList(logger logr.Logger, client client.Client, driver string) (volumegroupv1.VolumeGroupList, error) {
@@ -155,7 +175,7 @@ func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.Persi
 	logger.Info(fmt.Sprintf(messages.RemovePersistentVolumeClaimFromVolumeGroup,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 	vg.Status.PVCList = removeFromPVCList(pvc, vg.Status.PVCList)
-	err := client.Status().Update(context.TODO(), vg)
+	err := updateVolumeGroupStatusPVCList(client, vg, logger, vg.Status.PVCList)
 	if err != nil {
 		logger.Error(err, fmt.Sprintf(messages.FailedToRemovePersistentVolumeClaimFromVolumeGroup,
 			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
@@ -196,7 +216,7 @@ func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.Persistent
 	logger.Info(fmt.Sprintf(messages.AddPersistentVolumeClaimToVolumeGroup,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 	vg.Status.PVCList = appendPVC(vg.Status.PVCList, *pvc)
-	err := updateVolumeGroupStatus(client, vg, logger)
+	err := updateVolumeGroupStatusPVCList(client, vg, logger, vg.Status.PVCList)
 	if err != nil {
 		logger.Error(err, fmt.Sprintf(messages.FailedToAddPersistentVolumeClaimToVolumeGroup,
 			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))

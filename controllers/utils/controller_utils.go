@@ -12,6 +12,7 @@ import (
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -24,6 +25,9 @@ func UpdateObject(client client.Client, updateObject client.Object) error {
 
 func UpdateObjectStatus(client client.Client, updateObject client.Object) error {
 	if err := client.Status().Update(context.TODO(), updateObject); err != nil {
+		if apierrors.IsConflict(err) {
+			return err
+		}
 		return fmt.Errorf("failed to update %s (%s/%s) status %w", updateObject.GetObjectKind(), updateObject.GetNamespace(), updateObject.GetName(), err)
 	}
 	return nil

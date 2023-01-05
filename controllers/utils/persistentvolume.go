@@ -42,7 +42,7 @@ func getPersistentVolumeName(logger logr.Logger, client client.Client, pvc *core
 }
 
 func getPersistentVolume(logger logr.Logger, client client.Client, pvName string) (*corev1.PersistentVolume, error) {
-	logger.Info(fmt.Sprintf(messages.GetPersistentVolumeClaim, pvName))
+	logger.Info(fmt.Sprintf(messages.GetPersistentVolume, pvName))
 	pv := &corev1.PersistentVolume{}
 	namespacedPV := types.NamespacedName{Name: pvName}
 	err := client.Get(context.TODO(), namespacedPV, pv)

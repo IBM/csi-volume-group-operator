@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
@@ -101,11 +101,13 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	if instance.GetDeletionTimestamp().IsZero() {
+		log.Info(fmt.Sprintf("matan zero: %v", instance.GetDeletionTimestamp()))
 		if err = utils.AddFinalizerToVG(r.Client, logger, instance); err != nil {
 			return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVG)
 		}
 
 	} else {
+		log.Info(fmt.Sprintf("matan2 zero: %v", instance.GetDeletionTimestamp()))
 		if utils.Contains(instance.GetFinalizers(), utils.VolumeGroupFinalizer) {
 			if err = r.removeInstance(logger, instance, secret); err != nil {
 				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
@@ -320,6 +322,7 @@ func (r VolumeGroupReconciler) addMatchedVolumes(logger logr.Logger, pvcs []core
 		return err
 	}
 	for _, pvc := range pvcs {
+		logger.Info("")
 		err = utils.AddVolumeToPvcListAndPvList(logger, r.Client, &pvc, vg)
 		return err
 	}
@@ -343,13 +346,12 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 
 		return err
 	}
-	pred := predicate.GenerationChangedPredicate{}
 
 	r.VolumeGroupClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&volumegroupv1.VolumeGroup{}).
-		WithEventFilter(pred).Complete(r)
+		For(&volumegroupv1.VolumeGroup{}, builder.WithPredicates(vgPredicate)).
+		Complete(r)
 }
 
 func (r *VolumeGroupReconciler) waitForCrds(logger logr.Logger) error {

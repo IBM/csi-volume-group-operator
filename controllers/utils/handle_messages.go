@@ -15,6 +15,7 @@ func HandleErrorMessage(logger logr.Logger, client client.Client, vg *volumegrou
 		if uErr != nil {
 			return uErr
 		}
+		logger.Info("matan sleeps")
 		uErr = createNamespacedObjectErrorEvent(logger, client, vg, errorMessage, reason)
 		if uErr != nil {
 			return uErr
