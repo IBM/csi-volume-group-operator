@@ -14,7 +14,7 @@ on:
         type: boolean
         required: false
 env:
-  IMAGE_VERSION: '1.11.0'
+  IMAGE_VERSION: 'v0.9.0'
 jobs:
   prepare_env: 
     name: "Prepare env"
@@ -22,8 +22,8 @@ jobs:
     env:
       PRODUCTION: "${{ inputs.production }}"
       BUILD_NUMBER: "${{ github.run_number }}"
-      PROD_REPOSITORY: volume-group-operator
-      STAGING_REPOSITORY: volume-group-operator-staging
+      PROD_REPOSITORY: ibmcsiblock/csi-volume-group-operator
+      STAGING_REPOSITORY: csiblock/volume-group-operator-staging
     steps:
        - name: Checkout code
          uses: actions/checkout@v3.2.0
@@ -41,7 +41,7 @@ jobs:
     name: "Build and push images"
     runs-on: ubuntu-latest
     env:
-      REGISTRY: quay.io/csiblock
+      REGISTRY: quay.io
     needs:
       - prepare_env
     steps:
