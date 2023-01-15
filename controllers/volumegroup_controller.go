@@ -150,15 +150,23 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	if err = r.removeVolumesFromVG(logger, instance); err != nil {
-		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, removingPVC)
-	}
-	if err = r.addMatchingVolumesToVG(logger, instance); err != nil {
-		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
+	err = r.updatePVCs(err, logger, instance)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	r.createSuccessVolumeGroupEvent(logger, instance)
 	return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
+}
+
+func (r *VolumeGroupReconciler) updatePVCs(err error, logger logr.Logger, instance *volumegroupv1.VolumeGroup) error {
+	if err = r.removeVolumesFromVG(logger, instance); err != nil {
+		return utils.HandleErrorMessage(logger, r.Client, instance, err, removingPVC)
+	}
+	if err = r.addMatchingVolumesToVG(logger, instance); err != nil {
+		return utils.HandleErrorMessage(logger, r.Client, instance, err, addingPVC)
+	}
+	return nil
 }
 
 func (r *VolumeGroupReconciler) handleStaticProvisionedVG(instance *volumegroupv1.VolumeGroup, err error, logger logr.Logger, groupCreationTime *metav1.Time, vgClass *volumegroupv1.VolumeGroupClass) (error, bool) {
@@ -168,6 +176,10 @@ func (r *VolumeGroupReconciler) handleStaticProvisionedVG(instance *volumegroupv
 			return err, true
 		}
 		err = utils.UpdateStaticVGC(r.Client, instance, vgClass, logger)
+		if err != nil {
+			return err, true
+		}
+		err = r.updatePVCs(err, logger, instance)
 		if err != nil {
 			return err, true
 		}
