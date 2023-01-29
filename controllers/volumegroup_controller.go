@@ -301,7 +301,9 @@ func (r VolumeGroupReconciler) removeUnMatchedVolumes(logger logr.Logger, pvcs [
 	}
 	for _, pvc := range pvcs {
 		err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, &pvc, *vg)
-
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
