@@ -117,7 +117,10 @@ func (r PersistentVolumeClaimReconciler) removePersistentVolumeClaimFromVolumeGr
 	}
 
 	for _, vg := range vgList.Items {
-		if !utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
+		if !utils.IsVgReady(vg) {
+			continue
+		}
+		if !utils.IsPVCInPvcList(pvc, vg.Status.PVCList) {
 			continue
 		}
 		IsPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
@@ -131,7 +134,7 @@ func (r PersistentVolumeClaimReconciler) removePersistentVolumeClaimFromVolumeGr
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
 			}
-			err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, pvc, vg)
+			err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, *pvc, &vg)
 			return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
 		}
 	}
@@ -151,7 +154,10 @@ func (r PersistentVolumeClaimReconciler) addPersistentVolumeClaimToVolumeGroupOb
 	}
 
 	for _, vg := range vgList.Items {
-		if !utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
+		if !utils.IsVgReady(vg) {
+			continue
+		}
+		if !utils.IsPVCInPvcList(pvc, vg.Status.PVCList) && utils.IsVgReady(vg) {
 			isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)

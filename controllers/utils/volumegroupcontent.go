@@ -227,7 +227,7 @@ func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroup
 		if uErr != nil {
 			return uErr
 		}
-		logger.Info(fmt.Sprintf(messages.RetryUpdateVolumeGroupStatus, vgc.Namespace, vgc.Name))
+		logger.Info(fmt.Sprintf(messages.RetryUpdateVolumeGroupContentStatus, vgc.Namespace, vgc.Name))
 	}
 	return err
 }

@@ -19,6 +19,8 @@ package utils
 import (
 	"context"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"math/rand"
 	"time"
 
@@ -128,12 +130,12 @@ func RemoveVolumeFromVolumeGroup(logger logr.Logger, client client.Client, vgCli
 }
 
 func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, driver string,
-	pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) error {
-	err := RemovePVCFromVG(logger, client, pvc, &vg)
+	pvc corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+	err := RemovePVCFromVG(logger, client, &pvc, vg)
 	if err != nil {
 		return err
 	}
-	pv, err := GetPVFromPVC(logger, client, pvc)
+	pv, err := GetPVFromPVC(logger, client, &pvc)
 	if err != nil {
 		return err
 	}
@@ -148,12 +150,59 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 			return err
 		}
 	}
-
-	err = RemoveFinalizerFromPVC(client, logger, driver, pvc)
+	err = RemoveFinalizerFromPVC(client, logger, driver, &pvc)
 	if err != nil {
 		return err
 	}
 
 	message := fmt.Sprintf(messages.RemovedPersistentVolumeClaimFromVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
-	return HandleSuccessMessage(logger, client, &vg, message, removingPVC)
+	return HandleSuccessMessage(logger, client, vg, message, removingPVC)
+}
+
+func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
+	matchingPvcs []corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) error {
+
+	currentList := make([]corev1.PersistentVolumeClaim, len(vg.Status.PVCList))
+	copy(currentList, vg.Status.PVCList)
+
+	vg.Status.PVCList = matchingPvcs
+
+	err := ModifyVolumeGroup(logger, client, &vg, vgClient)
+	if err != nil {
+		vg.Status.PVCList = currentList
+		return err
+	}
+
+	return nil
+}
+
+func UpdatePvcAndPvList(logger logr.Logger, vg *volumegroupv1.VolumeGroup, client client.Client, driver string,
+	matchingPvcs []corev1.PersistentVolumeClaim) error {
+
+	vgPvcList := make([]corev1.PersistentVolumeClaim, len(vg.Status.PVCList))
+	copy(vgPvcList, vg.Status.PVCList)
+
+	for _, pvc := range vgPvcList {
+		if !IsPVCInPvcList(&pvc, matchingPvcs) {
+			err := RemoveVolumeFromPvcListAndPvList(logger, client, driver, pvc, vg)
+			if err != nil {
+				return HandleErrorMessage(logger, client, vg, err, removingPVC)
+			}
+		}
+	}
+	for _, pvc := range matchingPvcs {
+		if !IsPVCInPvcList(&pvc, vgPvcList) {
+			err := AddVolumeToPvcListAndPvList(logger, client, &pvc, vg)
+			if err != nil {
+				return HandleErrorMessage(logger, client, vg, err, addingPVC)
+			}
+		}
+	}
+	return nil
+}
+
+func IsPVCListEqual(x []corev1.PersistentVolumeClaim, y []corev1.PersistentVolumeClaim) bool {
+	less := func(a, b corev1.PersistentVolumeClaim) bool { return a.Name < b.Name }
+	equalIgnoreOrder := cmp.Diff(x, y, cmpopts.SortSlices(less)) == ""
+	return equalIgnoreOrder
 }
