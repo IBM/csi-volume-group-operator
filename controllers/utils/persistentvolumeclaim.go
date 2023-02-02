@@ -64,7 +64,7 @@ func IsPVCCanBeAddedToVG(logger logr.Logger, client runtimeclient.Client,
 	vgsWithPVC := []string{}
 	newVGsForPVC := []string{}
 	for _, vg := range vgs {
-		if IsPVCInPvcList(pvc, vg.Status.PVCList) {
+		if IsPVCInPVCList(pvc, vg.Status.PVCList) {
 			vgsWithPVC = append(vgsWithPVC, vg.Name)
 		} else if isPVCMatchesVG, _ := IsPVCMatchesVG(logger, client, pvc, vg); isPVCMatchesVG {
 			newVGsForPVC = append(newVGsForPVC, vg.Name)

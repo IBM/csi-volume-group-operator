@@ -160,7 +160,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 }
 
 func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
-	matchingPvcs, err := r.getMatchingVolumes(logger, *vg)
+	matchingPvcs, err := r.getMatchingPVCs(logger, *vg)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
@@ -269,7 +269,7 @@ func makeVolumeGroupName(prefix string, volumeGroupUID string) (string, error) {
 
 func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
 	pvc *corev1.PersistentVolumeClaim) (bool, error) {
-	if !utils.IsPVCInPvcList(pvc, vg.Status.PVCList) {
+	if !utils.IsPVCInPVCList(pvc, vg.Status.PVCList) {
 		return false, nil
 	}
 
@@ -418,7 +418,7 @@ func (r *VolumeGroupReconciler) createVolumeGroup(volumeGroupName string, parame
 	return resp
 }
 
-func (r *VolumeGroupReconciler) getMatchingVolumes(logger logr.Logger, vg volumegroupv1.VolumeGroup) ([]corev1.PersistentVolumeClaim, error) {
+func (r *VolumeGroupReconciler) getMatchingPVCs(logger logr.Logger, vg volumegroupv1.VolumeGroup) ([]corev1.PersistentVolumeClaim, error) {
 	var matchingPvcs []corev1.PersistentVolumeClaim
 	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
 	if err != nil {
@@ -429,7 +429,7 @@ func (r *VolumeGroupReconciler) getMatchingVolumes(logger logr.Logger, vg volume
 		if err != nil {
 			return nil, err
 		}
-		if isPVCShouldBeInVg && !utils.IsPVCInPvcList(&pvc, matchingPvcs) {
+		if isPVCShouldBeInVg && !utils.IsPVCInPVCList(&pvc, matchingPvcs) {
 			matchingPvcs = append(matchingPvcs, pvc)
 		}
 	}

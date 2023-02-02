@@ -120,7 +120,7 @@ func (r PersistentVolumeClaimReconciler) removePersistentVolumeClaimFromVolumeGr
 		if !utils.IsVgReady(vg) {
 			continue
 		}
-		if !utils.IsPVCInPvcList(pvc, vg.Status.PVCList) {
+		if !utils.IsPVCInPVCList(pvc, vg.Status.PVCList) {
 			continue
 		}
 		IsPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
@@ -157,7 +157,7 @@ func (r PersistentVolumeClaimReconciler) addPersistentVolumeClaimToVolumeGroupOb
 		if !utils.IsVgReady(vg) {
 			continue
 		}
-		if !utils.IsPVCInPvcList(pvc, vg.Status.PVCList) && utils.IsVgReady(vg) {
+		if !utils.IsPVCInPVCList(pvc, vg.Status.PVCList) && utils.IsVgReady(vg) {
 			isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)

@@ -244,14 +244,14 @@ func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.Persistent
 
 func IsPVCPartAnyVG(pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) bool {
 	for _, vg := range vgs {
-		if IsPVCInPvcList(pvc, vg.Status.PVCList) {
+		if IsPVCInPVCList(pvc, vg.Status.PVCList) {
 			return true
 		}
 	}
 	return false
 }
 
-func IsPVCInPvcList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) bool {
+func IsPVCInPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) bool {
 	for _, pvcFromList := range pvcList {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
 			return true

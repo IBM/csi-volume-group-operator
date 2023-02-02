@@ -183,7 +183,7 @@ func UpdatePvcAndPvList(logger logr.Logger, vg *volumegroupv1.VolumeGroup, clien
 	copy(vgPvcList, vg.Status.PVCList)
 
 	for _, pvc := range vgPvcList {
-		if !IsPVCInPvcList(&pvc, matchingPvcs) {
+		if !IsPVCInPVCList(&pvc, matchingPvcs) {
 			err := RemoveVolumeFromPvcListAndPvList(logger, client, driver, pvc, vg)
 			if err != nil {
 				return HandleErrorMessage(logger, client, vg, err, removingPVC)
@@ -191,7 +191,7 @@ func UpdatePvcAndPvList(logger logr.Logger, vg *volumegroupv1.VolumeGroup, clien
 		}
 	}
 	for _, pvc := range matchingPvcs {
-		if !IsPVCInPvcList(&pvc, vgPvcList) {
+		if !IsPVCInPVCList(&pvc, vgPvcList) {
 			err := AddVolumeToPvcListAndPvList(logger, client, &pvc, vg)
 			if err != nil {
 				return HandleErrorMessage(logger, client, vg, err, addingPVC)
