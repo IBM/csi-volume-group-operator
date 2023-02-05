@@ -84,7 +84,11 @@ func generateString() string {
 func AddVolumesToVolumeGroup(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
 	pvcs []corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.AddVolumeToVolumeGroup, vg.Namespace, vg.Name))
-	vg.Status.PVCList = appendMultiplePVCs(vg.Status.PVCList, pvcs)
+	newPVCList := appendMultiplePVCs(vg.Status.PVCList, pvcs)
+	if IsPVCListEqual(newPVCList, vg.Status.PVCList) {
+		return nil
+	}
+	vg.Status.PVCList = newPVCList
 
 	err := ModifyVolumeGroup(logger, client, vg, vgClient)
 	if err != nil {
@@ -118,7 +122,11 @@ func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
 func RemoveVolumeFromVolumeGroup(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
 	pvcs []corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.RemoveVolumeFromVolumeGroup, vg.Namespace, vg.Name))
-	vg.Status.PVCList = removeMultiplePVCs(vg.Status.PVCList, pvcs)
+	newPVCList := removeMultiplePVCs(vg.Status.PVCList, pvcs)
+	if IsPVCListEqual(newPVCList, vg.Status.PVCList) {
+		return nil
+	}
+	vg.Status.PVCList = newPVCList
 
 	err := ModifyVolumeGroup(logger, client, vg, vgClient)
 	if err != nil {
