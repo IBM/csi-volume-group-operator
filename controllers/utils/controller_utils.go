@@ -207,3 +207,11 @@ func IsPVCListEqual(x []corev1.PersistentVolumeClaim, y []corev1.PersistentVolum
 	equalIgnoreOrder := cmp.Diff(x, y, cmpopts.SortSlices(less)) == ""
 	return equalIgnoreOrder
 }
+
+func IsRemoveNeeded(vg volumegroupv1.VolumeGroup, pvc *corev1.PersistentVolumeClaim) bool {
+	return IsVgReady(vg) && IsPVCInPVCList(pvc, vg.Status.PVCList)
+}
+
+func IsAddNeeded(vg volumegroupv1.VolumeGroup, pvc *corev1.PersistentVolumeClaim) bool {
+	return IsVgReady(vg) && !IsPVCInPVCList(pvc, vg.Status.PVCList)
+}
