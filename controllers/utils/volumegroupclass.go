@@ -27,16 +27,16 @@ import (
 )
 
 func getVGClassDriver(client client.Client, logger logr.Logger, vgcName string) (string, error) {
-	vgClass, err := GetVolumeGroupClass(client, logger, vgcName)
+	vgClass, err := GetVGClass(client, logger, vgcName)
 	if err != nil {
 		return "", err
 	}
 	return vgClass.Driver, nil
 }
 
-func GetVolumeGroupClass(client client.Client, logger logr.Logger, vgcName string) (*volumegroupv1.VolumeGroupClass, error) {
-	vgcObj := &volumegroupv1.VolumeGroupClass{}
-	err := client.Get(context.TODO(), types.NamespacedName{Name: vgcName}, vgcObj)
+func GetVGClass(client client.Client, logger logr.Logger, vgcName string) (*volumegroupv1.VolumeGroupClass, error) {
+	vgClass := &volumegroupv1.VolumeGroupClass{}
+	err := client.Get(context.TODO(), types.NamespacedName{Name: vgcName}, vgClass)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Error(err, "VolumeGroupClass not found", "VolumeGroupClass Name", vgcName)
@@ -46,5 +46,5 @@ func GetVolumeGroupClass(client client.Client, logger logr.Logger, vgcName strin
 
 		return nil, err
 	}
-	return vgcObj, nil
+	return vgClass, nil
 }

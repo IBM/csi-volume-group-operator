@@ -43,16 +43,16 @@ func getPVCListVolumeIds(logger logr.Logger, client runtimeclient.Client, pvcLis
 	return volumeIds, nil
 }
 
-func GetPersistentVolumeClaim(logger logr.Logger, client runtimeclient.Client, name, namespace string) (*corev1.PersistentVolumeClaim, error) {
-	logger.Info(fmt.Sprintf(messages.GetPersistentVolumeClaim, namespace, name))
+func GetPVC(logger logr.Logger, client runtimeclient.Client, name, namespace string) (*corev1.PersistentVolumeClaim, error) {
+	logger.Info(fmt.Sprintf(messages.GetPVC, namespace, name))
 	pvc := &corev1.PersistentVolumeClaim{}
 	namespacedPVC := types.NamespacedName{Name: name, Namespace: namespace}
 	err := client.Get(context.TODO(), namespacedPVC, pvc)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Error(err, fmt.Sprintf(messages.PersistentVolumeClaimNotFound, namespace, name))
+			logger.Error(err, fmt.Sprintf(messages.PVCNotFound, namespace, name))
 		} else {
-			logger.Error(err, fmt.Sprintf(messages.UnExpectedPersistentVolumeClaimError, namespace, name))
+			logger.Error(err, fmt.Sprintf(messages.UnExpectedPVCError, namespace, name))
 		}
 		return nil, err
 	}
@@ -73,15 +73,14 @@ func IsPVCCanBeAddedToVG(logger logr.Logger, client runtimeclient.Client,
 	return checkIfPVCCanBeAddedToVG(logger, pvc, vgsWithPVC, newVGsForPVC)
 }
 
-func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim,
-	vgsWithPVC, newVGsForPVC []string) error {
+func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim, vgsWithPVC, newVGsForPVC []string) error {
 	if len(vgsWithPVC) > 0 && len(newVGsForPVC) > 0 {
-		message := fmt.Sprintf(messages.PersistentVolumeClaimIsAlreadyBelongToGroup, pvc.Namespace, pvc.Name, newVGsForPVC, vgsWithPVC)
+		message := fmt.Sprintf(messages.PVCIsAlreadyBelongToGroup, pvc.Namespace, pvc.Name, newVGsForPVC, vgsWithPVC)
 		logger.Info(message)
 		return fmt.Errorf(message)
 	}
 	if len(newVGsForPVC) > 1 {
-		message := fmt.Sprintf(messages.PersistentVolumeClaimMatchedWithMultipleNewGroups, pvc.Namespace, pvc.Name, newVGsForPVC)
+		message := fmt.Sprintf(messages.PVCMatchedWithMultipleNewGroups, pvc.Namespace, pvc.Name, newVGsForPVC)
 		logger.Info(message)
 		return fmt.Errorf(message)
 	}
@@ -89,7 +88,7 @@ func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeCl
 }
 
 func IsPVCInStaticVG(logger logr.Logger, client runtimeclient.Client, pvc *corev1.PersistentVolumeClaim) (bool, error) {
-	storageClassName, sErr := GetPersistentVolumeClaimClass(pvc)
+	storageClassName, sErr := GetPVCClass(pvc)
 	if sErr != nil {
 		return false, sErr
 	}
@@ -114,10 +113,10 @@ func GetPVCList(logger logr.Logger, client runtimeclient.Client, driver string) 
 }
 
 func getPVCList(logger logr.Logger, client runtimeclient.Client) (corev1.PersistentVolumeClaimList, error) {
-	logger.Info(messages.ListPersistentVolumeClaim)
+	logger.Info(messages.ListPVCs)
 	pvcList := &corev1.PersistentVolumeClaimList{}
 	if err := client.List(context.TODO(), pvcList); err != nil {
-		logger.Error(err, messages.FailedToListPersistentVolumeClaim)
+		logger.Error(err, messages.FailedToListPVC)
 		return corev1.PersistentVolumeClaimList{}, err
 	}
 	return *pvcList, nil
@@ -150,7 +149,7 @@ func getProvisionedPVCList(logger logr.Logger, client runtimeclient.Client, driv
 
 func IsPVCHasMatchingDriver(logger logr.Logger, client runtimeclient.Client,
 	pvc *corev1.PersistentVolumeClaim, driver string) (bool, error) {
-	storageClassName, sErr := GetPersistentVolumeClaimClass(pvc)
+	storageClassName, sErr := GetPVCClass(pvc)
 	if sErr != nil {
 		return false, sErr
 	}

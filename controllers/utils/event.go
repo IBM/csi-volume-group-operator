@@ -50,7 +50,7 @@ func generateEvent(object client.Object, reason, message, eventType string) *cor
 			Namespace: object.GetNamespace(),
 			Name:      fmt.Sprintf("%s.%s", object.GetName(), generateString()),
 		},
-		ReportingController: volumeGroupController,
+		ReportingController: vgController,
 		InvolvedObject: corev1.ObjectReference{
 			Kind:       object.GetObjectKind().GroupVersionKind().Kind,
 			APIVersion: object.GetObjectKind().GroupVersionKind().Version,

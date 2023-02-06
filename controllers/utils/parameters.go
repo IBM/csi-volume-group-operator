@@ -35,20 +35,20 @@ func FilterPrefixedParameters(prefix string, param map[string]string) map[string
 
 func ValidatePrefixedParameters(param map[string]string) error {
 	for k, v := range param {
-		if strings.HasPrefix(k, VolumeGroupAsPrefix) {
+		if strings.HasPrefix(k, VGAsPrefix) {
 			switch k {
-			case PrefixedVolumeGroupSecretNameKey:
+			case PrefixedVGSecretNameKey:
 				if v == "" {
 					return errors.New("secret name cannot be empty")
 				}
-			case PrefixedVolumeGroupSecretNamespaceKey:
+			case PrefixedVGSecretNamespaceKey:
 				if v == "" {
 					return errors.New("secret namespace cannot be empty")
 				}
 
 			default:
 
-				return fmt.Errorf("found unknown parameter key %q with reserved prefix %s", k, VolumeGroupAsPrefix)
+				return fmt.Errorf("found unknown parameter key %q with reserved prefix %s", k, VGAsPrefix)
 			}
 		}
 	}
