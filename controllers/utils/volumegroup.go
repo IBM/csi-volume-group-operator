@@ -19,7 +19,6 @@ package utils
 import (
 	"context"
 	"fmt"
-
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
@@ -40,13 +39,13 @@ func UpdateVolumeGroupSourceContent(client client.Client, instance *volumegroupv
 	return nil
 }
 
-func updateVolumeGroupStatus(client client.Client, instance *volumegroupv1.VolumeGroup, logger logr.Logger) error {
-	logger.Info(fmt.Sprintf(messages.UpdateVolumeGroupStatus, instance.Namespace, instance.Name))
-	if err := UpdateObjectStatus(client, instance); err != nil {
+func updateVolumeGroupStatus(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger) error {
+	logger.Info(fmt.Sprintf(messages.UpdateVolumeGroupStatus, vg.Namespace, vg.Name))
+	if err := UpdateObjectStatus(client, vg); err != nil {
 		if apierrors.IsConflict(err) {
 			return err
 		}
-		logger.Error(err, "failed to update volumeGroup status", "VGName", instance.Name)
+		logger.Error(err, "failed to update volumeGroup status", "VGName", vg.Name)
 		return err
 	}
 	return nil
@@ -245,18 +244,22 @@ func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.Persistent
 
 func IsPVCPartAnyVG(pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) bool {
 	for _, vg := range vgs {
-		if IsPVCPartOfVG(pvc, vg.Status.PVCList) {
+		if IsPVCInPVCList(pvc, vg.Status.PVCList) {
 			return true
 		}
 	}
 	return false
 }
 
-func IsPVCPartOfVG(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) bool {
+func IsPVCInPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) bool {
 	for _, pvcFromList := range pvcList {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
 			return true
 		}
 	}
 	return false
+}
+
+func IsVgReady(vg volumegroupv1.VolumeGroup) bool {
+	return vg.Status.Ready != nil && *vg.Status.Ready
 }

@@ -117,22 +117,20 @@ func (r PersistentVolumeClaimReconciler) removePersistentVolumeClaimFromVolumeGr
 	}
 
 	for _, vg := range vgList.Items {
-		if !utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
-			continue
-		}
-		IsPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
-		if err != nil {
-			return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
-		}
-
-		if !IsPVCMatchesVG {
-			err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient,
-				[]corev1.PersistentVolumeClaim{*pvc}, &vg)
+		if utils.IsRemoveNeeded(vg, pvc) {
+			IsPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
 			}
-			err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, pvc, vg)
-			return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
+			if !IsPVCMatchesVG {
+				err := utils.RemoveVolumeFromVolumeGroup(logger, r.Client, r.VolumeGroupClient,
+					[]corev1.PersistentVolumeClaim{*pvc}, &vg)
+				if err != nil {
+					return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
+				}
+				err = utils.RemoveVolumeFromPvcListAndPvList(logger, r.Client, r.DriverConfig.DriverName, *pvc, &vg)
+				return utils.HandleErrorMessage(logger, r.Client, &vg, err, removingPVC)
+			}
 		}
 	}
 	return nil
@@ -151,7 +149,7 @@ func (r PersistentVolumeClaimReconciler) addPersistentVolumeClaimToVolumeGroupOb
 	}
 
 	for _, vg := range vgList.Items {
-		if !utils.IsPVCPartOfVG(pvc, vg.Status.PVCList) {
+		if utils.IsAddNeeded(vg, pvc) {
 			isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 			if err != nil {
 				return utils.HandleErrorMessage(logger, r.Client, &vg, err, addingPVC)

@@ -118,6 +118,10 @@ func RemoveFinalizerFromPVC(client runtimeclient.Client, logger logr.Logger, dri
 
 func isFinalizerShouldBeREmovedFromPVC(logger logr.Logger, client runtimeclient.Client, driver string,
 	pvc *corev1.PersistentVolumeClaim) (bool, error) {
+	pvc, err := GetPersistentVolumeClaim(logger, client, pvc.Name, pvc.Namespace)
+	if err != nil {
+		return false, err
+	}
 	vgList, err := GetVGList(logger, client, driver)
 	if err != nil {
 		return false, err
