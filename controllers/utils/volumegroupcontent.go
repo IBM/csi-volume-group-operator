@@ -118,8 +118,9 @@ func GenerateVGC(vgname string, instance *volumegroupv1.VolumeGroup, vgClass *vo
 
 func generateVGCSpec(instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass,
 	resp *volumegroup.Response, secretName string, secretNamespace string) volumegroupv1.VolumeGroupContentSpec {
+	vgClassName := GetStringField(instance.Spec, "VolumeGroupClassName")
 	return volumegroupv1.VolumeGroupContentSpec{
-		VolumeGroupClassName: instance.Spec.VolumeGroupClassName,
+		VolumeGroupClassName: &vgClassName,
 		VolumeGroupRef:       generateObjectReference(instance),
 		Source:               generateVGCSource(vgClass, resp),
 		VolumeGroupSecretRef: generateSecretReference(secretName, secretNamespace),
@@ -247,7 +248,8 @@ func UpdateStaticVGC(client client.Client, vg *volumegroupv1.VolumeGroup,
 
 func updateStaticVGCSpec(vgClass *volumegroupv1.VolumeGroupClass, vgc *volumegroupv1.VolumeGroupContent, vg *volumegroupv1.VolumeGroup) {
 	secretName, secretNamespace := GetSecretCred(vgClass)
-	vgc.Spec.VolumeGroupClassName = vg.Spec.VolumeGroupClassName
+	vgClassName := GetStringField(vg.Spec, "VolumeGroupClassName")
+	vgc.Spec.VolumeGroupClassName = &vgClassName
 	vgc.Spec.VolumeGroupRef = generateObjectReference(vg)
 	vgc.Spec.Source.Driver = vgClass.Driver
 	vgc.Spec.VolumeGroupSecretRef = generateSecretReference(secretName, secretNamespace)

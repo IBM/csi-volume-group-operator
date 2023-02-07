@@ -139,7 +139,7 @@ func getProvisionedVGs(logger logr.Logger, client client.Client, vgList *volumeg
 
 func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegroupv1.VolumeGroup,
 	driver string) (bool, error) {
-	vgClassDriver, err := getVGClassDriver(client, logger, *vg.Spec.VolumeGroupClassName)
+	vgClassDriver, err := getVGClassDriver(client, logger, GetStringField(vg.Spec, "VolumeGroupClassName"))
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil

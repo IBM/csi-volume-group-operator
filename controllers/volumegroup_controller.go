@@ -80,7 +80,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 
-	vgClass, err := utils.GetVGClass(r.Client, logger, *instance.Spec.VolumeGroupClassName)
+	vgClass, err := utils.GetVGClass(r.Client, logger, utils.GetStringField(instance.Spec, "VolumeGroupClassName"))
 	if err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
