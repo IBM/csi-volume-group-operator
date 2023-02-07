@@ -17,7 +17,6 @@ limitations under the License.
 package utils
 
 import (
-	"fmt"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
@@ -34,20 +33,20 @@ func removeByIndexFromPVList(pvList []corev1.PersistentVolume,
 
 func GetStringField(object interface{}, fieldName string) string {
 	fieldValue := getObjectField(object, fieldName)
-	if fieldValue == nil {
+	if fieldValue.Kind() == reflect.Ptr && fieldValue.IsNil() {
 		return ""
 	}
-	return fmt.Sprintf("%v", fieldValue)
+	return fieldValue.Elem().String()
 }
 
-func getObjectField(object interface{}, fieldName string) interface{} {
+func getObjectField(object interface{}, fieldName string) reflect.Value {
 	objectValue := reflect.ValueOf(object)
 	for i := 0; i < objectValue.NumField(); i++ {
 		fieldValue := objectValue.Field(i)
 		fieldType := objectValue.Type().Field(i)
 		if fieldType.Name == fieldName {
-			return fieldValue.Interface()
+			return fieldValue
 		}
 	}
-	return nil
+	return reflect.ValueOf(nil)
 }
