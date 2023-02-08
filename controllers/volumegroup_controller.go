@@ -218,7 +218,8 @@ func (r *VolumeGroupReconciler) updateItems(instance *volumegroupv1.VolumeGroup,
 }
 
 func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *volumegroupv1.VolumeGroup, secret map[string]string) error {
-	vgc, err := utils.GetVGC(r.Client, logger, *instance.Spec.Source.VolumeGroupContentName, instance.Name, instance.Namespace)
+	vgc, err := utils.GetVGC(r.Client, logger, utils.GetStringField(instance.Spec.Source, "VolumeGroupContentName"),
+		instance.Name, instance.Namespace)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err

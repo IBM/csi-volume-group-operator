@@ -40,7 +40,7 @@ func AddMatchingPVToMatchingVGC(logger logr.Logger, client client.Client,
 	if err != nil {
 		return err
 	}
-	vgc, err := GetVGC(client, logger, *vg.Spec.Source.VolumeGroupContentName, vg.Name, vg.Namespace)
+	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Name, vg.Namespace)
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroup
 
 func UpdateStaticVGC(client client.Client, vg *volumegroupv1.VolumeGroup,
 	vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
-	vgc, err := GetVGC(client, logger, *vg.Spec.Source.VolumeGroupContentName, vg.Name, vg.Namespace)
+	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Name, vg.Namespace)
 	if err != nil {
 		return err
 	}
