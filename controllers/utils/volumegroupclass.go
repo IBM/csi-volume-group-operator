@@ -18,6 +18,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/go-logr/logr"
@@ -35,6 +36,9 @@ func getVGClassDriver(client client.Client, logger logr.Logger, vgClassName stri
 }
 
 func GetVGClass(client client.Client, logger logr.Logger, vgClassName string) (*volumegroupv1.VolumeGroupClass, error) {
+	if vgClassName == "" {
+		return nil, fmt.Errorf("VolumeGroupClass name is empty")
+	}
 	vgClass := &volumegroupv1.VolumeGroupClass{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: vgClassName}, vgClass)
 	if err != nil {

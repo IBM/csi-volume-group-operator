@@ -67,7 +67,7 @@ func generateModifyVGParams(logger logr.Logger, client client.Client,
 	}, nil
 }
 func getSecrets(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (map[string]string, error) {
-	vgc, err := GetVGClass(client, logger, *vg.Spec.VolumeGroupClassName)
+	vgc, err := GetVGClass(client, logger, GetStringField(vg.Spec, "VolumeGroupClassName"))
 	if err != nil {
 		return nil, err
 	}
