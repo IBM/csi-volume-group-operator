@@ -26,25 +26,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getVGClassDriver(client client.Client, logger logr.Logger, vgcName string) (string, error) {
-	vgClass, err := GetVolumeGroupClass(client, logger, vgcName)
+func getVGClassDriver(client client.Client, logger logr.Logger, vgClassName string) (string, error) {
+	vgClass, err := GetVGClass(client, logger, vgClassName)
 	if err != nil {
 		return "", err
 	}
 	return vgClass.Driver, nil
 }
 
-func GetVolumeGroupClass(client client.Client, logger logr.Logger, vgcName string) (*volumegroupv1.VolumeGroupClass, error) {
-	vgcObj := &volumegroupv1.VolumeGroupClass{}
-	err := client.Get(context.TODO(), types.NamespacedName{Name: vgcName}, vgcObj)
+func GetVGClass(client client.Client, logger logr.Logger, vgClassName string) (*volumegroupv1.VolumeGroupClass, error) {
+	vgClass := &volumegroupv1.VolumeGroupClass{}
+	err := client.Get(context.TODO(), types.NamespacedName{Name: vgClassName}, vgClass)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Error(err, "VolumeGroupClass not found", "VolumeGroupClass Name", vgcName)
+			logger.Error(err, "VolumeGroupClass not found", "VolumeGroupClass Name", vgClassName)
 		} else {
-			logger.Error(err, "Got an unexpected error while fetching VolumeGroupClass", "VolumeGroupClass", vgcName)
+			logger.Error(err, "Got an unexpected error while fetching VolumeGroupClass", "VolumeGroupClass", vgClassName)
 		}
 
 		return nil, err
 	}
-	return vgcObj, nil
+	return vgClass, nil
 }
