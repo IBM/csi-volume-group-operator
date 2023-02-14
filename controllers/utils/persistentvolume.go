@@ -39,7 +39,7 @@ func GetPVFromPVC(logger logr.Logger, client client.Client, pvc *corev1.Persiste
 		return nil, nil
 	}
 
-	pv, err := getPersistentVolume(logger, client, pvName)
+	pv, err := getPersistentVolume(logger, client, pvName, pvc.Namespace)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, &vgerrors.PersistentVolumeDoesNotExist{pvName, pvc.Namespace, err.Error()}
@@ -57,10 +57,10 @@ func getPersistentVolumeName(logger logr.Logger, client client.Client, pvc *core
 	return pvName, nil
 }
 
-func getPersistentVolume(logger logr.Logger, client client.Client, pvName string) (*corev1.PersistentVolume, error) {
+func getPersistentVolume(logger logr.Logger, client client.Client, pvName, namespace string) (*corev1.PersistentVolume, error) {
 	logger.Info(fmt.Sprintf(messages.GetPersistentVolume, pvName))
 	pv := &corev1.PersistentVolume{}
-	namespacedPV := types.NamespacedName{Name: pvName}
+	namespacedPV := types.NamespacedName{Name: pvName, Namespace: namespace}
 	err := client.Get(context.TODO(), namespacedPV, pv)
 	if err != nil {
 		logger.Error(err, fmt.Sprintf(messages.FailedToGetPersistentVolume, pvName))
