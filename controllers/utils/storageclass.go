@@ -19,6 +19,7 @@ package utils
 import (
 	"context"
 	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
@@ -28,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetPersistentVolumeClaimClass(claim *corev1.PersistentVolumeClaim) (string, error) {
+func GetPVCClass(claim *corev1.PersistentVolumeClaim) (string, error) {
 	if class, found := claim.Annotations[corev1.BetaStorageClassAnnotation]; found {
 		return class, nil
 	}

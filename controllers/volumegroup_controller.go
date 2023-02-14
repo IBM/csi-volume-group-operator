@@ -49,11 +49,11 @@ const (
 
 type VolumeGroupReconciler struct {
 	client.Client
-	Log               logr.Logger
-	Scheme            *runtime.Scheme
-	DriverConfig      *config.DriverConfig
-	GRPCClient        *grpcClient.Client
-	VolumeGroupClient grpcClient.VolumeGroup
+	Log          logr.Logger
+	Scheme       *runtime.Scheme
+	DriverConfig *config.DriverConfig
+	GRPCClient   *grpcClient.Client
+	VGClient     grpcClient.VolumeGroup
 }
 
 //+kubebuilder:rbac:groups=csi.ibm.com,resources=volumegroups,verbs=get;list;watch;create;update;patch;delete
@@ -67,7 +67,7 @@ type VolumeGroupReconciler struct {
 
 func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("Request.Name", req.Name, "Request.Namespace", req.Namespace)
-	logger.Info(messages.ReconcileVolumeGroup)
+	logger.Info(messages.ReconcileVG)
 
 	instance := &volumegroupv1.VolumeGroup{}
 	if err := r.Client.Get(context.TODO(), req.NamespacedName, instance); err != nil {
@@ -80,7 +80,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 
-	vgClass, err := utils.GetVolumeGroupClass(r.Client, logger, *instance.Spec.VolumeGroupClassName)
+	vgClass, err := utils.GetVGClass(r.Client, logger, utils.GetStringField(instance.Spec, "VolumeGroupClassName"))
 	if err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
@@ -91,12 +91,12 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	if err = utils.ValidatePrefixedParameters(vgClass.Parameters); err != nil {
 		logger.Error(err, "failed to validate parameters of volumegroupClass", "VGClassName", vgClass.Name)
-		if uErr := utils.UpdateVolumeGroupStatusError(r.Client, instance, logger, err.Error()); uErr != nil {
+		if uErr := utils.UpdateVGStatusError(r.Client, instance, logger, err.Error()); uErr != nil {
 			return ctrl.Result{}, uErr
 		}
 		return ctrl.Result{}, err
 	}
-	parameters := utils.FilterPrefixedParameters(utils.VolumeGroupAsPrefix, vgClass.Parameters)
+	parameters := utils.FilterPrefixedParameters(utils.VGAsPrefix, vgClass.Parameters)
 
 	secret, err := utils.GetSecretDataFromClass(r.Client, vgClass, logger, instance)
 	if err != nil {
@@ -109,7 +109,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 
 	} else {
-		if utils.Contains(instance.GetFinalizers(), utils.VolumeGroupFinalizer) {
+		if utils.Contains(instance.GetFinalizers(), utils.VGFinalizer) {
 			if err = r.removeInstance(logger, instance, secret); err != nil {
 				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
 			}
@@ -128,24 +128,24 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	volumeGroupName, err := makeVolumeGroupName(utils.VolumeGroupNamePrefix, string(instance.UID))
+	vgName, err := makeVGName(utils.VGNamePrefix, string(instance.UID))
 	if err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVG)
 	}
 
-	createVolumeGroupResponse := r.createVolumeGroup(volumeGroupName, parameters, secret)
-	if createVolumeGroupResponse.Error != nil {
-		logger.Error(createVolumeGroupResponse.Error, "failed to create volume group")
-		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, createVolumeGroupResponse.Error, createVG)
+	createVGResponse := r.createVG(vgName, parameters, secret)
+	if createVGResponse.Error != nil {
+		logger.Error(createVGResponse.Error, "failed to create volume group")
+		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, createVGResponse.Error, createVG)
 	}
 	secretName, secretNamespace := utils.GetSecretCred(vgClass)
-	vgc := utils.GenerateVolumeGroupContent(volumeGroupName, instance, vgClass, createVolumeGroupResponse, secretName, secretNamespace)
+	vgc := utils.GenerateVGC(vgName, instance, vgClass, createVGResponse, secretName, secretNamespace)
 	logger.Info("GenerateVolumeGroupContent", "vgc", vgc)
-	if err = utils.CreateVolumeGroupContent(r.Client, logger, vgc); err != nil {
+	if err = utils.CreateVGC(r.Client, logger, vgc); err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVGC)
 	}
 
-	err = r.updateItems(instance, logger, groupCreationTime, volumeGroupName)
+	err = r.updateItems(instance, logger, groupCreationTime, vgName)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -155,7 +155,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	r.createSuccessVolumeGroupEvent(logger, instance)
+	r.createSuccessVGEvent(logger, instance)
 	return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 }
 
@@ -167,7 +167,7 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1
 	if utils.IsPVCListEqual(matchingPvcs, vg.Status.PVCList) {
 		return nil
 	}
-	err = utils.ModifyVolumesInVG(logger, r.Client, r.VolumeGroupClient, matchingPvcs, *vg)
+	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, *vg)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
@@ -198,34 +198,35 @@ func (r *VolumeGroupReconciler) handleStaticProvisionedVG(instance *volumegroupv
 }
 
 func (r *VolumeGroupReconciler) updateItems(instance *volumegroupv1.VolumeGroup, logger logr.Logger, groupCreationTime *metav1.Time, vgcName string) error {
-	vgc, err := utils.GetVolumeGroupContent(r.Client, logger, vgcName, instance.Name, instance.Namespace)
+	vgc, err := utils.GetVGC(r.Client, logger, vgcName, instance.Name, instance.Namespace)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
-	if err = utils.UpdateVolumeGroupSourceContent(r.Client, instance, vgcName, logger); err != nil {
+	if err = utils.UpdateVGSourceContent(r.Client, instance, vgcName, logger); err != nil {
 		return utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, updateVGC)
 	}
-	if err = utils.UpdateVolumeGroupStatus(r.Client, instance, vgc, groupCreationTime, true, logger); err != nil {
+	if err = utils.UpdateVGStatus(r.Client, instance, vgc, groupCreationTime, true, logger); err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, instance, err, updateStatusVG)
 	}
 	if err = utils.AddFinalizerToVGC(r.Client, logger, vgc); err != nil {
 		return utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, updateVGC)
 	}
-	if err = utils.UpdateVolumeGroupContentStatus(r.Client, logger, vgc, groupCreationTime, true); err != nil {
+	if err = utils.UpdateVGCStatus(r.Client, logger, vgc, groupCreationTime, true); err != nil {
 		return utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, updateStatusVGC)
 	}
 	return nil
 }
 
 func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *volumegroupv1.VolumeGroup, secret map[string]string) error {
-	volumeGroupContent, err := utils.GetVolumeGroupContent(r.Client, logger, *instance.Spec.Source.VolumeGroupContentName, instance.Name, instance.Namespace)
+	vgc, err := utils.GetVGC(r.Client, logger, utils.GetStringField(instance.Spec.Source, "VolumeGroupContentName"),
+		instance.Name, instance.Namespace)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
 		}
 
 	} else {
-		err = r.removeVolumeGroupContent(logger, volumeGroupContent, secret)
+		err = r.removeVGC(logger, vgc, secret)
 		if err != nil {
 			return err
 		}
@@ -237,34 +238,34 @@ func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *vol
 	return nil
 }
 
-func (r *VolumeGroupReconciler) removeVolumeGroupContent(logger logr.Logger, volumeGroupContent *volumegroupv1.VolumeGroupContent, secret map[string]string) error {
-	volumeGroupId := volumeGroupContent.Spec.Source.VolumeGroupHandle
-	if err := r.deleteVolumeGroup(logger, volumeGroupId, secret); err != nil {
+func (r *VolumeGroupReconciler) removeVGC(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, secret map[string]string) error {
+	vgId := vgc.Spec.Source.VolumeGroupHandle
+	if err := r.deleteVG(logger, vgId, secret); err != nil {
 		return err
 	}
-	err := r.RemoveVGCObject(logger, volumeGroupContent)
+	err := r.removeVGCObject(logger, vgc)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *VolumeGroupReconciler) RemoveVGCObject(logger logr.Logger, volumeGroupContent *volumegroupv1.VolumeGroupContent) error {
-	if err := utils.RemoveFinalizerFromVGC(r.Client, logger, volumeGroupContent); err != nil {
+func (r *VolumeGroupReconciler) removeVGCObject(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
+	if err := utils.RemoveFinalizerFromVGC(r.Client, logger, vgc); err != nil {
 		return err
 	}
-	if err := r.Client.Delete(context.TODO(), volumeGroupContent); err != nil {
-		logger.Error(err, "Failed to delete volume group content", "VGCName", volumeGroupContent.Name)
+	if err := r.Client.Delete(context.TODO(), vgc); err != nil {
+		logger.Error(err, "Failed to delete volume group content", "VGCName", vgc.Name)
 		return err
 	}
 	return nil
 }
 
-func makeVolumeGroupName(prefix string, volumeGroupUID string) (string, error) {
-	if len(volumeGroupUID) == 0 {
+func makeVGName(prefix string, vgUID string) (string, error) {
+	if len(vgUID) == 0 {
 		return "", fmt.Errorf("Corrupted volumeGroup object, it is missing UID")
 	}
-	return fmt.Sprintf("%s-%s", prefix, volumeGroupUID), nil
+	return fmt.Sprintf("%s-%s", prefix, vgUID), nil
 }
 
 func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
@@ -310,8 +311,8 @@ func (r VolumeGroupReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *core
 	return err
 }
 
-func (r VolumeGroupReconciler) createSuccessVolumeGroupEvent(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
-	message := fmt.Sprintf(messages.VolumeGroupCreated, vg.Namespace, vg.Name)
+func (r VolumeGroupReconciler) createSuccessVGEvent(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+	message := fmt.Sprintf(messages.VGCreated, vg.Namespace, vg.Name)
 	err := utils.HandleSuccessMessage(logger, r.Client, vg, message, vgReconcile)
 	if err != nil {
 		return nil
@@ -329,7 +330,7 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 	}
 	pred := predicate.GenerationChangedPredicate{}
 
-	r.VolumeGroupClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
+	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroup{}).
@@ -337,21 +338,21 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 }
 
 func (r *VolumeGroupReconciler) waitForCrds(logger logr.Logger) error {
-	err := r.waitForVolumeGroupResource(logger, VolumeGroup)
+	err := r.waitForVGResource(logger, VolumeGroup)
 	if err != nil {
 		logger.Error(err, "failed to wait for VolumeGroup CRD")
 
 		return err
 	}
 
-	err = r.waitForVolumeGroupResource(logger, VolumeGroupClass)
+	err = r.waitForVGResource(logger, VolumeGroupClass)
 	if err != nil {
 		logger.Error(err, "failed to wait for VolumeGroupClass CRD")
 
 		return err
 	}
 
-	err = r.waitForVolumeGroupResource(logger, VolumeGroupContent)
+	err = r.waitForVGResource(logger, VolumeGroupContent)
 	if err != nil {
 		logger.Error(err, "failed to wait for VolumeGroupContent CRD")
 
@@ -361,7 +362,7 @@ func (r *VolumeGroupReconciler) waitForCrds(logger logr.Logger) error {
 	return nil
 }
 
-func (r *VolumeGroupReconciler) waitForVolumeGroupResource(logger logr.Logger, resourceName string) error {
+func (r *VolumeGroupReconciler) waitForVGResource(logger logr.Logger, resourceName string) error {
 	unstructuredResource := &unstructured.UnstructuredList{}
 	unstructuredResource.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   volumegroupv1.GroupVersion.Group,
@@ -384,11 +385,11 @@ func (r *VolumeGroupReconciler) waitForVolumeGroupResource(logger logr.Logger, r
 	}
 }
 
-func (r *VolumeGroupReconciler) deleteVolumeGroup(logger logr.Logger, volumeGroupId string, secrets map[string]string) error {
+func (r *VolumeGroupReconciler) deleteVG(logger logr.Logger, vgId string, secrets map[string]string) error {
 	param := volumegroup.CommonRequestParameters{
-		VolumeGroupID: volumeGroupId,
+		VolumeGroupID: vgId,
 		Secrets:       secrets,
-		VolumeGroup:   r.VolumeGroupClient,
+		VolumeGroup:   r.VGClient,
 	}
 
 	volumeGroupRequest := volumegroup.NewVolumeGroupRequest(param)
@@ -403,12 +404,12 @@ func (r *VolumeGroupReconciler) deleteVolumeGroup(logger logr.Logger, volumeGrou
 	return nil
 }
 
-func (r *VolumeGroupReconciler) createVolumeGroup(volumeGroupName string, parameters, secrets map[string]string) *volumegroup.Response {
+func (r *VolumeGroupReconciler) createVG(vgName string, parameters, secrets map[string]string) *volumegroup.Response {
 	param := volumegroup.CommonRequestParameters{
-		Name:        volumeGroupName,
+		Name:        vgName,
 		Parameters:  parameters,
 		Secrets:     secrets,
-		VolumeGroup: r.VolumeGroupClient,
+		VolumeGroup: r.VGClient,
 	}
 
 	volumeGroupRequest := volumegroup.NewVolumeGroupRequest(param)

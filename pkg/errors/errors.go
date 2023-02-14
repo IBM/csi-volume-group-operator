@@ -30,12 +30,12 @@ func (e *MatchingLabelsAndLabelSelectorError) Error() string {
 	return fmt.Sprintf(messages.MatchingLabelsAndLabelSelectorFailed, e.ErrorMessage)
 }
 
-type PersistentVolumeDoesNotExist struct {
+type PVDoesNotExist struct {
 	PVName       string
 	PVNamespace  string
 	ErrorMessage string
 }
 
-func (e *PersistentVolumeDoesNotExist) Error() string {
-	return fmt.Sprintf(messages.PersistentVolumeDoesNotExist, e.PVName, e.PVNamespace, e.ErrorMessage)
+func (e *PVDoesNotExist) Error() string {
+	return fmt.Sprintf(messages.PVDoesNotExist, e.PVName, e.PVNamespace, e.ErrorMessage)
 }

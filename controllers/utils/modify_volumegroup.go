@@ -27,24 +27,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ModifyVolumeGroup(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup,
+func ModifyVG(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup,
 	vgClient grpcClient.VolumeGroup) error {
-	params, err := generateModifyVolumeGroupParams(logger, client, vg, vgClient)
+	params, err := generateModifyVGParams(logger, client, vg, vgClient)
 	if err != nil {
 		return err
 	}
-	logger.Info(fmt.Sprintf(messages.ModifyVolumeGroup, params.VolumeGroupID, params.VolumeIds))
+	logger.Info(fmt.Sprintf(messages.ModifyVG, params.VolumeGroupID, params.VolumeIds))
 	volumeGroupRequest := volumegroup.NewVolumeGroupRequest(params)
-	modifyVolumeGroupResponse := volumeGroupRequest.Modify()
-	responseError := modifyVolumeGroupResponse.Error
+	modifyVGResponse := volumeGroupRequest.Modify()
+	responseError := modifyVGResponse.Error
 	if responseError != nil {
-		logger.Error(responseError, fmt.Sprintf(messages.FailedToModifyVolumeGroup, vg.Namespace, vg.Name))
+		logger.Error(responseError, fmt.Sprintf(messages.FailedToModifyVG, vg.Namespace, vg.Name))
 		return responseError
 	}
-	logger.Info(fmt.Sprintf(messages.ModifiedVolumeGroup, params.VolumeGroupID))
+	logger.Info(fmt.Sprintf(messages.ModifiedVG, params.VolumeGroupID))
 	return nil
 }
-func generateModifyVolumeGroupParams(logger logr.Logger, client client.Client,
+func generateModifyVGParams(logger logr.Logger, client client.Client,
 	vg *volumegroupv1.VolumeGroup, vgClient grpcClient.VolumeGroup) (volumegroup.CommonRequestParameters, error) {
 	vgId, err := getVgId(logger, client, vg)
 	if err != nil {
@@ -67,7 +67,7 @@ func generateModifyVolumeGroupParams(logger logr.Logger, client client.Client,
 	}, nil
 }
 func getSecrets(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (map[string]string, error) {
-	vgc, err := GetVolumeGroupClass(client, logger, *vg.Spec.VolumeGroupClassName)
+	vgc, err := GetVGClass(client, logger, GetStringField(vg.Spec, "VolumeGroupClassName"))
 	if err != nil {
 		return nil, err
 	}
