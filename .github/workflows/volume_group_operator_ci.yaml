@@ -96,4 +96,4 @@ jobs:
         with:
           name: images
           path: /tmp/images.txt
-          retention-days: 7
+          retention-days: 90
