@@ -252,6 +252,19 @@ func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroup
 	return err
 }
 
+func UpdateStaticVGCFromVG(client client.Client, vg *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
+	vgc, err := GetVGC(client, logger, *vg.Spec.Source.VolumeGroupContentName, vg.Namespace)
+	if err != nil {
+		return err
+	}
+	vgc.Spec.VolumeGroupRef = generateObjectReference(vg)
+	updateStaticVGCSpec(vgClass, vgc)
+	if err = UpdateObject(client, vgc); err != nil {
+		return err
+	}
+	return nil
+}
+
 func UpdateStaticVGC(client client.Client, vgcNamespace, vgcName string,
 	vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
 	vgc, err := GetVGC(client, logger, vgcName, vgcNamespace)
@@ -286,8 +299,10 @@ func UpdateThinVGC(client client.Client, vgcNamespace, vgcName string, logger lo
 }
 
 func updateThinVGCSpec(vgc *volumegroupv1.VolumeGroupContent) {
-	defaultTingVGC := volumegroupv1.VolumeGroupContentRetain
-	vgc.Spec.VolumeGroupDeletionPolicy = &defaultTingVGC
+	if GetStringField(vgc.Spec, "VolumeGroupDeletionPolicy") == "" {
+		defaultDeletionPolicy := volumegroupv1.VolumeGroupContentRetain
+		vgc.Spec.VolumeGroupDeletionPolicy = &defaultDeletionPolicy
+	}
 }
 
 func UpdateVGCByResponse(client client.Client, vgc *volumegroupv1.VolumeGroupContent, resp *volumegroup.Response) error {
