@@ -99,7 +99,9 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, createVGC)
 	}
 
-	utils.CreateSuccessVGCEvent(logger, r.Client, vgc)
+	if err = utils.CreateSuccessVGCEvent(logger, r.Client, vgc); err != nil {
+		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, vgcReconcile)
+	}
 	return ctrl.Result{}, nil
 }
 
