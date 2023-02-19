@@ -22,6 +22,8 @@ var (
 	RequestName                    = "Request.Name"
 	RequestNamespace               = "Request.Namespace"
 	UnableToCreatePVCController    = "Unable to create persistentvolumeclaim controller"
+	UnableToCreateVGController     = "Unable to create controller  with controller VolumeGroup"
+	UnableToCreateVGCController    = "Unable to create controller  with controller VolumeGroupContent"
 	PVCNotFound                    = "%s/%s persistentVolumeClaim not found"
 	ListVGs                        = "Listing volumeGroups"
 	CheckIfPVCMatchesVG            = "Checking if %s/%s persistentVolumeClaim is matches %s/%s volumeGroup"
@@ -31,7 +33,7 @@ var (
 	RemovedPVCFromVG               = "Successfully removed %s/%s persistentVolumeClaim from %s/%s volumeGroup"
 	PVCDoesNotHavePV               = "PersistentVolumeClaim does not Have persistentVolume"
 	GetPVOfPVC                     = "Get matching persistentVolume from %s/%s persistentVolumeClaim"
-	GetVGCOfVG                     = "Get matching volumeGroupContent from %s/%s VolumeGroup"
+	GetVGC                         = "Get %s/%s volumeGroupContent"
 	RemovePVFromVGC                = "Removing %s persistentVolume from %s/%s volumeGroupContent"
 	RemovedPVFromVGC               = "Successfully removed %s persistentVolume from %s/%s volumeGroupContent"
 	FailedToModifyVG               = "Failed to modify %s/%s volumeGroup"
@@ -58,4 +60,5 @@ var (
 	RetryUpdateVGStatus            = "Retry update %s/%s volumeGroup status due to conflict error"
 	RetryUpdateVGCtStatus          = "Retry update %s/%s volumeGroupContent status due to conflict error"
 	RetryUpdateFinalizer           = "Retry update finalizer due to conflict error"
+	VgIsStillExist                 = "cant delete %s/%s volumeGroupContent because volumeGroup is still exist"
 )

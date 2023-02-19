@@ -19,16 +19,46 @@ package utils
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/types"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace string) (*volumegroupv1.VolumeGroup, error) {
+	logger.Info(fmt.Sprintf(messages.GetVGC, vgName, vgNamespace))
+	vgc := &volumegroupv1.VolumeGroup{}
+	namespacedVGC := types.NamespacedName{Name: vgName, Namespace: vgNamespace}
+	err := client.Get(context.TODO(), namespacedVGC, vgc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Error(err, "VolumeGroupContent not found", "VolumeGroupContent Name", vgName)
+		}
+		return nil, err
+	}
+
+	return vgc, nil
+}
+
+func IsVgExist(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) (bool, error) {
+	if !GetObjectField(vgc.Spec, "VolumeGroupRef").IsNil() {
+		if vg, err := GetVG(client, logger, vgc.Spec.VolumeGroupRef.Name, vgc.Spec.VolumeGroupRef.Namespace); err != nil {
+			if !errors.IsNotFound(err) {
+				return false, err
+			}
+		} else {
+			return vg != nil, nil
+		}
+	}
+	return false, nil
+}
 
 func UpdateVGSourceContent(client client.Client, instance *volumegroupv1.VolumeGroup,
 	vgcName string, logger logr.Logger) error {
@@ -52,10 +82,10 @@ func updateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, logger 
 	return nil
 }
 
-func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgc *volumegroupv1.VolumeGroupContent,
+func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgcName string,
 	groupCreationTime *metav1.Time, ready bool, logger logr.Logger) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		vg.Status.BoundVolumeGroupContentName = &vgc.Name
+		vg.Status.BoundVolumeGroupContentName = &vgcName
 		vg.Status.GroupCreationTime = groupCreationTime
 		vg.Status.Ready = &ready
 		vg.Status.Error = nil
@@ -202,7 +232,7 @@ func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persi
 }
 
 func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (string, error) {
-	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Name, vg.Namespace)
+	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Namespace)
 	if err != nil {
 		return "", err
 	}
