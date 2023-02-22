@@ -33,18 +33,17 @@ import (
 )
 
 func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace string) (*volumegroupv1.VolumeGroup, error) {
-	logger.Info(fmt.Sprintf(messages.GetVGC, vgName, vgNamespace))
-	vgc := &volumegroupv1.VolumeGroup{}
-	namespacedVGC := types.NamespacedName{Name: vgName, Namespace: vgNamespace}
-	err := client.Get(context.TODO(), namespacedVGC, vgc)
+	logger.Info(fmt.Sprintf(messages.GetVG, vgName, vgNamespace))
+	vg := &volumegroupv1.VolumeGroup{}
+	namespacedVG := types.NamespacedName{Name: vgName, Namespace: vgNamespace}
+	err := client.Get(context.TODO(), namespacedVG, vg)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Error(err, "VolumeGroupContent not found", "VolumeGroupContent Name", vgName)
+			logger.Error(err, "VolumeGroup not found", "VolumeGroup Name", vgName)
 		}
 		return nil, err
 	}
-
-	return vgc, nil
+	return vg, nil
 }
 
 func IsVgExist(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) (bool, error) {
