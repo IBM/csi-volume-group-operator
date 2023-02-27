@@ -34,7 +34,8 @@ var (
 	PVCDoesNotHavePV               = "PersistentVolumeClaim does not Have persistentVolume"
 	GetPVOfPVC                     = "Get matching persistentVolume from %s/%s persistentVolumeClaim"
 	GetVGC                         = "Get %s/%s volumeGroupContent"
-	RemovePVFromVGC                = "Removing %s persistentVolume from %s/%s volumeGroupContent"
+	GetVG                          = "Get %s/%s volumeGroup"
+	RemovePVFromVGC                = "Removing %s/%s persistentVolume from %s/%s volumeGroupContent"
 	RemovedPVFromVGC               = "Successfully removed %s persistentVolume from %s/%s volumeGroupContent"
 	FailedToModifyVG               = "Failed to modify %s/%s volumeGroup"
 	AddPVCToVG                     = "Adding %s/%s persistentVolumeClaim to %s/%s volumeGroup"
@@ -60,5 +61,5 @@ var (
 	RetryUpdateVGStatus            = "Retry update %s/%s volumeGroup status due to conflict error"
 	RetryUpdateVGCtStatus          = "Retry update %s/%s volumeGroupContent status due to conflict error"
 	RetryUpdateFinalizer           = "Retry update finalizer due to conflict error"
-	VgIsStillExist                 = "cant delete %s/%s volumeGroupContent because volumeGroup is still exist"
+	VgIsStillExist                 = "Cant delete %s/%s volumeGroupContent because volumeGroup is still exist"
 )

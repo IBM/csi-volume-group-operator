@@ -37,5 +37,5 @@ type PVDoesNotExist struct {
 }
 
 func (e *PVDoesNotExist) Error() string {
-	return fmt.Sprintf(messages.PVDoesNotExist, e.PVName, e.PVNamespace, e.ErrorMessage)
+	return fmt.Sprintf(messages.PVDoesNotExist, e.PVName, e.PVNamespace)
 }
