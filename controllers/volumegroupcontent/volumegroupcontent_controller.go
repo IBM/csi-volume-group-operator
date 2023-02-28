@@ -19,6 +19,7 @@ package volumegroupcontent
 import (
 	"context"
 	"fmt"
+
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
@@ -58,7 +59,18 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, vgcReconcile)
 	}
 
-	vgClass, err := utils.GetVGClass(r.Client, logger, utils.GetStringField(vgc.Spec, "VolumeGroupClassName"))
+	vgClassName := utils.GetStringField(vgc.Spec, "VolumeGroupClassName")
+	if vgClassName == "" {
+		if err := utils.UpdateThinVGC(r.Client, vgc.Namespace, vgc.Name, logger); err != nil {
+			return ctrl.Result{}, err
+		}
+		if err := utils.UpdateVGCStatus(r.Client, logger, vgc, utils.GetCurrentTime(), false); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	vgClass, err := utils.GetVGClass(r.Client, logger, vgClassName)
 	if err != nil {
 		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, vgcReconcile)
 	}
@@ -204,22 +216,11 @@ func (r *VolumeGroupContentReconciler) updateStaticVGC(vgc *volumegroupv1.Volume
 }
 
 func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
-	if !utils.GetObjectField(vgc.Spec, "VolumeGroupRef").IsNil() {
-		vg, err := utils.GetVG(r.Client, logger, vgc.Spec.VolumeGroupRef.Name, vgc.Namespace)
-		if err != nil {
-			return err
-		}
-		vgClassName := utils.GetStringField(vg.Spec, "VolumeGroupClassName")
-		vgClass, err := utils.GetVGClass(r.Client, logger, vgClassName)
-		if err != nil {
-			return err
-		}
-		if err = utils.UpdateStaticVGC(r.Client, vgc.Namespace, vgc.Name, vgClass, logger); err != nil {
-			return err
-		}
-		return nil
+	vgClass, err := utils.GetVGClass(r.Client, logger, *vgc.Spec.VolumeGroupClassName)
+	if err != nil {
+		return err
 	}
-	if err := utils.UpdateThinVGC(r.Client, vgc.Namespace, vgc.Name, logger); err != nil {
+	if err = utils.UpdateStaticVGC(r.Client, vgc.Namespace, vgc.Name, vgClass, logger); err != nil {
 		return err
 	}
 	return nil
