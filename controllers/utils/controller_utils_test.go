@@ -1,13 +1,14 @@
 package utils
 
 import (
-	"context"
+	"fmt"
+
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
-	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	csi "github.com/IBM/csi-volume-group/lib/go/volumegroup"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
+	"testing"
 
 	vgclient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	vgfakeclient "github.com/IBM/csi-volume-group-operator/pkg/client/fake"
@@ -15,97 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
-
-func createFakeScheme(t *testing.T) *runtime.Scheme {
-	t.Helper()
-	scheme, err := volumegroupv1.SchemeBuilder.Build()
-	if err != nil {
-		assert.Fail(t, "unable to build scheme")
-	}
-	err = corev1.AddToScheme(scheme)
-	if err != nil {
-		assert.Fail(t, "failed to add corev1 scheme")
-	}
-	err = volumegroupv1.AddToScheme(scheme)
-	if err != nil {
-		assert.Fail(t, "failed to add replicationv1alpha1 scheme")
-	}
-
-	return scheme
-}
-
-func getVGObj() *volumegroupv1.VolumeGroup {
-	vgclassName := "test-vgclass"
-	vgcName := "test-vgc"
-	return &volumegroupv1.VolumeGroup{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-name",
-			Namespace: "test-namespace",
-		},
-		Spec: volumegroupv1.VolumeGroupSpec{
-			VolumeGroupClassName: &vgclassName,
-			Source: volumegroupv1.VolumeGroupSource{
-				VolumeGroupContentName: &vgcName,
-			},
-		},
-	}
-}
-
-func getVGCObj() *volumegroupv1.VolumeGroupContent {
-	vgclassName := "test-vgclass"
-	return &volumegroupv1.VolumeGroupContent{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-vgc",
-			Namespace: "test-namespace",
-		},
-		Spec: volumegroupv1.VolumeGroupContentSpec{
-			VolumeGroupClassName: &vgclassName,
-			Source: &volumegroupv1.VolumeGroupContentSource{
-				//Driver:                "",
-				VolumeGroupHandle: "vgh",
-				//VolumeGroupAttributes: nil,
-			},
-		},
-	}
-
-}
-
-func getPVC() *corev1.PersistentVolumeClaim {
-	return &corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-name",
-			Namespace: "test-namespace",
-		},
-		Spec: corev1.PersistentVolumeClaimSpec{
-			VolumeName: "test-name",
-		},
-	}
-}
-
-func getRuntimeVGC(client client.Client, vgc volumegroupv1.VolumeGroupContent) *volumegroupv1.VolumeGroupContent {
-	RTvgc := volumegroupv1.VolumeGroupContent{}
-	namespacedVGC := types.NamespacedName{Name: vgc.Name, Namespace: vgc.Namespace}
-	client.Get(context.TODO(), namespacedVGC, &RTvgc)
-	return &RTvgc
-}
-
-func getPV() *corev1.PersistentVolume {
-	return &corev1.PersistentVolume{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-name",
-			Namespace: "test-namespace",
-		}, Spec: corev1.PersistentVolumeSpec{
-			PersistentVolumeSource: corev1.PersistentVolumeSource{
-				CSI: &corev1.CSIPersistentVolumeSource{
-					VolumeHandle: "vh",
-				},
-			},
-		},
-	}
-}
 
 func TestAddVolumeToPvcListAndPvList(t *testing.T) {
 	t.Helper()
@@ -124,17 +35,17 @@ func TestAddVolumeToPvcListAndPvList(t *testing.T) {
 		{
 			name: "test success",
 			args: args{
-				pvc: getPVC(),
-				vg:  getVGObj(),
+				pvc: getFakePVC(),
+				vg:  getFakeVG(),
 			},
-			vgc:     getVGCObj(),
+			vgc:     getFakeVGC(),
 			wantErr: false,
 		},
 		{
 			name: "test with err - no vgc",
 			args: args{
-				pvc: getPVC(),
-				vg:  getVGObj(),
+				pvc: getFakePVC(),
+				vg:  getFakeVG(),
 			},
 			vgc:     nil,
 			wantErr: true,
@@ -142,7 +53,7 @@ func TestAddVolumeToPvcListAndPvList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pv := getPV()
+			pv := getFakePV()
 			obj := []runtime.Object{tt.args.vg, tt.args.pvc, pv}
 			if tt.vgc != nil {
 				obj = append(obj, tt.vgc)
@@ -167,7 +78,7 @@ func TestAddVolumeToPvcListAndPvList(t *testing.T) {
 			}
 		})
 	}
-}
+} // v
 
 func TestAddVolumesToVolumeGroup(t *testing.T) {
 	scheme := createFakeScheme(t)
@@ -181,33 +92,52 @@ func TestAddVolumesToVolumeGroup(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "t",
+			name: "success run with pvc in VG",
 			args: args{
-				pvcs: []corev1.PersistentVolumeClaim{*getPVC()},
-				vg:   getVGObj(),
+				pvcs: []corev1.PersistentVolumeClaim{*getFakePVC()},
+				vg:   getFakeVG(),
 			},
 			wantErr: false,
+		},
+		{
+			name: "failed run with no pvc in VG",
+			args: args{
+				pvcs: []corev1.PersistentVolumeClaim{*getFakePVC()},
+				vg:   getFakeVG(),
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			obj := []runtime.Object{tt.args.vg, getVGCObj(), getPV()}
+			obj := []runtime.Object{tt.args.vg, getFakeVGC(), getFakePV(), getFakeVGClass(), getFakeSecrets()}
 			log := logf.Log.WithName("controller_volumegroup_test")
-			vgClient := vgfakeclient.VolumeGroup{}
+			vgClient := vgfakeclient.VolumeGroup{
+				ModifyVolumeGroupMembershipMock: func(volumeGroupId string, volumeIds []string, secrets map[string]string) (*csi.ModifyVolumeGroupMembershipResponse, error) {
+					if tt.wantErr {
+						return nil, fmt.Errorf("error with modify func")
+					}
+					return &csi.ModifyVolumeGroupMembershipResponse{}, nil
+				},
+			}
 			fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(obj...).Build()
 			if err := AddVolumesToVolumeGroup(log, fakeClient, vgClient, tt.args.pvcs, tt.args.vg); err != nil {
 				if tt.wantErr {
-					if len(tt.args.vg.Status.PVCList) != 100 {
+					if len(tt.args.vg.Status.PVCList) != 0 {
 						t.Errorf("AddVolumeToPvcListAndPvList() PVCListLen = %v, wantLen = 0", len(tt.args.vg.Status.PVCList))
 					}
 				} else {
 					t.Errorf("AddVolumeToPvcListAndPvList() error = %v, wantErr %v", err, tt.wantErr)
 
 				}
+			} else {
+				if len(tt.args.vg.Status.PVCList) != 1 {
+					t.Errorf("AddVolumeToPvcListAndPvList() PVCListLen = %v, wantLen = 1", len(tt.args.vg.Status.PVCList))
+				}
 			}
 		})
 	}
-}
+} // v
 
 func TestGetMessageFromError(t *testing.T) {
 	type args struct {
@@ -218,39 +148,65 @@ func TestGetMessageFromError(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "success msg",
+			args: args{err: fmt.Errorf("err msg")},
+			want: "err msg",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetMessageFromError(tt.args.err); got != tt.want {
-				t.Errorf("GetMessageFromError() = %v, want %v", got, tt.want)
+				t.Errorf("GetMessageFromError() = %v, addNeededWantedResult %v", got, tt.want)
 			}
 		})
 	}
-}
+} // v
 
 func TestIsAddNeeded(t *testing.T) {
-	type args struct {
-		vg  volumegroupv1.VolumeGroup
-		pvc *corev1.PersistentVolumeClaim
-	}
 	tests := []struct {
-		name string
-		args args
-		want bool
+		name                  string
+		vgReady               bool
+		pvcInVg               bool
+		addNeededWantedResult bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:                  "add is needed",
+			vgReady:               true,
+			addNeededWantedResult: true,
+		},
+		{
+			name:                  "add is not needed - vg not ready",
+			vgReady:               false,
+			addNeededWantedResult: false,
+		},
+		{
+			name: "add is not needed - vg ready, pvc in vg",
+
+			vgReady:               true,
+			pvcInVg:               true,
+			addNeededWantedResult: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsAddNeeded(tt.args.vg, tt.args.pvc); got != tt.want {
-				t.Errorf("IsAddNeeded() = %v, want %v", got, tt.want)
+			vg := getFakeVG()
+			pvc := getFakePVC()
+			vg.Status.Ready = &tt.vgReady
+			if tt.pvcInVg {
+				vg.Status.PVCList = append(vg.Status.PVCList, *pvc)
+			}
+			if addNeededResult := IsAddNeeded(*vg, pvc); addNeededResult != tt.addNeededWantedResult {
+				t.Errorf("IsAddNeeded() = %v, addNeededWantedResult %v", addNeededResult, tt.addNeededWantedResult)
 			}
 		})
 	}
-}
+} // v
 
 func TestIsPVCListEqual(t *testing.T) {
+	pvc1 := *getFakePVC()
+	pvc2 := *getFakePVC()
+	pvc2.Name = "second pvc"
 	type args struct {
 		x []corev1.PersistentVolumeClaim
 		y []corev1.PersistentVolumeClaim
@@ -260,16 +216,47 @@ func TestIsPVCListEqual(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "equal empty",
+			args: args{
+				x: []corev1.PersistentVolumeClaim{},
+				y: []corev1.PersistentVolumeClaim{},
+			},
+			want: true,
+		},
+		{
+			name: "equal with pvc",
+			args: args{
+				x: []corev1.PersistentVolumeClaim{pvc1},
+				y: []corev1.PersistentVolumeClaim{pvc1},
+			},
+			want: true,
+		},
+		{
+			name: "not equal with pvc in one",
+			args: args{
+				x: []corev1.PersistentVolumeClaim{pvc1},
+				y: []corev1.PersistentVolumeClaim{},
+			},
+			want: false,
+		},
+		{
+			name: "not equal with pvc in one",
+			args: args{
+				x: []corev1.PersistentVolumeClaim{pvc1},
+				y: []corev1.PersistentVolumeClaim{pvc2},
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsPVCListEqual(tt.args.x, tt.args.y); got != tt.want {
-				t.Errorf("IsPVCListEqual() = %v, want %v", got, tt.want)
+				t.Errorf("IsPVCListEqual() = %v, addNeededWantedResult %v", got, tt.want)
 			}
 		})
 	}
-}
+} // v
 
 func TestIsRemoveNeeded(t *testing.T) {
 	type args struct {
