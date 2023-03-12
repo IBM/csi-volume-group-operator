@@ -17,6 +17,12 @@ limitations under the License.
 package utils
 
 import (
+	"fmt"
+	"reflect"
+	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -24,7 +30,48 @@ func removeByIndexFromPVCList(pvcList []corev1.PersistentVolumeClaim, index int)
 	return append(pvcList[:index], pvcList[index+1:]...)
 }
 
-func removeByIndexFromPersistentVolumeList(pvList []corev1.PersistentVolume,
+func removeByIndexFromPVList(pvList []corev1.PersistentVolume,
 	index int) []corev1.PersistentVolume {
 	return append(pvList[:index], pvList[index+1:]...)
+}
+
+func GetStringField(object interface{}, fieldName string) string {
+	fieldValue := GetObjectField(object, fieldName)
+	if fieldValue.Kind() == reflect.Ptr && fieldValue.IsNil() {
+		return ""
+	}
+	return fieldValue.Elem().String()
+}
+
+func GetBoolField(object interface{}, fieldName string) bool {
+	fieldValue := GetObjectField(object, fieldName)
+	if fieldValue.Kind() == reflect.Ptr && fieldValue.IsNil() {
+		return false
+	}
+	return fieldValue.Elem().Bool()
+}
+
+func GetObjectField(object interface{}, fieldName string) reflect.Value {
+	objectValue := reflect.ValueOf(object)
+	for i := 0; i < objectValue.NumField(); i++ {
+		fieldValue := objectValue.Field(i)
+		fieldType := objectValue.Type().Field(i)
+		if fieldType.Name == fieldName {
+			return fieldValue
+		}
+	}
+	return reflect.ValueOf(nil)
+}
+
+func GetCurrentTime() *metav1.Time {
+	metav1NowTime := metav1.NewTime(time.Now())
+
+	return &metav1NowTime
+}
+
+func MakeVGName(prefix string, vgUID string) (string, error) {
+	if len(vgUID) == 0 {
+		return "", fmt.Errorf("Corrupted volumeGroup object, it is missing UID")
+	}
+	return fmt.Sprintf("%s-%s", prefix, vgUID), nil
 }

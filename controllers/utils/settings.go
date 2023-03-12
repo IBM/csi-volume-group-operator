@@ -17,22 +17,22 @@ limitations under the License.
 package utils
 
 const (
-	VolumeGroupNamePrefix                 = "volumegroup"
-	volumeGroupGroupName                  = "volumegroup.storage.ibm.io"
-	VolumeGroupFinalizer                  = volumeGroupGroupName
-	VolumeGroupAsPrefix                   = volumeGroupGroupName + "/"
-	volumeGroupContentFinalizer           = VolumeGroupAsPrefix + "vgc-protection"
-	pvcVolumeGroupFinalizer               = VolumeGroupAsPrefix + "pvc-protection"
-	PrefixedVolumeGroupSecretNameKey      = VolumeGroupAsPrefix + "secret-name"      // name key for secret
-	PrefixedVolumeGroupSecretNamespaceKey = VolumeGroupAsPrefix + "secret-namespace" // namespace key secret
-	letterBytes                           = "0123456789abcdefghijklmnopqrstuvwxyz"
-	volumeGroupController                 = "volumeGroupController"
-	warningEventType                      = "Warning"
-	normalEventType                       = "Normal"
-	storageClassVGParameter               = "volume_group"
-	addingPVC                             = "addPVC"
-	removingPVC                           = "removePVC"
-	createVGC                             = "creatingVGC"
-	volumeGroupContentKind                = "VolumeGroupContent"
-	APIVersion                            = "csi.ibm.com/v1"
+	VGNamePrefix                 = "volumegroup"
+	vgGroupName                  = "volumegroup.storage.ibm.io"
+	VGFinalizer                  = vgGroupName
+	VGAsPrefix                   = vgGroupName + "/"
+	VgcFinalizer                 = VGAsPrefix + "vgc-protection"
+	pvcVGFinalizer               = VGAsPrefix + "pvc-protection"
+	PrefixedVGSecretNameKey      = VGAsPrefix + "secret-name"      // name key for secret
+	PrefixedVGSecretNamespaceKey = VGAsPrefix + "secret-namespace" // namespace key secret
+	letterBytes                  = "0123456789abcdefghijklmnopqrstuvwxyz"
+	vgController                 = "volumeGroupController"
+	warningEventType             = "Warning"
+	normalEventType              = "Normal"
+	storageClassVGParameter      = "volume_group"
+	addingPVC                    = "addPVC"
+	removingPVC                  = "removePVC"
+	createVGC                    = "creatingVGC"
+	vgcKind                      = "VolumeGroupContent"
+	APIVersion                   = "csi.ibm.com/v1"
 )

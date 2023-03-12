@@ -55,24 +55,21 @@ func convertMap(oldMap map[string][]byte) map[string]string {
 	return newMap
 }
 
-func GetSecretDataFromClass(client client.Client, vgcObj *volumegroupv1.VolumeGroupClass, logger logr.Logger, instance *volumegroupv1.VolumeGroup) (map[string]string, error) {
-	secretName, secretNamespace := GetSecretCred(vgcObj)
+func GetSecretDataFromClass(client client.Client, vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) (map[string]string, error) {
+	secretName, secretNamespace := GetSecretCred(vgClass)
 	secret := make(map[string]string)
 	var err error
 	if secretName != "" && secretNamespace != "" {
 		secret, err = getSecretData(client, logger, secretName, secretNamespace)
 		if err != nil {
-			if uErr := UpdateVolumeGroupStatusError(client, instance, logger, err.Error()); uErr != nil {
-				return nil, uErr
-			}
 			return nil, err
 		}
 	}
 	return secret, nil
 }
 
-func GetSecretCred(vgcObj *volumegroupv1.VolumeGroupClass) (string, string) {
-	secretName := vgcObj.Parameters[PrefixedVolumeGroupSecretNameKey]
-	secretNamespace := vgcObj.Parameters[PrefixedVolumeGroupSecretNamespaceKey]
+func GetSecretCred(vgClass *volumegroupv1.VolumeGroupClass) (string, string) {
+	secretName := vgClass.Parameters[PrefixedVGSecretNameKey]
+	secretNamespace := vgClass.Parameters[PrefixedVGSecretNamespaceKey]
 	return secretName, secretNamespace
 }

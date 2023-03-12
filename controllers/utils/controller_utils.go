@@ -19,10 +19,11 @@ package utils
 import (
 	"context"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"math/rand"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
@@ -81,17 +82,21 @@ func generateString() string {
 	return string(b)
 }
 
-func AddVolumesToVolumeGroup(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
+func AddVolumesToVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
 	pvcs []corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
-	logger.Info(fmt.Sprintf(messages.AddVolumeToVolumeGroup, vg.Namespace, vg.Name))
-	vg.Status.PVCList = appendMultiplePVCs(vg.Status.PVCList, pvcs)
+	logger.Info(fmt.Sprintf(messages.AddVolumeToVG, vg.Namespace, vg.Name))
+	newPVCList := appendMultiplePVCs(vg.Status.PVCList, pvcs)
+	if IsPVCListEqual(newPVCList, vg.Status.PVCList) {
+		return nil
+	}
+	vg.Status.PVCList = newPVCList
 
-	err := ModifyVolumeGroup(logger, client, vg, vgClient)
+	err := ModifyVG(logger, client, vg, vgClient)
 	if err != nil {
 		vg.Status.PVCList = removeMultiplePVCs(vg.Status.PVCList, pvcs)
 		return err
 	}
-	logger.Info(fmt.Sprintf(messages.AddedVolumeToVolumeGroup, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.AddedVolumeToVG, vg.Namespace, vg.Name))
 	return nil
 }
 
@@ -111,21 +116,25 @@ func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
 		return err
 	}
 
-	message := fmt.Sprintf(messages.AddedPersistentVolumeClaimToVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
+	message := fmt.Sprintf(messages.AddedPVCToVG, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
 	return HandleSuccessMessage(logger, client, vg, message, addingPVC)
 }
 
-func RemoveVolumeFromVolumeGroup(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
+func RemoveVolumeFromVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
 	pvcs []corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
-	logger.Info(fmt.Sprintf(messages.RemoveVolumeFromVolumeGroup, vg.Namespace, vg.Name))
-	vg.Status.PVCList = removeMultiplePVCs(vg.Status.PVCList, pvcs)
+	logger.Info(fmt.Sprintf(messages.RemoveVolumeFromVG, vg.Namespace, vg.Name))
+	newPVCList := removeMultiplePVCs(vg.Status.PVCList, pvcs)
+	if IsPVCListEqual(newPVCList, vg.Status.PVCList) {
+		return nil
+	}
+	vg.Status.PVCList = newPVCList
 
-	err := ModifyVolumeGroup(logger, client, vg, vgClient)
+	err := ModifyVG(logger, client, vg, vgClient)
 	if err != nil {
 		vg.Status.PVCList = appendMultiplePVCs(vg.Status.PVCList, pvcs)
 		return err
 	}
-	logger.Info(fmt.Sprintf(messages.RemovedVolumeFromVolumeGroup, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.RemovedVolumeFromVG, vg.Namespace, vg.Name))
 	return nil
 }
 
@@ -139,7 +148,7 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 	if err != nil {
 		return err
 	}
-	vgc, err := GetVolumeGroupContent(client, logger, *vg.Spec.Source.VolumeGroupContentName, vg.Name, vg.Namespace)
+	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Namespace)
 	if err != nil {
 		return err
 	}
@@ -155,7 +164,7 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 		return err
 	}
 
-	message := fmt.Sprintf(messages.RemovedPersistentVolumeClaimFromVolumeGroup, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
+	message := fmt.Sprintf(messages.RemovedPVCFromVG, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
 	return HandleSuccessMessage(logger, client, vg, message, removingPVC)
 }
 
@@ -167,7 +176,7 @@ func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcCl
 
 	vg.Status.PVCList = matchingPvcs
 
-	err := ModifyVolumeGroup(logger, client, &vg, vgClient)
+	err := ModifyVG(logger, client, &vg, vgClient)
 	if err != nil {
 		vg.Status.PVCList = currentList
 		return err

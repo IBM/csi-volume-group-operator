@@ -27,7 +27,7 @@ func HandleErrorMessage(logger logr.Logger, client client.Client, vg *volumegrou
 	err error, reason string) error {
 	if err != nil {
 		errorMessage := GetMessageFromError(err)
-		uErr := UpdateVolumeGroupStatusError(client, vg, logger, errorMessage)
+		uErr := UpdateVGStatusError(client, vg, logger, errorMessage)
 		if uErr != nil {
 			return uErr
 		}
@@ -41,7 +41,7 @@ func HandleErrorMessage(logger logr.Logger, client client.Client, vg *volumegrou
 }
 
 func HandleSuccessMessage(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup, message, reason string) error {
-	err := UpdateVolumeGroupStatusError(client, vg, logger, "")
+	err := UpdateVGStatusError(client, vg, logger, "")
 	if err != nil {
 		return err
 	}
@@ -70,6 +70,7 @@ func HandleVGCErrorMessage(logger logr.Logger, client client.Client, vgc *volume
 		if uErr := createNamespacedObjectErrorEvent(logger, client, vgc, errorMessage, reason); uErr != nil {
 			return uErr
 		}
+		return err
 	}
 	return nil
 }
