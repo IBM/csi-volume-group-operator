@@ -25,10 +25,10 @@ func TestFilterPrefixedParameters(t *testing.T) {
 		{
 			name: "remove param with vg prefix",
 			args: args{
-				prefix: VolumeGroupAsPrefix,
+				prefix: VGAsPrefix,
 				param: map[string]string{
-					VolumeGroupAsPrefix + mockParameterKeySuffix: nonEmptyValue,
-					mockParameterKey: nonEmptyValue,
+					VGAsPrefix + mockParameterKeySuffix: nonEmptyValue,
+					mockParameterKey:                    nonEmptyValue,
 				},
 			},
 			want: map[string]string{
@@ -57,35 +57,35 @@ func TestValidatePrefixedParameters(t *testing.T) {
 		{
 			name: "with vg prefix but no matching suffix",
 			args: args{param: map[string]string{
-				VolumeGroupAsPrefix + mockParameterKeySuffix: nonEmptyValue,
+				VGAsPrefix + mockParameterKeySuffix: nonEmptyValue,
 			}},
 			wantErr: true,
 		},
 		{
 			name: "with vg prefix and secret suffix but no value",
 			args: args{param: map[string]string{
-				PrefixedVolumeGroupSecretNameKey: EmptyValue,
+				PrefixedVGSecretNameKey: EmptyValue,
 			}},
 			wantErr: true,
 		},
 		{
 			name: "with vg prefix and secret namespace suffix but no value",
 			args: args{param: map[string]string{
-				PrefixedVolumeGroupSecretNamespaceKey: EmptyValue,
+				PrefixedVGSecretNamespaceKey: EmptyValue,
 			}},
 			wantErr: true,
 		},
 		{
 			name: "with vg prefix and secret suffix with value",
 			args: args{param: map[string]string{
-				PrefixedVolumeGroupSecretNameKey: nonEmptyValue,
+				PrefixedVGSecretNamespaceKey: nonEmptyValue,
 			}},
 			wantErr: false,
 		},
 		{
 			name: "with vg prefix and secret namespace suffix with value",
 			args: args{param: map[string]string{
-				PrefixedVolumeGroupSecretNamespaceKey: nonEmptyValue,
+				PrefixedVGSecretNamespaceKey: nonEmptyValue,
 			}},
 			wantErr: false,
 		},

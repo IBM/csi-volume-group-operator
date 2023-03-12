@@ -72,7 +72,7 @@ func TestAddVolumeToPvcListAndPvList(t *testing.T) {
 				if len(runtimeVGC.Status.PVList) != 1 || runtimeVGC.Status.PVList[0].Name != "test-name" {
 					t.Errorf("AddVolumeToPvcListAndPvList() PVListLen = %v, wantLen = 1", len(runtimeVGC.Status.PVList))
 				}
-				if len(tt.args.pvc.ObjectMeta.Finalizers) != 1 || tt.args.pvc.ObjectMeta.Finalizers[0] != pvcVolumeGroupFinalizer {
+				if len(tt.args.pvc.ObjectMeta.Finalizers) != 1 || tt.args.pvc.ObjectMeta.Finalizers[0] != pvcVGFinalizer {
 					t.Errorf("AddVolumeToPvcListAndPvList() FinalizersLen = %v, wantLen = 1", len(tt.args.pvc.ObjectMeta.Finalizers))
 				}
 			}
@@ -80,7 +80,7 @@ func TestAddVolumeToPvcListAndPvList(t *testing.T) {
 	}
 } // v
 
-func TestAddVolumesToVolumeGroup(t *testing.T) {
+func TestAddVolumesToVG(t *testing.T) {
 	scheme := createFakeScheme(t)
 	type args struct {
 		pvcs []corev1.PersistentVolumeClaim
@@ -121,7 +121,7 @@ func TestAddVolumesToVolumeGroup(t *testing.T) {
 				},
 			}
 			fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(obj...).Build()
-			if err := AddVolumesToVolumeGroup(log, fakeClient, vgClient, tt.args.pvcs, tt.args.vg); err != nil {
+			if err := AddVolumesToVG(log, fakeClient, vgClient, tt.args.pvcs, tt.args.vg); err != nil {
 				if tt.wantErr {
 					if len(tt.args.vg.Status.PVCList) != 0 {
 						t.Errorf("AddVolumeToPvcListAndPvList() PVCListLen = %v, wantLen = 0", len(tt.args.vg.Status.PVCList))
@@ -327,7 +327,7 @@ func TestRemoveVolumeFromPvcListAndPvList(t *testing.T) {
 	}
 }
 
-func TestRemoveVolumeFromVolumeGroup(t *testing.T) {
+func TestRemoveVolumeFromVG(t *testing.T) {
 	type args struct {
 		logger   logr.Logger
 		client   client.Client
@@ -344,7 +344,7 @@ func TestRemoveVolumeFromVolumeGroup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := RemoveVolumeFromVolumeGroup(tt.args.logger, tt.args.client, tt.args.vgClient, tt.args.pvcs, tt.args.vg); (err != nil) != tt.wantErr {
+			if err := RemoveVolumeFromVG(tt.args.logger, tt.args.client, tt.args.vgClient, tt.args.pvcs, tt.args.vg); (err != nil) != tt.wantErr {
 				t.Errorf("RemoveVolumeFromVolumeGroup() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
