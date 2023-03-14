@@ -102,15 +102,15 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 
 	} else {
-		if utils.Contains(instance.GetFinalizers(), utils.VGFinalizer) {
+		if utils.Contains(instance.GetFinalizers(), utils.VGFinalizer) && !utils.IsContainOtherFinalizers(instance, logger) {
 			if err = r.removeInstance(logger, instance); err != nil {
 				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
 			}
 			if r.DriverConfig.DisableDeletePvcs == "false" {
 				//TODO CSI-5167 Delete all VG's PVCs
 			}
+			logger.Info("volumeGroup object is terminated, skipping reconciliation")
 		}
-		logger.Info("volumeGroup object is terminated, skipping reconciliation")
 		return ctrl.Result{}, nil
 	}
 
@@ -291,7 +291,8 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 
 		return err
 	}
-	pred := predicate.GenerationChangedPredicate{}
+	generationPred := predicate.GenerationChangedPredicate{}
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate())
 
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 

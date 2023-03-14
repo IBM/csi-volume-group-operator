@@ -61,5 +61,6 @@ var (
 	RetryUpdateVGStatus            = "Retry update %s/%s volumeGroup status due to conflict error"
 	RetryUpdateVGCtStatus          = "Retry update %s/%s volumeGroupContent status due to conflict error"
 	RetryUpdateFinalizer           = "Retry update finalizer due to conflict error"
+	NonVolumeGroupFinalizers       = "%s/%s have a non-volumegroup finalizers"
 	VgIsStillExist                 = "Cant delete %s/%s volumeGroupContent because volumeGroup is still exist"
 )
