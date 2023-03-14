@@ -163,7 +163,7 @@ func getPVCNameFromPV(pv corev1.PersistentVolume) string {
 	return GetStringField(pv.Spec.ClaimRef, "Name")
 }
 
-func getPVCNameSpaceFromPV(pv corev1.PersistentVolume) string {
+func getPVCNamespaceFromPV(pv corev1.PersistentVolume) string {
 	return GetStringField(pv.Spec.ClaimRef, "Namespace")
 }
 

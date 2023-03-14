@@ -319,8 +319,8 @@ func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, vgc *volumegro
 	logger.Info(fmt.Sprintf(messages.DeletePVCsUnderVGC, vgc.Namespace, vgc.Name))
 	for _, pv := range vgc.Status.PVList {
 		pvcName := getPVCNameFromPV(pv)
-		pvcNameSpace := getPVCNameSpaceFromPV(pv)
-		if pvcNameSpace == "" || pvcName == "" {
+		pvcNamespace := getPVCNamespaceFromPV(pv)
+		if pvcNamespace == "" || pvcName == "" {
 			pvc, err := getMatchingPVCFromPVCListToPV(logger, client, pv.Name, driver)
 			if err != nil {
 				return err
@@ -330,9 +330,9 @@ func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, vgc *volumegro
 				continue
 			}
 			pvcName = pvc.Name
-			pvcNameSpace = pvc.Namespace
+			pvcNamespace = pvc.Namespace
 		}
-		err := deletePVC(logger, client, pvcName, pvcNameSpace, driver)
+		err := deletePVC(logger, client, pvcName, pvcNamespace, driver)
 		if err != nil {
 			return err
 		}
