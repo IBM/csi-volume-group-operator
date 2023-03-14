@@ -25,7 +25,7 @@ import (
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
 	"google.golang.org/grpc"
 )
-
+//go:generate mockgen -destination=../../mocks/mock_grpc_client.go -package=mocks github.com/IBM/csi-volume-group-operator/pkg/client Client
 type Client struct {
 	Client  *grpc.ClientConn
 	Timeout time.Duration
