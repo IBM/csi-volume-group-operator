@@ -25,7 +25,7 @@ import (
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
 	"google.golang.org/grpc"
 )
-//go:generate mockgen -destination=../../mocks/mock_grpc_client.go -package=mocks github.com/IBM/csi-volume-group-operator/pkg/client Client
+
 type Client struct {
 	Client  *grpc.ClientConn
 	Timeout time.Duration
@@ -36,15 +36,15 @@ func connect(address string) (*grpc.ClientConn, error) {
 }
 
 func New(address string, timeout time.Duration) (*Client, error) {
-	c := &Client{}
+	client := &Client{}
 	cc, err := connect(address)
 	if err != nil {
-		return c, err
+		return client, err
 	}
-	c.Client = cc
-	c.Timeout = timeout
+	client.Client = cc
+	client.Timeout = timeout
 
-	return c, nil
+	return client, nil
 }
 
 func (c *Client) Probe() error {
