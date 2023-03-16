@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
+	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
@@ -30,10 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
-	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -291,14 +289,14 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 
 		return err
 	}
-	generationPred := predicate.GenerationChangedPredicate{}
-	pred := predicate.Or(generationPred, utils.FinalizerPredicate())
+	//generationPred := predicate.GenerationChangedPredicate{}
+	//pred := predicate.Or(generationPred, utils.FinalizerPredicate())
 
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroup{}).
-		WithEventFilter(pred).Complete(r)
+		WithEventFilter(utils.MultiPredicate()).Complete(r)
 }
 
 func (r *VolumeGroupReconciler) waitForCrds(logger logr.Logger) error {
