@@ -34,8 +34,14 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -289,14 +295,33 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 
 		return err
 	}
-	//generationPred := predicate.GenerationChangedPredicate{}
-	//pred := predicate.Or(generationPred, utils.FinalizerPredicate())
+	generationPred := predicate.GenerationChangedPredicate{}
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate())
 
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&volumegroupv1.VolumeGroup{}).
-		WithEventFilter(utils.MultiPredicate()).Complete(r)
+		For(&volumegroupv1.VolumeGroup{}, builder.WithPredicates(pred)).
+		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, handler.EnqueueRequestsFromMapFunc(
+			func(object client.Object) []reconcile.Request {
+				var vgList volumegroupv1.VolumeGroupList
+				if err := r.Client.List(context.TODO(), &vgList); err != nil {
+					return []ctrl.Request{}
+				}
+				// Create a reconcile request for each matching VolumeGroup.
+				requests := make([]ctrl.Request, len(vgList.Items))
+				for _, vg := range vgList.Items {
+					requests = append(requests, ctrl.Request{
+						NamespacedName: types.NamespacedName{
+							Namespace: vg.Namespace,
+							Name:      vg.Name,
+						},
+					})
+				}
+				return requests
+			}),
+		).
+		Complete(r)
 }
 
 func (r *VolumeGroupReconciler) waitForCrds(logger logr.Logger) error {
