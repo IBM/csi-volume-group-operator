@@ -46,13 +46,12 @@ import (
 )
 
 var (
-	cfg        *rest.Config
-	k8sClient  client.Client
-	testEnv    *envtest.Environment
-	cancel     context.CancelFunc
-	ctx        context.Context
-	server     *mock_grpc_server.MockServer
-	driverName = "driver.name"
+	cfg       *rest.Config
+	k8sClient client.Client
+	testEnv   *envtest.Environment
+	cancel    context.CancelFunc
+	ctx       context.Context
+	server    *mock_grpc_server.MockServer
 )
 
 func TestAPIs(t *testing.T) {
@@ -93,10 +92,10 @@ var _ = BeforeSuite(func() {
 	server, err = mock_grpc_server.CreateMockServer()
 	Expect(err).ToNot(HaveOccurred())
 	addr := server.Address()
-	csiConn, err := fake.New(addr, driverName)
+	csiConn, err := fake.New(addr, DriverName)
 	Expect(err).ToNot(HaveOccurred())
 	driverConfig := &config.DriverConfig{
-		DriverName:        driverName,
+		DriverName:        DriverName,
 		DriverEndpoint:    addr,
 		RPCTimeout:        time.Minute,
 		MultipleVGsToPVC:  "false",
