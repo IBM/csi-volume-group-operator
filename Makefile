@@ -69,7 +69,7 @@ run-unit-tests:
 
 KUBERNETES_VERSION=1.23.1
 .PHONY: test
-#test: check-generated-manifests update
+test: check-generated-manifests update
 test:
 	export KUBEBUILDER_ASSETS=$(shell setup-envtest use -p path ${KUBERNETES_VERSION});\
 	ginkgo -r -v

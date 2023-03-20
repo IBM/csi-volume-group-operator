@@ -5,8 +5,7 @@ ENV GO111MODULE=on \
     WORKDIR=/go/src/github.com/IBM/volume-group-operator
 WORKDIR $WORKDIR
 RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.9.0 \
-    && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20220322150744-c46b410039fd \
-    && go install github.com/golang/mock/mockgen@v1.6.0
+    && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20220322150744-c46b410039fd
 COPY Makefile .
 
 RUN make kustomize \

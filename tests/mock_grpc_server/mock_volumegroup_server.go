@@ -92,14 +92,3 @@ func stop(lock *sync.Mutex, wg *sync.WaitGroup, server *grpc.Server, running boo
 	server.Stop()
 	wg.Wait()
 }
-
-//func (c *VolumeGroupServer) Close() {
-//	c.server.Stop()
-//}
-//
-//func (c *VolumeGroupServer) IsRunning() bool {
-//	c.lock.Lock()
-//	defer c.lock.Unlock()
-//
-//	return c.running
-//}
