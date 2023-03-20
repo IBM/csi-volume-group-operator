@@ -70,12 +70,9 @@ run-unit-tests:
 KUBERNETES_VERSION=1.23.1
 .PHONY: test
 test: check-generated-manifests update
-ifeq (s390x, $(shell hack/get-arch.sh))
-	ginkgo -r -v -skipPackage envtest
-else
+test:
 	export KUBEBUILDER_ASSETS=$(shell setup-envtest use -p path ${KUBERNETES_VERSION});\
 	ginkgo -r -v
-endif
 
 .PHONY: update
 update: kustomize
