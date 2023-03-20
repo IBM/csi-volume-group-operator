@@ -36,15 +36,15 @@ func connect(address string) (*grpc.ClientConn, error) {
 }
 
 func New(address string, timeout time.Duration) (*Client, error) {
-	client := &Client{}
+	c := &Client{}
 	cc, err := connect(address)
 	if err != nil {
-		return client, err
+		return c, err
 	}
-	client.Client = cc
-	client.Timeout = timeout
+	c.Client = cc
+	c.Timeout = timeout
 
-	return client, nil
+	return c, nil
 }
 
 func (c *Client) Probe() error {
