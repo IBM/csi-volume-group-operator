@@ -110,15 +110,6 @@ func main() {
 	}).SetupWithManager(mgr, cfg)
 	exitWithError(err, messages.UnableToCreateVGCController)
 
-	//err = (&persistentvolumeclaim.PersistentVolumeClaimReconciler{
-	//	Client:       mgr.GetClient(),
-	//	Scheme:       mgr.GetScheme(),
-	//	Log:          ctrl.Log.WithName(pvcController),
-	//	DriverConfig: cfg,
-	//	GRPCClient:   grpcClientInstance,
-	//}).SetupWithManager(mgr, cfg)
-	//exitWithError(err, messages.UnableToCreatePVCController)
-
 	//+kubebuilder:scaffold:builder
 
 	err = mgr.AddHealthzCheck("healthz", healthz.Ping)
