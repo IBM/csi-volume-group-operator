@@ -43,11 +43,12 @@ type VolumeGroupClass struct {
 	Parameters map[string]string `json:"parameters,omitempty"`
 
 	// +optional
+	// +kubebuilder:default:=Delete
 	VolumeGroupDeletionPolicy *VolumeGroupDeletionPolicy `json:"volumeGroupDeletionPolicy,omitempty"`
 
 	// This field specifies whether group snapshot is supported.
-	// The default is false.
 	// +optional
+	// +kubebuilder:default:=false
 	SupportVolumeGroupSnapshot *bool `json:"supportVolumeGroupSnapshot,omitempty"`
 }
 
