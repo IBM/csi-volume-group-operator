@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -22,25 +21,6 @@ func GetVGCObjectFromVG(vgName, Namespace string, vgObject runtimeclient.Object,
 	return vgcObj, err
 }
 
-func GetVGCName(vgUID types.UID) string {
-	return fmt.Sprintf("volumegroup-%s", vgUID)
-}
-
-func RemoveResourceObjectFinalizers(name, namespace string, obj runtimeclient.Object, client runtimeclient.Client) error {
-	err := GetNamespacedResourceObject(name, namespace, obj, client)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	if err == nil {
-		obj.SetFinalizers([]string{})
-		err := client.Update(context.TODO(), obj)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func GetNamespacedResourceObject(name, namespace string, obj runtimeclient.Object, client runtimeclient.Client) error {
 	objNamespacedName := types.NamespacedName{
 		Name:      name,
@@ -48,6 +28,10 @@ func GetNamespacedResourceObject(name, namespace string, obj runtimeclient.Objec
 	}
 	err := client.Get(context.Background(), objNamespacedName, obj)
 	return err
+}
+
+func GetVGCName(vgUID types.UID) string {
+	return fmt.Sprintf("volumegroup-%s", vgUID)
 }
 
 func CreateResourceObject(obj runtimeclient.Object, client runtimeclient.Client) error {

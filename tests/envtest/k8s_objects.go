@@ -97,6 +97,10 @@ var (
 					VolumeHandle: "volumeHandle",
 				},
 			},
+			ClaimRef: &corev1.ObjectReference{
+				Name:      PVCName,
+				Namespace: Namespace,
+			},
 		},
 	}
 )

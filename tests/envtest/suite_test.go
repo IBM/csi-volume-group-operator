@@ -25,6 +25,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 
@@ -41,6 +43,7 @@ import (
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
 	"github.com/IBM/csi-volume-group-operator/pkg/client/fake"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
+	"github.com/IBM/csi-volume-group-operator/tests/envtest/utils"
 	"github.com/IBM/csi-volume-group-operator/tests/mock_grpc_server"
 	//+kubebuilder:scaffold:imports
 )
@@ -157,3 +160,75 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func createVolumeGroupObjects() error {
+	err := utils.CreateResourceObject(VGClass, k8sClient)
+	if err != nil {
+		return err
+	}
+	err = utils.CreateResourceObject(VG, k8sClient)
+	return err
+}
+
+func createVolumeObjects() error {
+	if err := utils.CreateResourceObject(PV, k8sClient); err != nil {
+		return err
+	}
+	if err := utils.CreateResourceObject(PVC, k8sClient); err != nil {
+		return err
+	}
+	pvc := &corev1.PersistentVolumeClaim{}
+	if err := utils.GetNamespacedResourceObject(PVCName, Namespace, pvc, k8sClient); err != nil {
+		return err
+	}
+	pvc.Status.Phase = corev1.ClaimBound
+	err := k8sClient.Status().Update(context.TODO(), pvc)
+	return err
+}
+
+func cleanTestNamespace() error {
+	err := cleanVolumeGroupObjects()
+	if err != nil {
+		return err
+	}
+	err = cleanVolumeObjects()
+	if err != nil {
+		return err
+	}
+	err = k8sClient.DeleteAllOf(context.Background(), &corev1.Secret{}, client.InNamespace(Namespace))
+	if err != nil {
+		return err
+	}
+	err = k8sClient.DeleteAllOf(context.Background(), &storagev1.StorageClass{})
+	return err
+}
+
+func cleanVolumeGroupObjects() error {
+	err := k8sClient.DeleteAllOf(context.Background(), &volumegroupv1.VolumeGroup{}, client.InNamespace(Namespace))
+	if err != nil {
+		return err
+	}
+	err = k8sClient.DeleteAllOf(context.Background(), &volumegroupv1.VolumeGroupContent{}, client.InNamespace(Namespace))
+	if err != nil {
+		return err
+	}
+	err = k8sClient.DeleteAllOf(context.Background(), &volumegroupv1.VolumeGroupClass{}, client.InNamespace(Namespace))
+	return err
+}
+
+func cleanVolumeObjects() error {
+	pvc := &corev1.PersistentVolumeClaim{}
+	if err := utils.RemoveResourceObjectFinalizers(PVCName, Namespace, pvc, k8sClient); err != nil {
+		return err
+	}
+	pv := &corev1.PersistentVolume{}
+	if err := utils.RemoveResourceObjectFinalizers(PVName, Namespace, pv, k8sClient); err != nil {
+		return err
+	}
+	err := k8sClient.DeleteAllOf(context.Background(), &corev1.PersistentVolumeClaim{}, client.InNamespace(Namespace))
+	if err != nil {
+		return err
+	}
+	err = k8sClient.DeleteAllOf(context.Background(), &corev1.PersistentVolume{})
+	return err
+}

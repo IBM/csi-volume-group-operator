@@ -21,8 +21,7 @@ import (
 )
 
 const (
-	Timeout  = time.Second * 30
-	Interval = time.Second * 1
+	Timeout = time.Second * 30
 )
 
 var (
@@ -41,4 +40,5 @@ var (
 	FakeMatchLabels = map[string]string{
 		"fake-label": "fake-value",
 	}
+	PVCProtectionFinalizer = "kubernetes.io/pvc-protection"
 )
