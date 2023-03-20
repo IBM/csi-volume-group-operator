@@ -234,11 +234,7 @@ func UpdateVGCStatusError(client client.Client, vgc *volumegroupv1.VolumeGroupCo
 		err := vgcRetryOnConflictFunc(client, vgc, logger)
 		return err
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
