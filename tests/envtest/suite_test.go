@@ -99,7 +99,7 @@ var _ = BeforeSuite(func() {
 		DriverEndpoint:    addr,
 		RPCTimeout:        time.Minute,
 		MultipleVGsToPVC:  "false",
-		DisableDeletePvcs: "true",
+		DisableDeletePvcs: "false",
 	}
 	mockVolumeGroup := fake.VolumeGroup{
 		CreateVolumeGroupMock: func(name string, secrets, parameters map[string]string) (*csi.CreateVolumeGroupResponse, error) {

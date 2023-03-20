@@ -26,10 +26,13 @@ const (
 )
 
 var (
-	VGName                 = "vg-name"
-	VGClassName            = "vgclass-name"
+	VGName                 = "fake-vg-name"
+	VGClassName            = "fake-vgclass-name"
 	Namespace              = "default"
-	SecretName             = "fake-secret"
+	SecretName             = "fake-secret-name"
+	PVCName                = "fake-pvc-name"
+	PVName                 = "fake-pv-name"
+	SCName                 = "fake-storage-class-name"
 	DriverName             = "driver.name"
 	StorageClassParameters = map[string]string{
 		"volumegroup.storage.ibm.io/secret-name":      SecretName,

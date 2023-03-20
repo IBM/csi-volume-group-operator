@@ -19,6 +19,8 @@ package envtest
 import (
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,6 +50,53 @@ var (
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      SecretName,
 			Namespace: Namespace,
+		},
+	}
+	PVC = &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      PVCName,
+			Namespace: Namespace,
+			Labels:    FakeMatchLabels,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			StorageClassName: &SCName,
+			VolumeName:       PVName,
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: *resource.NewQuantity(100*1024*1024, resource.BinarySI),
+				},
+			},
+		},
+		Status: corev1.PersistentVolumeClaimStatus{
+			Phase: corev1.ClaimBound,
+		},
+	}
+	StorageClass = &storagev1.StorageClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: SCName,
+		},
+		Provisioner: DriverName,
+	}
+	PV = &corev1.PersistentVolume{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      PVName,
+			Namespace: Namespace,
+		},
+		Spec: corev1.PersistentVolumeSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Capacity: corev1.ResourceList{
+				corev1.ResourceStorage: *resource.NewQuantity(100*1024*1024, resource.BinarySI),
+			},
+			StorageClassName:              SCName,
+			PersistentVolumeReclaimPolicy: corev1.PersistentVolumeReclaimRetain,
+			PersistentVolumeSource: corev1.PersistentVolumeSource{
+				CSI: &corev1.CSIPersistentVolumeSource{
+					Driver:       DriverName,
+					FSType:       "ext4",
+					VolumeHandle: "volumeHandle",
+				},
+			},
 		},
 	}
 )
