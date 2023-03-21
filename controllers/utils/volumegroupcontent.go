@@ -233,11 +233,7 @@ func UpdateVGCStatusError(client client.Client, vgc *volumegroupv1.VolumeGroupCo
 		err := vgcRetryOnConflictFunc(client, vgc, logger)
 		return err
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
@@ -280,10 +276,16 @@ func UpdateStaticVGC(client client.Client, vgcNamespace, vgcName string,
 
 func updateStaticVGCSpec(vgClass *volumegroupv1.VolumeGroupClass, vgc *volumegroupv1.VolumeGroupContent) {
 	secretName, secretNamespace := GetSecretCred(vgClass)
-	vgClassName := vgClass.Name
-	vgc.Spec.VolumeGroupClassName = &vgClassName
-	vgc.Spec.VolumeGroupSecretRef = generateSecretReference(secretName, secretNamespace)
-	vgc.Spec.VolumeGroupDeletionPolicy = getVolumeGroupDeletionPolicy(vgClass)
+	if vgc.Spec.VolumeGroupClassName == nil {
+		vgClassName := vgClass.Name
+		vgc.Spec.VolumeGroupClassName = &vgClassName
+	}
+	if vgc.Spec.VolumeGroupSecretRef == nil {
+		vgc.Spec.VolumeGroupSecretRef = generateSecretReference(secretName, secretNamespace)
+	}
+	if vgc.Spec.VolumeGroupDeletionPolicy == nil {
+		vgc.Spec.VolumeGroupDeletionPolicy = getVolumeGroupDeletionPolicy(vgClass)
+	}
 }
 
 func UpdateThinVGC(client client.Client, vgcNamespace, vgcName string, logger logr.Logger) error {

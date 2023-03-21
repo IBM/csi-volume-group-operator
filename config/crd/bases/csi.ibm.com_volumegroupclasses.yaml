@@ -56,9 +56,11 @@ spec:
             description: Parameters hold parameters for the driver. These values are opaque to the system and are passed directly to the driver.
             type: object
           supportVolumeGroupSnapshot:
-            description: This field specifies whether group snapshot is supported. The default is false.
+            default: false
+            description: This field specifies whether group snapshot is supported.
             type: boolean
           volumeGroupDeletionPolicy:
+            default: Delete
             description: VolumeGroupDeletionPolicy describes a policy for end-of-life maintenance of volume group contents
             type: string
         required:

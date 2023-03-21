@@ -70,7 +70,6 @@ func HandleVGCErrorMessage(logger logr.Logger, client client.Client, vgc *volume
 		if uErr := createNamespacedObjectErrorEvent(logger, client, vgc, errorMessage, reason); uErr != nil {
 			return uErr
 		}
-		return err
 	}
-	return nil
+	return err
 }
