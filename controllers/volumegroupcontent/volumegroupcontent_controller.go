@@ -220,7 +220,7 @@ func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc *volumegroupv1.Vo
 	if err != nil {
 		return err
 	}
-	if err = utils.UpdateStaticVGC(r.Client, vgc.Namespace, vgc.Name, vgClass, logger); err != nil {
+	if err = utils.UpdateStaticVGC(r.Client, vgc, vgClass); err != nil {
 		return err
 	}
 	return nil

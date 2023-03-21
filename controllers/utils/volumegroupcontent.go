@@ -262,14 +262,10 @@ func UpdateStaticVGCFromVG(client client.Client, vg *volumegroupv1.VolumeGroup, 
 	return nil
 }
 
-func UpdateStaticVGC(client client.Client, vgcNamespace, vgcName string,
-	vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
-	vgc, err := GetVGC(client, logger, vgcName, vgcNamespace)
-	if err != nil {
-		return err
-	}
+func UpdateStaticVGC(client client.Client, vgc *volumegroupv1.VolumeGroupContent,
+	vgClass *volumegroupv1.VolumeGroupClass) error {
 	updateStaticVGCSpec(vgClass, vgc)
-	if err = UpdateObject(client, vgc); err != nil {
+	if err := UpdateObject(client, vgc); err != nil {
 		return err
 	}
 	return nil
