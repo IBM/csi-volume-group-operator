@@ -30,4 +30,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Run unit tests
-        run: docker run --rm -t volume-group-operator-unit-tests
+        run: |
+          docker ps
+          docker build -f build/ci/Dockerfile.unittest -t volume-group-operator-unit-tests .
+          docker run --rm -t volume-group-operator-unit-tests
