@@ -12,6 +12,8 @@ updates:
     rebase-strategy: "disabled"
     reviewers:
       - "csi-reviewers"
+    labels:
+      - go
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -19,3 +21,5 @@ updates:
     rebase-strategy: "disabled"
     reviewers:
       - "csi-reviewers"
+    labels:
+      - testing
