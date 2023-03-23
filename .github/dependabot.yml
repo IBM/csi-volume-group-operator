@@ -11,7 +11,7 @@ updates:
       interval: "weekly"
     rebase-strategy: "disabled"
     reviewers:
-      - "csi-reviewers"
+      - "IBM/csi-reviewers"
     labels:
       - go
   - package-ecosystem: "github-actions"
@@ -20,6 +20,6 @@ updates:
       interval: "weekly"
     rebase-strategy: "disabled"
     reviewers:
-      - "csi-reviewers"
+      - "IBM/csi-reviewers"
     labels:
       - testing
