@@ -63,4 +63,6 @@ var (
 	RetryUpdateFinalizer           = "Retry update finalizer due to conflict error"
 	NonVolumeGroupFinalizers       = "%s/%s have a non-volumegroup finalizers"
 	VgIsStillExist                 = "Cant delete %s/%s volumeGroupContent because volumeGroup is still exist"
+	DeletePVCsUnderVGC             = "Deleting persistentVolumeClaims under %s/%s volumeGroupContent"
+	DeletePVC                      = "Deleting %s/%s persistentVolumeClaim"
 )

@@ -124,11 +124,16 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 		return fmt.Errorf(messages.VgIsStillExist, vgc.Name, vgc.Namespace)
 	}
 	if utils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) && !utils.IsContainOtherFinalizers(vgc, logger) {
+		if r.DriverConfig.DisableDeletePvcs == "false" {
+			if err := utils.DeletePVCsUnderVGC(logger, r.Client, vgc, r.DriverConfig.DriverName); err != nil {
+				return err
+			}
+		}
 		if err := r.removeVGC(logger, vgc, secret); err != nil {
 			return err
 		}
-		logger.Info("VolumeGroupContent object is terminated, skipping reconciliation")
 	}
+	logger.Info("VolumeGroupContent object is terminated, skipping reconciliation")
 	return nil
 }
 

@@ -72,5 +72,5 @@ func HandleVGCErrorMessage(logger logr.Logger, client client.Client, vgc *volume
 		}
 		return err
 	}
-	return nil
+	return err
 }
