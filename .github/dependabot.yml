@@ -14,6 +14,7 @@ updates:
       - "IBM/csi-reviewers"
     labels:
       - go
+      - dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -22,4 +23,5 @@ updates:
     reviewers:
       - "IBM/csi-reviewers"
     labels:
-      - testing
+      - github_actions
+      - dependencies
