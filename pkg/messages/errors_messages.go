@@ -32,4 +32,6 @@ var (
 	FailedToGetStorageClass              = "Failed to get %s storageClass"
 	FailedToListPVC                      = "Failed to list persistentVolumeClaim"
 	FailedToGetStorageClassName          = "Failed to get storageClass name from persistentVolumeClaim %s"
+	CannotFindMatchingPVCForPV           = "Cannot find matching persistentVolumeClaim for %s persistentVolume"
+	FailToRemovePVCObject                = "Fail To remove %s/%s persistentVolumeClaim object"
 )

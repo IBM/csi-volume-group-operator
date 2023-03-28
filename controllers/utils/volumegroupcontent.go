@@ -162,8 +162,7 @@ func generateVGCSource(vgClass *volumegroupv1.VolumeGroupClass) *volumegroupv1.V
 }
 
 func RemovePVFromVGC(logger logr.Logger, client client.Client, pv *corev1.PersistentVolume, vgc *volumegroupv1.VolumeGroupContent) error {
-	logger.Info(fmt.Sprintf(messages.RemovePVFromVGC,
-		pv.Namespace, pv.Name, vgc.Namespace, vgc.Name))
+	logger.Info(fmt.Sprintf(messages.RemovePVFromVGC, pv.Name, vgc.Namespace, vgc.Name))
 	vgc.Status.PVList = removeFromPVList(pv, vgc.Status.PVList)
 	err := updateVGCStatusPVList(client, vgc, logger, vgc.Status.PVList)
 	if err != nil {
@@ -262,10 +261,14 @@ func UpdateStaticVGCFromVG(client client.Client, vg *volumegroupv1.VolumeGroup, 
 	return nil
 }
 
-func UpdateStaticVGC(client client.Client, vgc *volumegroupv1.VolumeGroupContent,
-	vgClass *volumegroupv1.VolumeGroupClass) error {
+func UpdateStaticVGC(client client.Client, vgcNamespace, vgcName string,
+	vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
+	vgc, err := GetVGC(client, logger, vgcName, vgcNamespace)
+	if err != nil {
+		return err
+	}
 	updateStaticVGCSpec(vgClass, vgc)
-	if err := UpdateObject(client, vgc); err != nil {
+	if err = UpdateObject(client, vgc); err != nil {
 		return err
 	}
 	return nil
@@ -310,6 +313,35 @@ func UpdateVGCByResponse(client client.Client, vgc *volumegroupv1.VolumeGroupCon
 	vgc.Spec.Source.VolumeGroupAttributes = CreateVGResponse.VolumeGroup.VolumeGroupContext
 	if err := UpdateObject(client, vgc); err != nil {
 		return err
+	}
+	return nil
+}
+
+func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent, driver string) error {
+	logger.Info(fmt.Sprintf(messages.DeletePVCsUnderVGC, vgc.Namespace, vgc.Name))
+	for _, pv := range vgc.Status.PVList {
+		pvcName := getPVCNameFromPV(pv)
+		pvcNamespace := getPVCNamespaceFromPV(pv)
+		if pvcNamespace == "" || pvcName == "" {
+			pvc, err := getMatchingPVCFromPVCListToPV(logger, client, pv.Name, driver)
+			if err != nil {
+				return err
+			}
+			if pvc.Name == "" || pvc.Namespace == "" {
+				logger.Info(fmt.Sprintf(messages.CannotFindMatchingPVCForPV, pv.Name))
+				continue
+			}
+			pvcName = pvc.Name
+			pvcNamespace = pvc.Namespace
+		}
+		err := deletePVC(logger, client, pvcName, pvcNamespace, driver)
+		if err != nil {
+			return err
+		}
+		err = RemovePVFromVGC(logger, client, &pv, vgc)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
