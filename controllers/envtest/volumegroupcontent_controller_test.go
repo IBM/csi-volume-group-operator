@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

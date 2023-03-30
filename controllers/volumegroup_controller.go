@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -71,7 +71,6 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	instance := &volumegroupv1.VolumeGroup{}
 	if err := r.Client.Get(context.TODO(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
-
 			logger.Info("VolumeGroup resource not found")
 
 			return ctrl.Result{}, nil

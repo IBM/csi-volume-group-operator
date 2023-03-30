@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
