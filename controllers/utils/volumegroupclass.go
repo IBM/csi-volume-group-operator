@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"

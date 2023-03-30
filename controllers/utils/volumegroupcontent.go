@@ -23,7 +23,7 @@ import (
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	csi "github.com/IBM/csi-volume-group/lib/go/volumegroup"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

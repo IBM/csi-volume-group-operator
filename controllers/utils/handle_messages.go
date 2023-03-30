@@ -17,7 +17,7 @@ limitations under the License.
 package utils
 
 import (
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

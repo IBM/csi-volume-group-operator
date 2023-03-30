@@ -39,7 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
 	//+kubebuilder:scaffold:imports

@@ -7,7 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 )
 
 func GetVGCObjectFromVG(vgName, Namespace string, vgObject runtimeclient.Object,
