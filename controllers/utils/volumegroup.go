@@ -63,21 +63,21 @@ func IsVgExist(client client.Client, logger logr.Logger, vgc *volumegroupv1.Volu
 
 func UpdateVGSourceContent(client client.Client, instance *volumegroupv1.VolumeGroup,
 	vgcName string, logger logr.Logger) error {
-	instance.Spec.Source.VolumeGroupContentName = &vgcName
+	instance.UpdateVGCName(vgcName)
 	if err := UpdateObject(client, instance); err != nil {
-		logger.Error(err, "failed to update source", "VGName", instance.Name)
+		logger.Error(err, "failed to update source", "VGName", instance.GetName())
 		return err
 	}
 	return nil
 }
 
 func updateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger) error {
-	logger.Info(fmt.Sprintf(messages.UpdateVGStatus, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.UpdateVGStatus, vg.GetNamespace(), vg.GetName()))
 	if err := UpdateObjectStatus(client, vg); err != nil {
 		if apierrors.IsConflict(err) {
 			return err
 		}
-		logger.Error(err, "failed to update volumeGroup status", "VGName", vg.Name)
+		logger.Error(err, "failed to update volumeGroup status", "VGName", vg.GetName())
 		return err
 	}
 	return nil
@@ -86,10 +86,10 @@ func updateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, logger 
 func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgcName string,
 	groupCreationTime *metav1.Time, ready bool, logger logr.Logger) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		vg.Status.BoundVolumeGroupContentName = &vgcName
-		vg.Status.GroupCreationTime = groupCreationTime
-		vg.Status.Ready = &ready
-		vg.Status.Error = nil
+		vg.UpdateBoundVGCName(vgcName)
+		vg.UpdateGroupCreationTime(groupCreationTime)
+		vg.UpdateReady(ready)
+		vg.UpdateError(nil)
 		err := vgRetryOnConflictFunc(client, vg, logger)
 		return err
 	})
@@ -103,7 +103,7 @@ func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgcName
 func updateVGStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger,
 	pvcList []corev1.PersistentVolumeClaim) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		vg.Status.PVCList = pvcList
+		vg.UpdatePVCList(pvcList)
 		err := vgRetryOnConflictFunc(client, vg, logger)
 		return err
 	})
@@ -116,7 +116,7 @@ func updateVGStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, 
 
 func UpdateVGStatusError(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger, message string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		vg.Status.Error = &common.VolumeGroupError{Message: &message}
+		vg.UpdateError(&common.VolumeGroupError{Message: &message})
 		err := vgRetryOnConflictFunc(client, vg, logger)
 		return err
 	})
@@ -134,7 +134,7 @@ func vgRetryOnConflictFunc(client client.Client, vg *volumegroupv1.VolumeGroup, 
 		if uErr != nil {
 			return uErr
 		}
-		logger.Info(fmt.Sprintf(messages.RetryUpdateVGStatus, vg.Namespace, vg.Name))
+		logger.Info(fmt.Sprintf(messages.RetryUpdateVGStatus, vg.GetNamespace(), vg.GetName()))
 	}
 	return err
 }
@@ -183,34 +183,32 @@ func IsPVCMatchesVG(logger logr.Logger, client client.Client,
 	pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) (bool, error) {
 
 	logger.Info(fmt.Sprintf(messages.CheckIfPVCMatchesVG,
-		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
+		pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 	areLabelsMatchLabelSelector, err := areLabelsMatchLabelSelector(
 		client, pvc.ObjectMeta.Labels, *vg.GetSelector())
 
 	if areLabelsMatchLabelSelector {
 		logger.Info(fmt.Sprintf(messages.PVCMatchedToVG,
-			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
+			pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 		return true, err
 	} else {
 		logger.Info(fmt.Sprintf(messages.PVCNotMatchedToVG,
-			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
+			pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 		return false, err
 	}
 }
 
 func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
-	logger.Info(fmt.Sprintf(messages.RemovePVCFromVG,
-		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	vg.Status.PVCList = removeFromPVCList(pvc, vg.GetPVCList())
+	logger.Info(fmt.Sprintf(messages.RemovePVCFromVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
+	vg.UpdatePVCList(removeFromPVCList(pvc, vg.GetPVCList()))
 	err := updateVGStatusPVCList(client, vg, logger, vg.GetPVCList())
 	if err != nil {
-		vg.Status.PVCList = appendPVC(vg.GetPVCList(), *pvc)
+		vg.UpdatePVCList(appendPVC(vg.GetPVCList(), *pvc))
 		logger.Error(err, fmt.Sprintf(messages.FailedToRemovePVCFromVG,
-			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
+			pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 		return err
 	}
-	logger.Info(fmt.Sprintf(messages.RemovedPVCFromVG,
-		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.RemovedPVCFromVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 	return nil
 }
 
@@ -233,7 +231,7 @@ func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persi
 }
 
 func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (string, error) {
-	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.Namespace)
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
 	if err != nil {
 		return "", err
 	}
@@ -241,18 +239,16 @@ func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeG
 }
 
 func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
-	logger.Info(fmt.Sprintf(messages.AddPVCToVG,
-		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	vg.Status.PVCList = appendPVC(vg.GetPVCList(), *pvc)
+	logger.Info(fmt.Sprintf(messages.AddPVCToVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
+	vg.UpdatePVCList(appendPVC(vg.GetPVCList(), *pvc))
 	err := updateVGStatusPVCList(client, vg, logger, vg.GetPVCList())
 	if err != nil {
-		vg.Status.PVCList = removeFromPVCList(pvc, vg.GetPVCList())
+		vg.UpdatePVCList(removeFromPVCList(pvc, vg.GetPVCList()))
 		logger.Error(err, fmt.Sprintf(messages.FailedToAddPVCToVG,
-			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
+			pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 		return err
 	}
-	logger.Info(fmt.Sprintf(messages.AddedPVCToVG,
-		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.AddedPVCToVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 	return nil
 }
 

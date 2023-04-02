@@ -28,6 +28,10 @@ type VolumeGroupContent interface {
 	UpdateVGAttributes(vgAttributes map[string]string)
 	UpdatePVList(PVList []corev1.PersistentVolume)
 	UpdateError(vgError *common.VolumeGroupError)
+	UpdateGroupCreationTime(groupCreationTime *metav1.Time)
+	UpdateReady(ready bool)
+	UpdateAPIVersion(apiVersion string)
+	UpdateKind(kind string)
 	metav1.Object
 	runtime.Object
 }

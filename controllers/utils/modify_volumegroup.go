@@ -38,7 +38,7 @@ func ModifyVG(logger logr.Logger, client client.Client, vg *volumegroupv1.Volume
 	modifyVGResponse := volumeGroupRequest.Modify()
 	responseError := modifyVGResponse.Error
 	if responseError != nil {
-		logger.Error(responseError, fmt.Sprintf(messages.FailedToModifyVG, vg.Namespace, vg.Name))
+		logger.Error(responseError, fmt.Sprintf(messages.FailedToModifyVG, vg.GetNamespace(), vg.GetName()))
 		return responseError
 	}
 	logger.Info(fmt.Sprintf(messages.ModifiedVG, params.VolumeGroupID))

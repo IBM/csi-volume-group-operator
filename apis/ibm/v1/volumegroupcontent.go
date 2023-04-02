@@ -6,6 +6,7 @@ import (
 	"github.com/IBM/csi-volume-group-operator/apis/common"
 	"github.com/IBM/csi-volume-group-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (vgc *VolumeGroupContent) GetVGCLassName() string {
@@ -60,4 +61,16 @@ func (vgc *VolumeGroupContent) UpdatePVList(PVList []corev1.PersistentVolume) {
 }
 func (vgc *VolumeGroupContent) UpdateError(vgError *common.VolumeGroupError) {
 	vgc.Status.Error = vgError
+}
+func (vgc *VolumeGroupContent) UpdateGroupCreationTime(groupCreationTime *metav1.Time) {
+	vgc.Status.GroupCreationTime = groupCreationTime
+}
+func (vgc *VolumeGroupContent) UpdateReady(ready bool) {
+	vgc.Status.Ready = &ready
+}
+func (vgc *VolumeGroupContent) UpdateAPIVersion(apiVersion string) {
+	vgc.APIVersion = apiVersion
+}
+func (vgc *VolumeGroupContent) UpdateKind(kind string) {
+	vgc.Kind = kind
 }

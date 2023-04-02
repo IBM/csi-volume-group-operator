@@ -84,19 +84,19 @@ func generateString() string {
 
 func AddVolumesToVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
 	pvcs []corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
-	logger.Info(fmt.Sprintf(messages.AddVolumeToVG, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.AddVolumeToVG, vg.GetNamespace(), vg.GetName()))
 	newPVCList := appendMultiplePVCs(vg.GetPVCList(), pvcs)
 	if IsPVCListEqual(newPVCList, vg.GetPVCList()) {
 		return nil
 	}
-	vg.Status.PVCList = newPVCList
+	vg.UpdatePVCList(newPVCList)
 
 	err := ModifyVG(logger, client, vg, vgClient)
 	if err != nil {
-		vg.Status.PVCList = removeMultiplePVCs(vg.GetPVCList(), pvcs)
+		vg.UpdatePVCList(removeMultiplePVCs(vg.GetPVCList(), pvcs))
 		return err
 	}
-	logger.Info(fmt.Sprintf(messages.AddedVolumeToVG, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.AddedVolumeToVG, vg.GetNamespace(), vg.GetName()))
 	return nil
 }
 
@@ -116,25 +116,25 @@ func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
 		return err
 	}
 
-	message := fmt.Sprintf(messages.AddedPVCToVG, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
+	message := fmt.Sprintf(messages.AddedPVCToVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName())
 	return HandleSuccessMessage(logger, client, vg, message, addingPVC)
 }
 
 func RemoveVolumeFromVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
 	pvcs []corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
-	logger.Info(fmt.Sprintf(messages.RemoveVolumeFromVG, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.RemoveVolumeFromVG, vg.GetNamespace(), vg.GetName()))
 	newPVCList := removeMultiplePVCs(vg.GetPVCList(), pvcs)
 	if IsPVCListEqual(newPVCList, vg.GetPVCList()) {
 		return nil
 	}
-	vg.Status.PVCList = newPVCList
+	vg.UpdatePVCList(newPVCList)
 
 	err := ModifyVG(logger, client, vg, vgClient)
 	if err != nil {
-		vg.Status.PVCList = appendMultiplePVCs(vg.GetPVCList(), pvcs)
+		vg.UpdatePVCList(appendMultiplePVCs(vg.GetPVCList(), pvcs))
 		return err
 	}
-	logger.Info(fmt.Sprintf(messages.RemovedVolumeFromVG, vg.Namespace, vg.Name))
+	logger.Info(fmt.Sprintf(messages.RemovedVolumeFromVG, vg.GetNamespace(), vg.GetName()))
 	return nil
 }
 
@@ -148,7 +148,7 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 	if err != nil {
 		return err
 	}
-	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.Namespace)
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
 	if err != nil {
 		return err
 	}
@@ -164,21 +164,21 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 		return err
 	}
 
-	message := fmt.Sprintf(messages.RemovedPVCFromVG, pvc.Namespace, pvc.Name, vg.Namespace, vg.Name)
+	message := fmt.Sprintf(messages.RemovedPVCFromVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName())
 	return HandleSuccessMessage(logger, client, vg, message, removingPVC)
 }
 
 func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
-	matchingPvcs []corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) error {
+	matchingPVCs []corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) error {
 
 	currentList := make([]corev1.PersistentVolumeClaim, len(vg.GetPVCList()))
 	copy(currentList, vg.GetPVCList())
 
-	vg.Status.PVCList = matchingPvcs
+	vg.UpdatePVCList(matchingPVCs)
 
 	err := ModifyVG(logger, client, &vg, vgClient)
 	if err != nil {
-		vg.Status.PVCList = currentList
+		vg.UpdatePVCList(currentList)
 		return err
 	}
 
