@@ -371,5 +371,5 @@ func (r *VolumeGroupReconciler) isVGCReady(logger logr.Logger, vgc *volumegroupv
 		}
 		return false, nil
 	}
-	return utils.GetBoolField(vgcFromCluster.Status, "Ready"), nil
+	return vgcFromCluster.IsReady(), nil
 }

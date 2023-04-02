@@ -34,3 +34,30 @@ func (vgc *VolumeGroupContent) GetVGSecretRef() *corev1.SecretReference {
 	return vgc.Spec.VolumeGroupSecretRef
 }
 func (vgc *VolumeGroupContent) GetPVList() []corev1.PersistentVolume { return vgc.Status.PVList }
+func (vgc *VolumeGroupContent) IsReady() bool {
+	return utils.GetBoolField(vgc.Status, "Ready")
+}
+func (vgc *VolumeGroupContent) UpdateVGRef(vgRef *corev1.ObjectReference) {
+	vgc.Spec.VolumeGroupRef = vgRef
+}
+func (vgc *VolumeGroupContent) UpdateVGClassName(vgclassName string) {
+	vgc.Spec.VolumeGroupClassName = &vgclassName
+}
+func (vgc *VolumeGroupContent) UpdateSecretRef(secretRef *corev1.SecretReference) {
+	vgc.Spec.VolumeGroupSecretRef = secretRef
+}
+func (vgc *VolumeGroupContent) UpdateDeletionPolicy(deletionPolicy *common.VolumeGroupDeletionPolicy) {
+	vgc.Spec.VolumeGroupDeletionPolicy = deletionPolicy
+}
+func (vgc *VolumeGroupContent) UpdateVGHandle(vgHandle string) {
+	vgc.Spec.Source.VolumeGroupHandle = vgHandle
+}
+func (vgc *VolumeGroupContent) UpdateVGAttributes(vgAttributes map[string]string) {
+	vgc.Spec.Source.VolumeGroupAttributes = vgAttributes
+}
+func (vgc *VolumeGroupContent) UpdatePVList(PVList []corev1.PersistentVolume) {
+	vgc.Status.PVList = PVList
+}
+func (vgc *VolumeGroupContent) UpdateError(vgError *common.VolumeGroupError) {
+	vgc.Status.Error = vgError
+}
