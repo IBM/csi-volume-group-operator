@@ -32,7 +32,7 @@ func getVGClassDriver(client client.Client, logger logr.Logger, vgClassName stri
 	if err != nil {
 		return "", err
 	}
-	return vgClass.Driver, nil
+	return vgClass.GetDriver(), nil
 }
 
 func GetVGClass(client client.Client, logger logr.Logger, vgClassName string) (*volumegroupv1.VolumeGroupClass, error) {

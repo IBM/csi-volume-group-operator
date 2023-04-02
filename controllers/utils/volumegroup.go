@@ -49,8 +49,8 @@ func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace 
 }
 
 func IsVgExist(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) (bool, error) {
-	if !GetObjectField(vgc.Spec, "VolumeGroupRef").IsNil() {
-		if vg, err := GetVG(client, logger, vgc.Spec.VolumeGroupRef.Name, vgc.Spec.VolumeGroupRef.Namespace); err != nil {
+	if !vgc.GetVGRef().IsNil() {
+		if vg, err := GetVG(client, logger, vgc.GetVGRefName(), vgc.GetVGRefNamespace()); err != nil {
 			if !errors.IsNotFound(err) {
 				return false, err
 			}
@@ -170,7 +170,7 @@ func getProvisionedVGs(logger logr.Logger, client client.Client, vgList *volumeg
 
 func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegroupv1.VolumeGroup,
 	driver string) (bool, error) {
-	vgClassDriver, err := getVGClassDriver(client, logger, GetStringField(vg.Spec, "VolumeGroupClassName"))
+	vgClassDriver, err := getVGClassDriver(client, logger, vg.GetVGCLassName())
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -185,7 +185,7 @@ func IsPVCMatchesVG(logger logr.Logger, client client.Client,
 	logger.Info(fmt.Sprintf(messages.CheckIfPVCMatchesVG,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 	areLabelsMatchLabelSelector, err := areLabelsMatchLabelSelector(
-		client, pvc.ObjectMeta.Labels, *vg.Spec.Source.Selector)
+		client, pvc.ObjectMeta.Labels, *vg.GetSelector())
 
 	if areLabelsMatchLabelSelector {
 		logger.Info(fmt.Sprintf(messages.PVCMatchedToVG,
@@ -201,10 +201,10 @@ func IsPVCMatchesVG(logger logr.Logger, client client.Client,
 func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.RemovePVCFromVG,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	vg.Status.PVCList = removeFromPVCList(pvc, vg.Status.PVCList)
-	err := updateVGStatusPVCList(client, vg, logger, vg.Status.PVCList)
+	vg.Status.PVCList = removeFromPVCList(pvc, vg.GetPVCList())
+	err := updateVGStatusPVCList(client, vg, logger, vg.GetPVCList())
 	if err != nil {
-		vg.Status.PVCList = appendPVC(vg.Status.PVCList, *pvc)
+		vg.Status.PVCList = appendPVC(vg.GetPVCList(), *pvc)
 		logger.Error(err, fmt.Sprintf(messages.FailedToRemovePVCFromVG,
 			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 		return err
@@ -233,20 +233,20 @@ func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persi
 }
 
 func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (string, error) {
-	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Namespace)
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.Namespace)
 	if err != nil {
 		return "", err
 	}
-	return string(vgc.Spec.Source.VolumeGroupHandle), nil
+	return vgc.GetVGHandle(), nil
 }
 
 func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.AddPVCToVG,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	vg.Status.PVCList = appendPVC(vg.Status.PVCList, *pvc)
-	err := updateVGStatusPVCList(client, vg, logger, vg.Status.PVCList)
+	vg.Status.PVCList = appendPVC(vg.GetPVCList(), *pvc)
+	err := updateVGStatusPVCList(client, vg, logger, vg.GetPVCList())
 	if err != nil {
-		vg.Status.PVCList = removeFromPVCList(pvc, vg.Status.PVCList)
+		vg.Status.PVCList = removeFromPVCList(pvc, vg.GetPVCList())
 		logger.Error(err, fmt.Sprintf(messages.FailedToAddPVCToVG,
 			pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 		return err
@@ -276,7 +276,7 @@ func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.Persistent
 
 func IsPVCPartAnyVG(pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) bool {
 	for _, vg := range vgs {
-		if IsPVCInPVCList(pvc, vg.Status.PVCList) {
+		if IsPVCInPVCList(pvc, vg.GetPVCList()) {
 			return true
 		}
 	}
@@ -290,8 +290,4 @@ func IsPVCInPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persiste
 		}
 	}
 	return false
-}
-
-func IsVgReady(vg volumegroupv1.VolumeGroup) bool {
-	return vg.Status.Ready != nil && *vg.Status.Ready
 }

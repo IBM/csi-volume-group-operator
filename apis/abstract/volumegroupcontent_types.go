@@ -12,16 +12,15 @@ import (
 type VolumeGroupContent interface {
 	GetVGCLassName() string
 	GetVGHandle() string
-	GetSpec() VolumeGroupContentSpec
-	GetSource() VolumeGroupContentSource
-	GetVolumeGroupRef() reflect.Value
+	GetVGRefName() string
+	GetVGRefNamespace() string
+	GetSource() reflect.Value
+	GetVGRef() reflect.Value
 	GetDeletionPolicy() common.VolumeGroupDeletionPolicy
 	GetPVList() []corev1.PersistentVolume
+	GetVGSecretRef() *corev1.SecretReference
 	metav1.Object
 	runtime.Object
-}
-
-type VolumeGroupContentSpec interface {
 }
 
 type VolumeGroupContentSource interface {

@@ -50,7 +50,7 @@ func generateModifyVGParams(logger logr.Logger, client client.Client,
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err
 	}
-	volumeIds, err := getPVCListVolumeIds(logger, client, vg.Status.PVCList)
+	volumeIds, err := getPVCListVolumeIds(logger, client, vg.GetPVCList())
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err
 	}
@@ -67,7 +67,7 @@ func generateModifyVGParams(logger logr.Logger, client client.Client,
 	}, nil
 }
 func getSecrets(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (map[string]string, error) {
-	vgc, err := GetVGClass(client, logger, GetStringField(vg.Spec, "VolumeGroupClassName"))
+	vgc, err := GetVGClass(client, logger, vg.GetVGCLassName())
 	if err != nil {
 		return nil, err
 	}

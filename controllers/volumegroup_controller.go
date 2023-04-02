@@ -32,8 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -79,16 +79,16 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 
-	vgClass, err := utils.GetVGClass(r.Client, logger, utils.GetStringField(instance.Spec, "VolumeGroupClassName"))
+	vgClass, err := utils.GetVGClass(r.Client, logger, instance.GetVGCLassName())
 	if err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
 	}
 
-	if r.DriverConfig.DriverName != vgClass.Driver {
+	if r.DriverConfig.DriverName != vgClass.GetDriver() {
 		return ctrl.Result{}, nil
 	}
 
-	if err = utils.ValidatePrefixedParameters(vgClass.Parameters); err != nil {
+	if err = utils.ValidatePrefixedParameters(vgClass.GetParameters()); err != nil {
 		logger.Error(err, "failed to validate parameters of volumegroupClass", "VGClassName", vgClass.Name)
 		if uErr := utils.UpdateVGStatusError(r.Client, instance, logger, err.Error()); uErr != nil {
 			return ctrl.Result{}, uErr
@@ -156,7 +156,7 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
-	if utils.IsPVCListEqual(matchingPvcs, vg.Status.PVCList) {
+	if utils.IsPVCListEqual(matchingPvcs, vg.GetPVCList()) {
 		return nil
 	}
 	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, *vg)
@@ -171,8 +171,8 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1
 }
 
 func (r *VolumeGroupReconciler) handleStaticProvisionedVG(vg *volumegroupv1.VolumeGroup, logger logr.Logger, groupCreationTime *metav1.Time, vgClass *volumegroupv1.VolumeGroupClass) (error, bool) {
-	if vg.Spec.Source.VolumeGroupContentName != nil {
-		err := r.updateItems(vg, logger, groupCreationTime, *vg.Spec.Source.VolumeGroupContentName)
+	if vg.GetVGCName() != "" {
+		err := r.updateItems(vg, logger, groupCreationTime, vg.GetVGCName())
 		if err != nil {
 			return err, true
 		}
@@ -200,7 +200,7 @@ func (r *VolumeGroupReconciler) updateItems(instance *volumegroupv1.VolumeGroup,
 }
 
 func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *volumegroupv1.VolumeGroup) error {
-	vgc, err := utils.GetVGC(r.Client, logger, utils.GetStringField(instance.Spec.Source, "VolumeGroupContentName"), instance.Namespace)
+	vgc, err := utils.GetVGC(r.Client, logger, instance.GetVGCName(), instance.Namespace)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
@@ -219,7 +219,7 @@ func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *vol
 }
 
 func (r *VolumeGroupReconciler) removeVGCObject(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
-	if *vgc.Spec.VolumeGroupDeletionPolicy == common.VolumeGroupContentDelete {
+	if vgc.GetDeletionPolicy() == common.VolumeGroupContentDelete {
 		if err := r.Client.Delete(context.TODO(), vgc); err != nil {
 			logger.Error(err, "Failed to delete volume group content", "VGCName", vgc.Name)
 			return err
@@ -230,7 +230,7 @@ func (r *VolumeGroupReconciler) removeVGCObject(logger logr.Logger, vgc *volumeg
 
 func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
 	pvc *corev1.PersistentVolumeClaim) (bool, error) {
-	if !utils.IsPVCInPVCList(pvc, vg.Status.PVCList) {
+	if !utils.IsPVCInPVCList(pvc, vg.GetPVCList()) {
 		return false, nil
 	}
 

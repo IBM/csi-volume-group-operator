@@ -69,7 +69,7 @@ func GetSecretDataFromClass(client client.Client, vgClass *volumegroupv1.VolumeG
 }
 
 func GetSecretCred(vgClass *volumegroupv1.VolumeGroupClass) (string, string) {
-	secretName := vgClass.Parameters[PrefixedVGSecretNameKey]
-	secretNamespace := vgClass.Parameters[PrefixedVGSecretNamespaceKey]
+	secretName := vgClass.GetParameters()[PrefixedVGSecretNameKey]
+	secretNamespace := vgClass.GetParameters()[PrefixedVGSecretNamespaceKey]
 	return secretName, secretNamespace
 }

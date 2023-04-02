@@ -1,8 +1,8 @@
 package v1
 
 import (
-	vgabstract "github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/pkg/utils"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -12,7 +12,8 @@ func (vg *VolumeGroup) GetVGCName() string {
 func (vg *VolumeGroup) GetVGCLassName() string {
 	return utils.GetStringField(vg.Spec, "VolumeGroupClassName")
 }
-func (vg *VolumeGroup) GetSpec() vgabstract.VolumeGroupSpec     { return vg.Spec }
-func (vg *VolumeGroup) GetSource() vgabstract.VolumeGroupSource { return vg.Spec.Source }
-func (vg *VolumeGroup) GetSelector() *metav1.LabelSelector      { return vg.Spec.Source.Selector }
-func (vg *VolumeGroup) IsReady() bool                           { return *vg.Status.Ready }
+func (vg *VolumeGroup) GetSelector() *metav1.LabelSelector         { return vg.Spec.Source.Selector }
+func (vg *VolumeGroup) GetPVCList() []corev1.PersistentVolumeClaim { return vg.Status.PVCList }
+func (vg *VolumeGroup) IsReady() bool {
+	return utils.GetBoolField(vg.Status, "Ready")
+}

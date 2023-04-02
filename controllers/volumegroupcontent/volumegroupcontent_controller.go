@@ -60,7 +60,7 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, vgcReconcile)
 	}
 
-	vgClassName := utils.GetStringField(vgc.Spec, "VolumeGroupClassName")
+	vgClassName := vgc.GetVGCLassName()
 	if vgClassName == "" {
 		if err := utils.UpdateThinVGC(r.Client, vgc.Namespace, vgc.Name, logger); err != nil {
 			return ctrl.Result{}, err
@@ -76,11 +76,11 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, vgcReconcile)
 	}
 
-	if r.DriverConfig.DriverName != vgClass.Driver {
+	if r.DriverConfig.DriverName != vgClass.GetDriver() {
 		return ctrl.Result{}, nil
 	}
 
-	if err = utils.ValidatePrefixedParameters(vgClass.Parameters); err != nil {
+	if err = utils.ValidatePrefixedParameters(vgClass.GetParameters()); err != nil {
 		logger.Error(err, "failed to validate parameters of volumegroupClass", "VGClassName", vgClass.Name)
 		if uErr := utils.UpdateVGCStatusError(r.Client, vgc, logger, err.Error()); uErr != nil {
 			return ctrl.Result{}, uErr
@@ -139,8 +139,8 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 }
 
 func (r *VolumeGroupContentReconciler) removeVGC(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, secret map[string]string) error {
-	if *vgc.Spec.VolumeGroupDeletionPolicy == common.VolumeGroupContentDelete {
-		vgId := vgc.Spec.Source.VolumeGroupHandle
+	if vgc.GetDeletionPolicy() == common.VolumeGroupContentDelete {
+		vgId := vgc.GetVGHandle()
 		if err := r.deleteVG(logger, vgId, secret); err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func (r *VolumeGroupContentReconciler) deleteVG(logger logr.Logger, vgId string,
 }
 
 func (r *VolumeGroupContentReconciler) handleCreateVG(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, vgClass *volumegroupv1.VolumeGroupClass, secret map[string]string) error {
-	parameters := utils.FilterPrefixedParameters(utils.VGAsPrefix, vgClass.Parameters)
+	parameters := utils.FilterPrefixedParameters(utils.VGAsPrefix, vgClass.GetParameters())
 	createVGResponse := r.createVG(vgc.Name, parameters, secret)
 	if createVGResponse.Error != nil {
 		logger.Error(createVGResponse.Error, "failed to create volume group")
@@ -203,8 +203,8 @@ func (r *VolumeGroupContentReconciler) createVG(vgName string, parameters, secre
 }
 
 func (r *VolumeGroupContentReconciler) handleStaticProvisionedVGC(vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) (error, bool) {
-	if vgcSpec := utils.GetObjectField(vgc.Spec, "Source"); !vgcSpec.IsNil() {
-		if Spec.Source.VolumeGroupHandle != "" {
+	if vgcSource := vgc.GetSource(); !vgcSource.IsNil() {
+		if vgc.GetVGHandle() != "" {
 			return r.updateStaticVGC(vgc, logger), true
 		}
 	}
@@ -222,7 +222,7 @@ func (r *VolumeGroupContentReconciler) updateStaticVGC(vgc *volumegroupv1.Volume
 }
 
 func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
-	vgClass, err := utils.GetVGClass(r.Client, logger, *vgc.Spec.VolumeGroupClassName)
+	vgClass, err := utils.GetVGClass(r.Client, logger, vgc.GetVGCLassName())
 	if err != nil {
 		return err
 	}

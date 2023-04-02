@@ -9,19 +9,11 @@ import (
 type VolumeGroup interface {
 	GetVGCName() string
 	GetVGCLassName() string
-	GetSpec() VolumeGroupSpec
-	GetSource() VolumeGroupSource
 	GetSelector() *metav1.LabelSelector
-	GetPVCList() []corev1.PersistentVolume
+	GetPVCList() []corev1.PersistentVolumeClaim
 	IsReady() bool
 	metav1.Object
 	runtime.Object
-}
-
-type VolumeGroupSpec interface {
-}
-
-type VolumeGroupSource interface {
 }
 
 type VolumeGroupList interface {
