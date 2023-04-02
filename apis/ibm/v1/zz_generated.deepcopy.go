@@ -276,8 +276,7 @@ func (in *VolumeGroupContentStatus) DeepCopyInto(out *VolumeGroupContentStatus) 
 	}
 	if in.Error != nil {
 		in, out := &in.Error, &out.Error
-		*out = new(common.VolumeGroupError)
-		(*in).DeepCopyInto(*out)
+		*out = (*in).DeepCopy()
 	}
 }
 
@@ -395,8 +394,7 @@ func (in *VolumeGroupStatus) DeepCopyInto(out *VolumeGroupStatus) {
 	}
 	if in.Error != nil {
 		in, out := &in.Error, &out.Error
-		*out = new(common.VolumeGroupError)
-		(*in).DeepCopyInto(*out)
+		*out = (*in).DeepCopy()
 	}
 }
 
