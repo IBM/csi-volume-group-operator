@@ -19,6 +19,15 @@ type VolumeGroupContent interface {
 	GetDeletionPolicy() common.VolumeGroupDeletionPolicy
 	GetPVList() []corev1.PersistentVolume
 	GetVGSecretRef() *corev1.SecretReference
+	IsReady() bool
+	UpdateVGRef(vgRef *corev1.ObjectReference)
+	UpdateVGClassName(vgclassName string)
+	UpdateSecretRef(secretRef *corev1.SecretReference)
+	UpdateDeletionPolicy(deletionPolicy *common.VolumeGroupDeletionPolicy)
+	UpdateVGHandle(vgHandle string)
+	UpdateVGAttributes(vgAttributes map[string]string)
+	UpdatePVList(PVList []corev1.PersistentVolume)
+	UpdateError(vgError *common.VolumeGroupError)
 	metav1.Object
 	runtime.Object
 }
