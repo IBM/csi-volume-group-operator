@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
-  name: volumegroupcontents.volumegroup.storage.k8s.io
+  name: volumegroupcontents.volumegroup.storage.openshift.io
 spec:
-  group: volumegroup.storage.k8s.io
+  group: volumegroup.storage.openshift.io
   names:
     kind: VolumeGroupContent
     listKind: VolumeGroupContentList
