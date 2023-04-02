@@ -71,8 +71,11 @@ func getSecrets(logger logr.Logger, client client.Client, vg *volumegroupv1.Volu
 	if err != nil {
 		return nil, err
 	}
-	secrets, err := GetSecretDataFromClass(client, vgc, logger, vg)
+	secrets, err := GetSecretDataFromClass(client, vgc, logger)
 	if err != nil {
+		if uErr := UpdateVGStatusError(client, vg, logger, err.Error()); uErr != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 	return secrets, nil

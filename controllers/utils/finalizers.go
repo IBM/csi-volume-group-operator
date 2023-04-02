@@ -42,9 +42,9 @@ func AddFinalizerToVG(client runtimeclient.Client, logger logr.Logger, vg *volum
 }
 
 func AddFinalizerToVGC(client runtimeclient.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
-	if !Contains(vgc.ObjectMeta.Finalizers, vgcFinalizer) {
-		logger.Info("adding finalizer to volumeGroupContent object", "Name", vgc.Name, "Finalizer", vgcFinalizer)
-		vgc.ObjectMeta.Finalizers = append(vgc.ObjectMeta.Finalizers, vgcFinalizer)
+	if !Contains(vgc.ObjectMeta.Finalizers, VgcFinalizer) {
+		logger.Info("adding finalizer to volumeGroupContent object", "Name", vgc.Name, "Finalizer", VgcFinalizer)
+		vgc.ObjectMeta.Finalizers = append(vgc.ObjectMeta.Finalizers, VgcFinalizer)
 		if err := updateFinalizer(logger, client, vgc.ObjectMeta.Finalizers, vgc); err != nil {
 			logger.Error(err, "failed to add finalizer to volumeGroupContent resource", "finalizer", VGFinalizer)
 			return err
@@ -68,9 +68,9 @@ func RemoveFinalizerFromVG(client runtimeclient.Client, logger logr.Logger, vg *
 }
 
 func RemoveFinalizerFromVGC(client runtimeclient.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
-	if Contains(vgc.ObjectMeta.Finalizers, vgcFinalizer) {
-		logger.Info("removing finalizer from VolumeGroupContent object", "Name", vgc.Name, "Finalizer", vgcFinalizer)
-		vgc.ObjectMeta.Finalizers = remove(vgc.ObjectMeta.Finalizers, vgcFinalizer)
+	if Contains(vgc.ObjectMeta.Finalizers, VgcFinalizer) {
+		logger.Info("removing finalizer from VolumeGroupContent object", "Name", vgc.Name, "Finalizer", VgcFinalizer)
+		vgc.ObjectMeta.Finalizers = remove(vgc.ObjectMeta.Finalizers, VgcFinalizer)
 		if err := updateFinalizer(logger, client, vgc.ObjectMeta.Finalizers, vgc); err != nil {
 			logger.Error(err, "failed to remove finalizer to VolumeGroupContent resource", "finalizer", VGFinalizer)
 			return err
