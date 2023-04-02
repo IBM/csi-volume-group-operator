@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	"github.com/IBM/csi-volume-group-operator/apis/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -44,7 +45,7 @@ type VolumeGroupClass struct {
 
 	// +optional
 	// +kubebuilder:default:=Delete
-	VolumeGroupDeletionPolicy *VolumeGroupDeletionPolicy `json:"volumeGroupDeletionPolicy,omitempty"`
+	VolumeGroupDeletionPolicy *common.VolumeGroupDeletionPolicy `json:"volumeGroupDeletionPolicy,omitempty"`
 
 	// This field specifies whether group snapshot is supported.
 	// +optional

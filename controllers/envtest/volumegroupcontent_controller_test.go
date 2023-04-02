@@ -20,6 +20,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
 	. "github.com/onsi/ginkgo/v2"
@@ -38,7 +39,7 @@ var _ = Describe("Controller", func() {
 			})
 			It("Should not delete vgc when vgclass deletion policy is retain", func(done Done) {
 				By("Creating a volumeGroup resources and set VGClass deletion policy to retain")
-				retainDeletionPolicy := volumegroupv1.VolumeGroupContentRetain
+				retainDeletionPolicy := common.VolumeGroupContentRetain
 				err := utils.CreateResourceObject(Secret, k8sClient)
 				Expect(err).NotTo(HaveOccurred())
 

@@ -22,6 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
@@ -115,7 +116,7 @@ func updateVGStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, 
 
 func UpdateVGStatusError(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger, message string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		vg.Status.Error = &volumegroupv1.VolumeGroupError{Message: &message}
+		vg.Status.Error = &common.VolumeGroupError{Message: &message}
 		err := vgRetryOnConflictFunc(client, vg, logger)
 		return err
 	})

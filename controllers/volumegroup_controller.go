@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/common"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -218,7 +219,7 @@ func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *vol
 }
 
 func (r *VolumeGroupReconciler) removeVGCObject(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
-	if *vgc.Spec.VolumeGroupDeletionPolicy == volumegroupv1.VolumeGroupContentDelete {
+	if *vgc.Spec.VolumeGroupDeletionPolicy == common.VolumeGroupContentDelete {
 		if err := r.Client.Delete(context.TODO(), vgc); err != nil {
 			logger.Error(err, "Failed to delete volume group content", "VGCName", vgc.Name)
 			return err
