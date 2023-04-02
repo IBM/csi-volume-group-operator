@@ -61,6 +61,11 @@ type VolumeGroupReconciler struct {
 //+kubebuilder:rbac:groups=csi.ibm.com,resources=volumegroups/finalizers,verbs=update
 //+kubebuilder:rbac:groups=csi.ibm.com,resources=volumegroupclasses,verbs=get;list;watch
 //+kubebuilder:rbac:groups=csi.ibm.com,resources=volumegroupcontents,verbs=get;list;watch
+//+kubebuilder:rbac:groups=volumegroup.storage.openshift.io,resources=volumegroups,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=volumegroup.storage.openshift.io,resources=volumegroups/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=volumegroup.storage.openshift.io,resources=volumegroups/finalizers,verbs=update
+//+kubebuilder:rbac:groups=volumegroup.storage.openshift.io,resources=volumegroupclasses,verbs=get;list;watch
+//+kubebuilder:rbac:groups=volumegroup.storage.openshift.io,resources=volumegroupcontents,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;update;patch
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims/finalizers,verbs=update
