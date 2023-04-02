@@ -42,3 +42,25 @@ type VolumeGroupError struct {
 	// +optional
 	Message *string `json:"message,omitempty"`
 }
+
+func (in *VolumeGroupError) DeepCopyInto(out *VolumeGroupError) {
+	*out = *in
+	if in.Time != nil {
+		in, out := &in.Time, &out.Time
+		*out = (*in).DeepCopy()
+	}
+	if in.Message != nil {
+		in, out := &in.Message, &out.Message
+		*out = new(string)
+		**out = **in
+	}
+}
+
+func (in *VolumeGroupError) DeepCopy() *VolumeGroupError {
+	if in == nil {
+		return nil
+	}
+	out := new(VolumeGroupError)
+	in.DeepCopyInto(out)
+	return out
+}
