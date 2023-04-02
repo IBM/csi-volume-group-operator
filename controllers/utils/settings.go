@@ -21,7 +21,7 @@ const (
 	vgGroupName                  = "volumegroup.storage.ibm.io"
 	VGFinalizer                  = vgGroupName
 	VGAsPrefix                   = vgGroupName + "/"
-	vgcFinalizer                 = VGAsPrefix + "vgc-protection"
+	VgcFinalizer                 = VGAsPrefix + "vgc-protection"
 	pvcVGFinalizer               = VGAsPrefix + "pvc-protection"
 	PrefixedVGSecretNameKey      = VGAsPrefix + "secret-name"      // name key for secret
 	PrefixedVGSecretNamespaceKey = VGAsPrefix + "secret-namespace" // namespace key secret
