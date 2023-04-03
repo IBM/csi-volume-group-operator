@@ -30,5 +30,5 @@ func (vgc *VolumeGroupClass) GetDeletionPolicy() common.VolumeGroupDeletionPolic
 	if deletionPolicy == string(common.VolumeGroupContentDelete) {
 		return common.VolumeGroupContentDelete
 	}
-	return common.VolumeGroupContentDelete
+	return common.VolumeGroupContentRetain
 }
