@@ -245,11 +245,11 @@ func (r VolumeGroupReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *core
 		return nil
 	}
 
-	vgList, err := utils.GetVGList(logger, r.Client, r.DriverConfig.DriverName)
+	vgs, err := utils.GetVGs(logger, r.Client, r.DriverConfig.DriverName)
 	if err != nil {
 		return err
 	}
-	err = utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.GetItems())
+	err = utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgs)
 	return err
 }
 
