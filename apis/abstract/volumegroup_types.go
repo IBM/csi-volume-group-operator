@@ -25,6 +25,7 @@ import (
 type VolumeGroup interface {
 	GetVGCName() string
 	GetVGCLassName() string
+	GetApiVersion() string
 	GetSelector() *metav1.LabelSelector
 	GetPVCList() []corev1.PersistentVolumeClaim
 	IsReady() bool
