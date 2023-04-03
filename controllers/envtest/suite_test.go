@@ -38,9 +38,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	"github.com/IBM/csi-volume-group-operator/controllers"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/persistentvolumeclaim"
+	vgcontroller "github.com/IBM/csi-volume-group-operator/controllers/vg_controller"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
 	"github.com/IBM/csi-volume-group-operator/pkg/client/fake"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
@@ -116,7 +116,7 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
-	err = (&controllers.VolumeGroupReconciler{
+	err = (&vgcontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
