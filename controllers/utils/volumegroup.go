@@ -22,6 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
@@ -71,7 +72,7 @@ func UpdateVGSourceContent(client client.Client, instance *volumegroupv1.VolumeG
 	return nil
 }
 
-func updateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger) error {
+func updateVGStatus(client client.Client, vg abstract.VolumeGroup, logger logr.Logger) error {
 	logger.Info(fmt.Sprintf(messages.UpdateVGStatus, vg.GetNamespace(), vg.GetName()))
 	if err := UpdateObjectStatus(client, vg); err != nil {
 		if apierrors.IsConflict(err) {
@@ -114,7 +115,7 @@ func updateVGStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, 
 	return nil
 }
 
-func UpdateVGStatusError(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger, message string) error {
+func UpdateVGStatusError(client client.Client, vg abstract.VolumeGroup, logger logr.Logger, message string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vg.UpdateError(&common.VolumeGroupError{Message: &message})
 		err := vgRetryOnConflictFunc(client, vg, logger)
@@ -127,7 +128,7 @@ func UpdateVGStatusError(client client.Client, vg *volumegroupv1.VolumeGroup, lo
 	return nil
 }
 
-func vgRetryOnConflictFunc(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger) error {
+func vgRetryOnConflictFunc(client client.Client, vg abstract.VolumeGroup, logger logr.Logger) error {
 	err := updateVGStatus(client, vg, logger)
 	if apierrors.IsConflict(err) {
 		uErr := getNamespacedObject(client, vg)

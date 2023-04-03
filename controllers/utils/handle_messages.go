@@ -18,12 +18,13 @@ package utils
 
 import (
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func HandleErrorMessage(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup,
+func HandleErrorMessage(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
 	err error, reason string) error {
 	if err != nil {
 		errorMessage := GetMessageFromError(err)

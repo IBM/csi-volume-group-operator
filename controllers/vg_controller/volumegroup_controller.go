@@ -51,7 +51,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	logger := r.Log.WithValues("Request.Name", req.Name, "Request.Namespace", req.Namespace)
 	logger.Info(messages.ReconcileVG)
 
-	instance := &volumegroupv1.VolumeGroup{}
+	instance := r.VGObjects.VG
 	if err := r.Client.Get(context.TODO(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("VolumeGroup resource not found")
