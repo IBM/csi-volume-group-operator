@@ -18,6 +18,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
@@ -149,4 +150,15 @@ func finalizerRetryOnConflictFunc(logger logr.Logger, client runtimeclient.Clien
 		logger.Info(fmt.Sprintf(messages.RetryUpdateFinalizer))
 	}
 	return err
+}
+
+func IsContainOtherFinalizers(object runtimeclient.Object, logger logr.Logger) bool {
+	finalizers := object.GetFinalizers()
+	for _, finalizer := range finalizers {
+		if !strings.Contains(finalizer, VGFinalizer) {
+			logger.Info(fmt.Sprintf(messages.NonVolumeGroupFinalizers, object.GetObjectKind().GroupVersionKind().Kind, object.GetName()))
+			return true
+		}
+	}
+	return false
 }
