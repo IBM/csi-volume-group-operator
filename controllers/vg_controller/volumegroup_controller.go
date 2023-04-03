@@ -249,7 +249,7 @@ func (r VolumeGroupReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *core
 	if err != nil {
 		return err
 	}
-	err = utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.Items)
+	err = utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.GetItems())
 	return err
 }
 

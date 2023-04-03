@@ -157,7 +157,7 @@ func GetVGList(logger logr.Logger, client client.Client, driver string) (volumeg
 func getProvisionedVGs(logger logr.Logger, client client.Client, vgList *volumegroupv1.VolumeGroupList,
 	driver string) (volumegroupv1.VolumeGroupList, error) {
 	newVgList := volumegroupv1.VolumeGroupList{}
-	for _, vg := range vgList.Items {
+	for _, vg := range vgList.GetItems() {
 		isVGHasMatchingDriver, err := isVGHasMatchingDriver(logger, client, vg, driver)
 		if err != nil {
 			return volumegroupv1.VolumeGroupList{}, err

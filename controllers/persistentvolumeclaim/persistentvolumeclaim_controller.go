@@ -115,7 +115,7 @@ func (r PersistentVolumeClaimReconciler) removePVCFromVGObjects(logger logr.Logg
 		return err
 	}
 
-	for _, vg := range vgList.Items {
+	for _, vg := range vgList.GetItems() {
 		if utils.IsRemoveNeeded(vg, pvc) {
 			IsPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 			if err != nil {
@@ -145,7 +145,7 @@ func (r PersistentVolumeClaimReconciler) addPVCToVGObjects(logger logr.Logger, p
 		return err
 	}
 
-	for _, vg := range vgList.Items {
+	for _, vg := range vgList.GetItems() {
 		if utils.IsAddNeeded(vg, pvc) {
 			isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
 			if err != nil {
@@ -171,7 +171,7 @@ func (r PersistentVolumeClaimReconciler) isPVCCanBeAddedToVG(logger logr.Logger,
 	if r.DriverConfig.MultipleVGsToPVC == "true" {
 		return nil
 	}
-	err := utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.Items)
+	err := utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.GetItems())
 	if hErr := utils.HandlePVCErrorMessage(logger, r.Client, pvc, err, addingPVC); hErr != nil {
 		return hErr
 	}

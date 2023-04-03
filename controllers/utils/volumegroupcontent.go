@@ -146,7 +146,7 @@ func generateObjectReference(instance abstract.VolumeGroup) *corev1.ObjectRefere
 		Namespace:       instance.GetNamespace(),
 		Name:            instance.GetName(),
 		UID:             instance.GetUID(),
-		APIVersion:      instance.APIVersion,
+		APIVersion:      instance.GetApiVersion(),
 		ResourceVersion: instance.GetResourceVersion(),
 	}
 }
