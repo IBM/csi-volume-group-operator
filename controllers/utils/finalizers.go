@@ -126,7 +126,7 @@ func isFinalizerShouldBeREmovedFromPVC(logger logr.Logger, client runtimeclient.
 	if err != nil {
 		return false, err
 	}
-	return !IsPVCPartAnyVG(pvc, vgList.Items) && Contains(pvc.ObjectMeta.Finalizers, pvcVGFinalizer), nil
+	return !IsPVCPartAnyVG(pvc, vgList.GetItems()) && Contains(pvc.ObjectMeta.Finalizers, pvcVGFinalizer), nil
 }
 
 func updateFinalizer(logger logr.Logger, client runtimeclient.Client,
