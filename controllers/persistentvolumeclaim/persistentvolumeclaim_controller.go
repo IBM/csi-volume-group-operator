@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
@@ -167,7 +167,7 @@ func (r PersistentVolumeClaimReconciler) addPVCToVGObjects(logger logr.Logger, p
 }
 
 func (r PersistentVolumeClaimReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim,
-	vgList volumegroupv1.VolumeGroupList) error {
+	vgList abstract.VolumeGroupList) error {
 	if r.DriverConfig.MultipleVGsToPVC == "true" {
 		return nil
 	}

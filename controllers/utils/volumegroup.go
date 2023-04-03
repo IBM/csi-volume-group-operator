@@ -140,7 +140,7 @@ func vgRetryOnConflictFunc(client client.Client, vg abstract.VolumeGroup, logger
 	return err
 }
 
-func GetVGList(logger logr.Logger, client client.Client, driver string) (volumegroupv1.VolumeGroupList, error) {
+func GetVGList(logger logr.Logger, client client.Client, driver string) (abstract.VolumeGroupList, error) {
 	logger.Info(messages.ListVGs)
 	vg := &volumegroupv1.VolumeGroupList{}
 	err := client.List(context.TODO(), vg)
