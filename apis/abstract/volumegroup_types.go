@@ -40,6 +40,7 @@ type VolumeGroup interface {
 }
 
 type VolumeGroupList interface {
+	GetItems() []VolumeGroup
 	metav1.ListInterface
 	runtime.Object
 }
