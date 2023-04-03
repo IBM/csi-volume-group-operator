@@ -43,22 +43,6 @@ func getPVCListVolumeIds(logger logr.Logger, client runtimeclient.Client, pvcLis
 	return volumeIds, nil
 }
 
-func GetPVC(logger logr.Logger, client runtimeclient.Client, name, namespace string) (*corev1.PersistentVolumeClaim, error) {
-	logger.Info(fmt.Sprintf(messages.GetPVC, namespace, name))
-	pvc := &corev1.PersistentVolumeClaim{}
-	namespacedPVC := types.NamespacedName{Name: name, Namespace: namespace}
-	err := client.Get(context.TODO(), namespacedPVC, pvc)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Error(err, fmt.Sprintf(messages.PVCNotFound, namespace, name))
-		} else {
-			logger.Error(err, fmt.Sprintf(messages.UnExpectedPVCError, namespace, name))
-		}
-		return nil, err
-	}
-	return pvc, nil
-}
-
 func IsPVCCanBeAddedToVG(logger logr.Logger, client runtimeclient.Client,
 	pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) error {
 	vgsWithPVC := []string{}
@@ -132,6 +116,21 @@ func IsPVCInStaticVG(logger logr.Logger, client runtimeclient.Client, pvc *corev
 	return isSCHasParam(sc, storageClassVGParameter), nil
 }
 
+func getMatchingPVCFromPVCListToPV(logger logr.Logger, client runtimeclient.Client,
+	pvName, driver string) (corev1.PersistentVolumeClaim, error) {
+	pvcList, err := GetPVCList(logger, client, driver)
+	if err != nil {
+		return corev1.PersistentVolumeClaim{}, err
+	}
+	for _, pvc := range pvcList.Items {
+		pvNameFromPVC := getPVNameFromPVC(&pvc)
+		if pvNameFromPVC == pvName {
+			return pvc, nil
+		}
+	}
+	return corev1.PersistentVolumeClaim{}, nil
+}
+
 func GetPVCList(logger logr.Logger, client runtimeclient.Client, driver string) (corev1.PersistentVolumeClaimList, error) {
 	pvcList, err := getPVCList(logger, client)
 	if err != nil {
@@ -191,4 +190,56 @@ func IsPVCHasMatchingDriver(logger logr.Logger, client runtimeclient.Client,
 		return false, err
 	}
 	return scProvisioner == driver, nil
+}
+
+func getPVCNameFromPV(pv corev1.PersistentVolume) string {
+	return GetStringField(pv.Spec.ClaimRef, "Name")
+}
+
+func getPVCNamespaceFromPV(pv corev1.PersistentVolume) string {
+	return GetStringField(pv.Spec.ClaimRef, "Namespace")
+}
+
+func deletePVC(logger logr.Logger, client runtimeclient.Client, name, namespace, driver string) error {
+	logger.Info(fmt.Sprintf(messages.DeletePVC, namespace, name))
+	pvc, err := GetPVC(logger, client, name, namespace)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	err = RemoveFinalizerFromPVC(client, logger, driver, pvc)
+	if err != nil {
+		return err
+	}
+	err = removePVCObject(logger, client, pvc)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetPVC(logger logr.Logger, client runtimeclient.Client, name, namespace string) (*corev1.PersistentVolumeClaim, error) {
+	logger.Info(fmt.Sprintf(messages.GetPVC, namespace, name))
+	pvc := &corev1.PersistentVolumeClaim{}
+	namespacedPVC := types.NamespacedName{Name: name, Namespace: namespace}
+	err := client.Get(context.TODO(), namespacedPVC, pvc)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Error(err, fmt.Sprintf(messages.PVCNotFound, namespace, name))
+		} else {
+			logger.Error(err, fmt.Sprintf(messages.UnExpectedPVCError, namespace, name))
+		}
+		return nil, err
+	}
+	return pvc, nil
+}
+
+func removePVCObject(logger logr.Logger, client runtimeclient.Client, pvc *corev1.PersistentVolumeClaim) error {
+	if err := client.Delete(context.TODO(), pvc); err != nil {
+		logger.Error(err, fmt.Sprintf(messages.FailToRemovePVCObject, pvc.Namespace, pvc.Name))
+		return err
+	}
+	return nil
 }
