@@ -65,7 +65,7 @@ type VolumeGroupReconciler struct {
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims/finalizers,verbs=update
 
-func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *VolumeGroupReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("Request.Name", req.Name, "Request.Namespace", req.Namespace)
 	logger.Info(messages.ReconcileVG)
 
@@ -290,13 +290,13 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 		return err
 	}
 	generationPred := predicate.GenerationChangedPredicate{}
-	pred := predicate.Or(generationPred, utils.FinalizerPredicate())
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate)
 
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroup{}, builder.WithPredicates(pred)).
-		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, utils.CreateRequests(r.Client)).
+		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, utils.CreateRequests(r.Client), builder.WithPredicates(utils.PvcPredicate)).
 		Complete(r)
 }
 
