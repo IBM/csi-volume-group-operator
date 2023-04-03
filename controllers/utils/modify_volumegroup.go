@@ -19,7 +19,7 @@ package utils
 import (
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ModifyVG(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup,
+func ModifyVG(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
 	vgClient grpcClient.VolumeGroup) error {
 	params, err := generateModifyVGParams(logger, client, vg, vgClient)
 	if err != nil {
@@ -45,7 +45,7 @@ func ModifyVG(logger logr.Logger, client client.Client, vg *volumegroupv1.Volume
 	return nil
 }
 func generateModifyVGParams(logger logr.Logger, client client.Client,
-	vg *volumegroupv1.VolumeGroup, vgClient grpcClient.VolumeGroup) (volumegroup.CommonRequestParameters, error) {
+	vg abstract.VolumeGroup, vgClient grpcClient.VolumeGroup) (volumegroup.CommonRequestParameters, error) {
 	vgId, err := getVgId(logger, client, vg)
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err
@@ -66,7 +66,7 @@ func generateModifyVGParams(logger logr.Logger, client client.Client,
 		VolumeIds:     volumeIds,
 	}, nil
 }
-func getSecrets(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (map[string]string, error) {
+func getSecrets(logger logr.Logger, client client.Client, vg abstract.VolumeGroup) (map[string]string, error) {
 	vgc, err := GetVGClass(client, logger, vg.GetVGCLassName())
 	if err != nil {
 		return nil, err

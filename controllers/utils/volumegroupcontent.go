@@ -23,6 +23,7 @@ import (
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	csi "github.com/IBM/csi-volume-group/lib/go/volumegroup"
 
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
@@ -37,7 +38,7 @@ import (
 )
 
 func AddMatchingPVToMatchingVGC(logger logr.Logger, client client.Client,
-	pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+	pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
 	pv, err := GetPVFromPVC(logger, client, pvc)
 	if err != nil {
 		return err
@@ -106,7 +107,7 @@ func updateVGCStatusFields(vgc *volumegroupv1.VolumeGroupContent, groupCreationT
 	vgc.UpdateReady(ready)
 }
 
-func GenerateVGC(vgname string, instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, secretName string, secretNamespace string) *volumegroupv1.VolumeGroupContent {
+func GenerateVGC(vgname string, instance abstract.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, secretName string, secretNamespace string) *volumegroupv1.VolumeGroupContent {
 	return &volumegroupv1.VolumeGroupContent{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      vgname,
@@ -116,7 +117,7 @@ func GenerateVGC(vgname string, instance *volumegroupv1.VolumeGroup, vgClass *vo
 	}
 }
 
-func generateVGCSpec(instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass,
+func generateVGCSpec(instance abstract.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass,
 	secretName string, secretNamespace string) volumegroupv1.VolumeGroupContentSpec {
 	vgClassName := instance.GetVGCLassName()
 	supportVolumeGroupSnapshot := false
@@ -139,7 +140,7 @@ func getVolumeGroupDeletionPolicy(vgClass *volumegroupv1.VolumeGroupClass) *comm
 	return &defaultDeletionPolicy
 }
 
-func generateObjectReference(instance *volumegroupv1.VolumeGroup) *corev1.ObjectReference {
+func generateObjectReference(instance abstract.VolumeGroup) *corev1.ObjectReference {
 	return &corev1.ObjectReference{
 		Kind:            instance.GetObjectKind().GroupVersionKind().Kind,
 		Namespace:       instance.GetNamespace(),
@@ -245,7 +246,7 @@ func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroup
 	return err
 }
 
-func UpdateStaticVGCFromVG(client client.Client, vg *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
+func UpdateStaticVGCFromVG(client client.Client, vg abstract.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
 	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.Namespace)
 	if err != nil {
 		return err

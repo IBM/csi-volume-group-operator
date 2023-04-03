@@ -133,15 +133,15 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
-	matchingPvcs, err := r.getMatchingPVCs(logger, *vg)
+func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg abstract.VolumeGroup) error {
+	matchingPvcs, err := r.getMatchingPVCs(logger, vg)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
 	if utils.IsPVCListEqual(matchingPvcs, vg.GetPVCList()) {
 		return nil
 	}
-	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, *vg)
+	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, vg)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
@@ -152,7 +152,7 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1
 	return nil
 }
 
-func (r *VolumeGroupReconciler) handleStaticProvisionedVG(vg *volumegroupv1.VolumeGroup, logger logr.Logger, groupCreationTime *metav1.Time, vgClass *volumegroupv1.VolumeGroupClass) (error, bool) {
+func (r *VolumeGroupReconciler) handleStaticProvisionedVG(vg abstract.VolumeGroup, logger logr.Logger, groupCreationTime *metav1.Time, vgClass *volumegroupv1.VolumeGroupClass) (error, bool) {
 	if vg.GetVGCName() != "" {
 		err := r.updateItems(vg, logger, groupCreationTime, vg.GetVGCName())
 		if err != nil {
@@ -171,7 +171,7 @@ func (r *VolumeGroupReconciler) handleStaticProvisionedVG(vg *volumegroupv1.Volu
 	return nil, false
 }
 
-func (r *VolumeGroupReconciler) updateItems(instance *volumegroupv1.VolumeGroup, logger logr.Logger, groupCreationTime *metav1.Time, vgcName string) error {
+func (r *VolumeGroupReconciler) updateItems(instance abstract.VolumeGroup, logger logr.Logger, groupCreationTime *metav1.Time, vgcName string) error {
 	if err := utils.UpdateVGSourceContent(r.Client, instance, vgcName, logger); err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, instance, err, updateVGC)
 	}
@@ -181,7 +181,7 @@ func (r *VolumeGroupReconciler) updateItems(instance *volumegroupv1.VolumeGroup,
 	return nil
 }
 
-func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance *volumegroupv1.VolumeGroup) error {
+func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance abstract.VolumeGroup) error {
 	vgc, err := utils.GetVGC(r.Client, logger, instance.GetVGCName(), instance.GetNamespace())
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -210,7 +210,7 @@ func (r *VolumeGroupReconciler) removeVGCObject(logger logr.Logger, vgc *volumeg
 	return nil
 }
 
-func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
+func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, vg abstract.VolumeGroup,
 	pvc *corev1.PersistentVolumeClaim) (bool, error) {
 	if !utils.IsPVCInPVCList(pvc, vg.GetPVCList()) {
 		return false, nil
@@ -223,7 +223,7 @@ func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, v
 	return !isPVCMatchesVG, nil
 }
 
-func (r *VolumeGroupReconciler) isPVCShouldBeInVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
+func (r *VolumeGroupReconciler) isPVCShouldBeInVg(logger logr.Logger, vg abstract.VolumeGroup,
 	pvc *corev1.PersistentVolumeClaim) (bool, error) {
 
 	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
@@ -253,7 +253,7 @@ func (r VolumeGroupReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *core
 	return err
 }
 
-func (r VolumeGroupReconciler) createSuccessVGEvent(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+func (r VolumeGroupReconciler) createSuccessVGEvent(logger logr.Logger, vg abstract.VolumeGroup) error {
 	message := fmt.Sprintf(messages.VGCreated, vg.GetNamespace(), vg.GetName())
 	err := utils.HandleSuccessMessage(logger, r.Client, vg, message, vgReconcile)
 	if err != nil {
@@ -262,7 +262,7 @@ func (r VolumeGroupReconciler) createSuccessVGEvent(logger logr.Logger, vg *volu
 	return nil
 }
 
-func (r *VolumeGroupReconciler) getMatchingPVCs(logger logr.Logger, vg volumegroupv1.VolumeGroup) ([]corev1.PersistentVolumeClaim, error) {
+func (r *VolumeGroupReconciler) getMatchingPVCs(logger logr.Logger, vg abstract.VolumeGroup) ([]corev1.PersistentVolumeClaim, error) {
 	var matchingPvcs []corev1.PersistentVolumeClaim
 	pvcList, err := utils.GetPVCList(logger, r.Client, r.DriverConfig.DriverName)
 	if err != nil {

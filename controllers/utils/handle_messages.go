@@ -41,7 +41,7 @@ func HandleErrorMessage(logger logr.Logger, client client.Client, vg abstract.Vo
 	return nil
 }
 
-func HandleSuccessMessage(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup, message, reason string) error {
+func HandleSuccessMessage(logger logr.Logger, client client.Client, vg abstract.VolumeGroup, message, reason string) error {
 	err := UpdateVGStatusError(client, vg, logger, "")
 	if err != nil {
 		return err

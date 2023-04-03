@@ -19,6 +19,7 @@ package utils
 import (
 	"fmt"
 
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
@@ -28,7 +29,7 @@ import (
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func AddFinalizerToVG(client runtimeclient.Client, logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+func AddFinalizerToVG(client runtimeclient.Client, logger logr.Logger, vg abstract.VolumeGroup) error {
 	if !Contains(vg.GetFinalizers(), VGFinalizer) {
 		logger.Info("adding finalizer to VolumeGroup object", "Finalizer", VGFinalizer)
 		vg.SetFinalizers(append(vg.GetFinalizers(), VGFinalizer))
@@ -54,7 +55,7 @@ func AddFinalizerToVGC(client runtimeclient.Client, logger logr.Logger, vgc *vol
 	return nil
 }
 
-func RemoveFinalizerFromVG(client runtimeclient.Client, logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+func RemoveFinalizerFromVG(client runtimeclient.Client, logger logr.Logger, vg abstract.VolumeGroup) error {
 	if Contains(vg.GetFinalizers(), VGFinalizer) {
 		logger.Info("removing finalizer from VolumeGroup object", "Finalizer", VGFinalizer)
 		vg.SetFinalizers(remove(vg.GetFinalizers(), VGFinalizer))

@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -44,7 +44,7 @@ func getPVCListVolumeIds(logger logr.Logger, client runtimeclient.Client, pvcLis
 }
 
 func IsPVCCanBeAddedToVG(logger logr.Logger, client runtimeclient.Client,
-	pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) error {
+	pvc *corev1.PersistentVolumeClaim, vgs []abstract.VolumeGroup) error {
 	vgsWithPVC := []string{}
 	newVGsForPVC := []string{}
 	for _, vg := range vgs {

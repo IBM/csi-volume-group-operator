@@ -62,7 +62,7 @@ func IsVgExist(client client.Client, logger logr.Logger, vgc *volumegroupv1.Volu
 	return false, nil
 }
 
-func UpdateVGSourceContent(client client.Client, instance *volumegroupv1.VolumeGroup,
+func UpdateVGSourceContent(client client.Client, instance abstract.VolumeGroup,
 	vgcName string, logger logr.Logger) error {
 	instance.UpdateVGCName(vgcName)
 	if err := UpdateObject(client, instance); err != nil {
@@ -84,7 +84,7 @@ func updateVGStatus(client client.Client, vg abstract.VolumeGroup, logger logr.L
 	return nil
 }
 
-func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgcName string,
+func UpdateVGStatus(client client.Client, vg abstract.VolumeGroup, vgcName string,
 	groupCreationTime *metav1.Time, ready bool, logger logr.Logger) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vg.UpdateBoundVGCName(vgcName)
@@ -101,7 +101,7 @@ func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgcName
 	return updateVGStatus(client, vg, logger)
 }
 
-func updateVGStatusPVCList(client client.Client, vg *volumegroupv1.VolumeGroup, logger logr.Logger,
+func updateVGStatusPVCList(client client.Client, vg abstract.VolumeGroup, logger logr.Logger,
 	pvcList []corev1.PersistentVolumeClaim) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vg.UpdatePVCList(pvcList)
@@ -181,7 +181,7 @@ func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegr
 	return vgClassDriver == driver, nil
 }
 func IsPVCMatchesVG(logger logr.Logger, client client.Client,
-	pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) (bool, error) {
+	pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) (bool, error) {
 
 	logger.Info(fmt.Sprintf(messages.CheckIfPVCMatchesVG,
 		pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
@@ -199,7 +199,7 @@ func IsPVCMatchesVG(logger logr.Logger, client client.Client,
 	}
 }
 
-func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.RemovePVCFromVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 	vg.UpdatePVCList(removeFromPVCList(pvc, vg.GetPVCList()))
 	err := updateVGStatusPVCList(client, vg, logger, vg.GetPVCList())
@@ -231,7 +231,7 @@ func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persi
 	return pvcList
 }
 
-func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (string, error) {
+func getVgId(logger logr.Logger, client client.Client, vg abstract.VolumeGroup) (string, error) {
 	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
 	if err != nil {
 		return "", err
@@ -239,7 +239,7 @@ func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeG
 	return vgc.GetVGHandle(), nil
 }
 
-func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
 	logger.Info(fmt.Sprintf(messages.AddPVCToVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName()))
 	vg.UpdatePVCList(appendPVC(vg.GetPVCList(), *pvc))
 	err := updateVGStatusPVCList(client, vg, logger, vg.GetPVCList())

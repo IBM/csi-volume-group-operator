@@ -25,6 +25,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
@@ -101,7 +102,7 @@ func AddVolumesToVG(logger logr.Logger, client client.Client, vgClient grpcClien
 }
 
 func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
-	pvc *corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+	pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
 	err := AddPVCToVG(logger, client, pvc, vg)
 	if err != nil {
 		return err
@@ -139,7 +140,7 @@ func RemoveVolumeFromVG(logger logr.Logger, client client.Client, vgClient grpcC
 }
 
 func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, driver string,
-	pvc corev1.PersistentVolumeClaim, vg *volumegroupv1.VolumeGroup) error {
+	pvc corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
 	err := RemovePVCFromVG(logger, client, &pvc, vg)
 	if err != nil {
 		return err
@@ -169,14 +170,14 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 }
 
 func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
-	matchingPVCs []corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) error {
+	matchingPVCs []corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
 
 	currentList := make([]corev1.PersistentVolumeClaim, len(vg.GetPVCList()))
 	copy(currentList, vg.GetPVCList())
 
 	vg.UpdatePVCList(matchingPVCs)
 
-	err := ModifyVG(logger, client, &vg, vgClient)
+	err := ModifyVG(logger, client, vg, vgClient)
 	if err != nil {
 		vg.UpdatePVCList(currentList)
 		return err
@@ -185,7 +186,7 @@ func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcCl
 	return nil
 }
 
-func UpdatePvcAndPvList(logger logr.Logger, vg *volumegroupv1.VolumeGroup, client client.Client, driver string,
+func UpdatePvcAndPvList(logger logr.Logger, vg abstract.VolumeGroup, client client.Client, driver string,
 	matchingPvcs []corev1.PersistentVolumeClaim) error {
 
 	vgPvcList := make([]corev1.PersistentVolumeClaim, len(vg.GetPVCList()))
