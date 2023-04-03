@@ -139,33 +139,33 @@ func vgRetryOnConflictFunc(client client.Client, vg *volumegroupv1.VolumeGroup, 
 	return err
 }
 
-func GetVGList(logger logr.Logger, client client.Client, driver string) (volumegroupv1.VolumeGroupList, error) {
+func GetVGs(logger logr.Logger, client client.Client, driver string) ([]volumegroupv1.VolumeGroup, error) {
 	logger.Info(messages.ListVGs)
 	vg := &volumegroupv1.VolumeGroupList{}
 	err := client.List(context.TODO(), vg)
 	if err != nil {
-		return volumegroupv1.VolumeGroupList{}, err
+		return []volumegroupv1.VolumeGroup{}, err
 	}
-	vgList, err := getProvisionedVGs(logger, client, vg, driver)
+	vgs, err := getProvisionedVGs(logger, client, vg.GetItems(), driver)
 	if err != nil {
-		return volumegroupv1.VolumeGroupList{}, err
+		return []volumegroupv1.VolumeGroup{}, err
 	}
-	return vgList, nil
+	return vgs, nil
 }
 
-func getProvisionedVGs(logger logr.Logger, client client.Client, vgList *volumegroupv1.VolumeGroupList,
-	driver string) (volumegroupv1.VolumeGroupList, error) {
-	newVgList := volumegroupv1.VolumeGroupList{}
-	for _, vg := range vgList.GetItems() {
+func getProvisionedVGs(logger logr.Logger, client client.Client, vgs []volumegroupv1.VolumeGroup,
+	driver string) ([]volumegroupv1.VolumeGroup, error) {
+	newVGs := []volumegroupv1.VolumeGroup{}
+	for _, vg := range vgs {
 		isVGHasMatchingDriver, err := isVGHasMatchingDriver(logger, client, vg, driver)
 		if err != nil {
-			return volumegroupv1.VolumeGroupList{}, err
+			return []volumegroupv1.VolumeGroup{}, err
 		}
 		if isVGHasMatchingDriver {
-			newVgList.Items = append(newVgList.Items, vg)
+			newVGs = append(newVGs, vg)
 		}
 	}
-	return newVgList, nil
+	return newVGs, nil
 }
 
 func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegroupv1.VolumeGroup,
