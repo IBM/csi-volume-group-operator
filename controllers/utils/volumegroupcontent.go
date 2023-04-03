@@ -246,7 +246,7 @@ func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroup
 }
 
 func UpdateStaticVGCFromVG(client client.Client, vg *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
-	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.Namespace)
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
 	if err != nil {
 		return err
 	}
