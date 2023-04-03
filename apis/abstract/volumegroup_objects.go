@@ -16,9 +16,10 @@ limitations under the License.
 package abstract
 
 type VolumeGroupObjects struct {
-	VG      VolumeGroup
-	VGList  VolumeGroupList
-	VGC     VolumeGroupContent
-	VGCList VolumeGroupContentList
-	VGClass VolumeGroupClass
+	VG          VolumeGroup
+	VGList      VolumeGroupList
+	VGC         VolumeGroupContent
+	VGCList     VolumeGroupContentList
+	VGClass     VolumeGroupClass
+	VGCLassList VolumeGroupClassList
 }

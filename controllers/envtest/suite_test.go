@@ -116,7 +116,7 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
-	err = (&vgcontroller.VolumeGroupReconciler{
+	err = (&vgcontroller.IBMVolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,

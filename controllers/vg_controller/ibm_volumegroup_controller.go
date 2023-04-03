@@ -24,6 +24,7 @@ import (
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,6 +53,23 @@ type IBMVolumeGroupReconciler struct {
 func (r *IBMVolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("Request.Name", req.Name, "Request.Namespace", req.Namespace)
 	logger.Info(messages.ReconcileVG)
+	vgObjects := abstract.VolumeGroupObjects{
+		VG:          &volumegroupv1.VolumeGroup{},
+		VGList:      &volumegroupv1.VolumeGroupList{},
+		VGC:         &volumegroupv1.VolumeGroupContent{},
+		VGCList:     &volumegroupv1.VolumeGroupContentList{},
+		VGClass:     &volumegroupv1.VolumeGroupClass{},
+		VGCLassList: &volumegroupv1.VolumeGroupClassList{},
+	}
+	reconciler := VolumeGroupReconciler{
+		Client:       r.Client,
+		Log:          r.Log,
+		Scheme:       r.Scheme,
+		DriverConfig: r.DriverConfig,
+		GRPCClient:   r.GRPCClient,
+		VGObjects:    vgObjects,
+	}
+	reconciler.Reconcile(ctx, req)
 	return ctrl.Result{}, nil
 }
 

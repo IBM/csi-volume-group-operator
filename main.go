@@ -93,9 +93,18 @@ func main() {
 	grpcClientInstance, err := getControllerGrpcClient(cfg, log)
 	exitWithError(err, "failed to get controller GRPC client")
 
-	err = (&vgcontroller.VolumeGroupReconciler{
+	err = (&vgcontroller.CommunityVolumeGroupReconciler{
 		Client:       mgr.GetClient(),
-		Log:          log,
+		Log:          ctrl.Log.WithName("controllers").WithName("CommunityVolumeGroup"),
+		Scheme:       mgr.GetScheme(),
+		DriverConfig: cfg,
+		GRPCClient:   grpcClientInstance,
+	}).SetupWithManager(mgr, cfg)
+	exitWithError(err, messages.UnableToCreateVGController)
+
+	err = (&vgcontroller.IBMVolumeGroupReconciler{
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName("controllers").WithName("IBMVolumeGroup"),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: cfg,
 		GRPCClient:   grpcClientInstance,
