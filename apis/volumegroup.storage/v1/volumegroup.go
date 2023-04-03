@@ -16,6 +16,7 @@ limitations under the License.
 package v1
 
 import (
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
 	"github.com/IBM/csi-volume-group-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -53,4 +54,10 @@ func (vg *VolumeGroup) UpdatePVCList(PVCList []corev1.PersistentVolumeClaim) {
 	vg.Status.PVCList = PVCList
 }
 
-func (vgList *VolumeGroupList) GetItems() []VolumeGroup { return vgList.Items }
+func (vgList *VolumeGroupList) GetItems() []abstract.VolumeGroup {
+	vgs := []abstract.VolumeGroup{}
+	for _, vg := range vgList.Items {
+		vgs = append(vgs, &vg)
+	}
+	return vgs
+}
