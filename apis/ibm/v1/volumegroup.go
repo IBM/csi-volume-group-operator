@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,7 @@ func (vg *VolumeGroup) GetVGCName() string {
 func (vg *VolumeGroup) GetVGCLassName() string {
 	return utils.GetStringField(vg.Spec, "VolumeGroupClassName")
 }
+func (vg *VolumeGroup) GetApiVersion() string                      { return vg.APIVersion }
 func (vg *VolumeGroup) GetSelector() *metav1.LabelSelector         { return vg.Spec.Source.Selector }
 func (vg *VolumeGroup) GetPVCList() []corev1.PersistentVolumeClaim { return vg.Status.PVCList }
 func (vg *VolumeGroup) IsReady() bool {
@@ -51,3 +52,5 @@ func (vg *VolumeGroup) UpdateError(vgError *common.VolumeGroupError) {
 func (vg *VolumeGroup) UpdatePVCList(PVCList []corev1.PersistentVolumeClaim) {
 	vg.Status.PVCList = PVCList
 }
+
+func (vgList *VolumeGroupList) GetItems() []VolumeGroup { return vgList.Items }
