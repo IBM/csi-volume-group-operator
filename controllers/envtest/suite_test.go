@@ -161,11 +161,23 @@ var _ = AfterSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 })
 
-func createVolumeGroupObjects() error {
+func createVolumeGroupObjects(deletionPolicy volumegroupv1.VolumeGroupDeletionPolicy) error {
 	err := utils.CreateResourceObject(VGClass, k8sClient)
 	if err != nil {
 		return err
 	}
+
+	vgclass := &volumegroupv1.VolumeGroupClass{}
+	err = utils.GetNamespacedResourceObject(VGClassName, Namespace, vgclass, k8sClient)
+	if err != nil {
+		return err
+	}
+	vgclass.VolumeGroupDeletionPolicy = &deletionPolicy
+	err = k8sClient.Update(context.TODO(), vgclass)
+	if err != nil {
+		return err
+	}
+
 	err = utils.CreateResourceObject(VG, k8sClient)
 	return err
 }
