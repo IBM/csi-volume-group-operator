@@ -140,7 +140,7 @@ var _ = BeforeSuite(func() {
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
-		Log:          ctrl.Log.WithName("VolumeGroupContentController"),
+		Log:          ctrl.Log.WithName("PersistentVolumeClaimController"),
 		GRPCClient:   csiConn,
 		VGClient:     mockVolumeGroup,
 	}).SetupWithManager(mgr, driverConfig)
