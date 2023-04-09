@@ -132,8 +132,8 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 		if err := r.removeVGC(logger, vgc, secret); err != nil {
 			return err
 		}
+		logger.Info("VolumeGroupContent object is terminated, skipping reconciliation")
 	}
-	logger.Info("VolumeGroupContent object is terminated, skipping reconciliation")
 	return nil
 }
 
@@ -235,7 +235,7 @@ func (r *VolumeGroupContentReconciler) SetupWithManager(mgr ctrl.Manager, cfg *c
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	generationPred := predicate.GenerationChangedPredicate{}
-	pred := predicate.Or(generationPred, utils.FinalizerPredicate())
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroupContent{}, builder.WithPredicates(pred)).

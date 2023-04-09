@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
+	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
@@ -30,14 +32,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
-	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -64,7 +65,7 @@ type VolumeGroupReconciler struct {
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims/finalizers,verbs=update
 
-func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *VolumeGroupReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("Request.Name", req.Name, "Request.Namespace", req.Namespace)
 	logger.Info(messages.ReconcileVG)
 
@@ -106,8 +107,8 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			if err = r.removeInstance(logger, instance); err != nil {
 				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
 			}
+			logger.Info("volumeGroup object is terminated, skipping reconciliation")
 		}
-		logger.Info("volumeGroup object is terminated, skipping reconciliation")
 		return ctrl.Result{}, nil
 	}
 
@@ -289,13 +290,14 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 		return err
 	}
 	generationPred := predicate.GenerationChangedPredicate{}
-	pred := predicate.Or(generationPred, utils.FinalizerPredicate())
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate)
 
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&volumegroupv1.VolumeGroup{}).
-		WithEventFilter(pred).Complete(r)
+		For(&volumegroupv1.VolumeGroup{}, builder.WithPredicates(pred)).
+		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, utils.CreateRequests(r.Client), builder.WithPredicates(utils.PvcPredicate)).
+		Complete(r)
 }
 
 func (r *VolumeGroupReconciler) waitForCrds(logger logr.Logger) error {
@@ -357,7 +359,11 @@ func (r *VolumeGroupReconciler) getMatchingPVCs(logger logr.Logger, vg volumegro
 		if err != nil {
 			return nil, err
 		}
-		if isPVCShouldBeInVg && !utils.IsPVCInPVCList(&pvc, matchingPvcs) {
+		isPVCShouldBeHandled, err := utils.IsPVCNeedToBeHandled(logger, &pvc, r.Client, r.DriverConfig.DriverName)
+		if err != nil {
+			return nil, err
+		}
+		if isPVCShouldBeInVg && !utils.IsPVCInPVCList(&pvc, matchingPvcs) && isPVCShouldBeHandled {
 			matchingPvcs = append(matchingPvcs, pvc)
 		}
 	}
