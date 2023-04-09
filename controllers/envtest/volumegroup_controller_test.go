@@ -62,8 +62,10 @@ var _ = Describe("Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 				err = utils.CreateResourceObject(StorageClass, k8sClient)
 				Expect(err).NotTo(HaveOccurred())
+
 				err = createVolumeObjects()
 				Expect(err).NotTo(HaveOccurred())
+
 				err = createVolumeGroupObjects()
 				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(1 * time.Second)
