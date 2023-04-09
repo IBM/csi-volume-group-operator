@@ -123,7 +123,7 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 	} else if isVgExist {
 		return fmt.Errorf(messages.VgIsStillExist, vgc.Name, vgc.Namespace)
 	}
-	if utils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) {
+	if utils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) && !utils.IsContainOtherFinalizers(vgc, logger) {
 		if r.DriverConfig.DisableDeletePvcs == "false" {
 			if err := utils.DeletePVCsUnderVGC(logger, r.Client, vgc, r.DriverConfig.DriverName); err != nil {
 				return err
@@ -234,7 +234,8 @@ func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc *volumegroupv1.Vo
 func (r *VolumeGroupContentReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
-	pred := predicate.GenerationChangedPredicate{}
+	generationPred := predicate.GenerationChangedPredicate{}
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate())
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroupContent{}, builder.WithPredicates(pred)).
