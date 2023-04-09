@@ -161,6 +161,14 @@ var _ = AfterSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 })
 
+func createNonVolumeK8SResources() error {
+	err := utils.CreateResourceObject(Secret, k8sClient)
+	if err != nil {
+		return err
+	}
+	return utils.CreateResourceObject(StorageClass, k8sClient)
+}
+
 func createVolumeGroupObjects(deletionPolicy volumegroupv1.VolumeGroupDeletionPolicy) error {
 	err := utils.CreateResourceObject(VGClass, k8sClient)
 	if err != nil {

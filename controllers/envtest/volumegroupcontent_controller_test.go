@@ -67,9 +67,7 @@ var _ = Describe("Test controllers", func() {
 		}, Timeout.Seconds())
 		It("Should delete pvcs when deleting vg", func(done Done) {
 			By("Creating a volumeGroup and volume resources")
-			err := utils.CreateResourceObject(Secret, k8sClient)
-			Expect(err).NotTo(HaveOccurred())
-			err = utils.CreateResourceObject(StorageClass, k8sClient)
+			err := createNonVolumeK8SResources()
 			Expect(err).NotTo(HaveOccurred())
 			err = createVolumeGroupObjects(volumegroupv1.VolumeGroupContentDelete)
 			Expect(err).NotTo(HaveOccurred())

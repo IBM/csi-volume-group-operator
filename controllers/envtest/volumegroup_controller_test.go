@@ -36,7 +36,7 @@ var _ = Describe("Test controllers", func() {
 
 		It("Should create all the relevant objects", func(done Done) {
 			By("Creating volumeGroup objects")
-			err := utils.CreateResourceObject(Secret, k8sClient)
+			err := createNonVolumeK8SResources()
 			Expect(err).NotTo(HaveOccurred())
 			err = createVolumeGroupObjects(volumegroupv1.VolumeGroupContentDelete)
 			Expect(err).NotTo(HaveOccurred())
@@ -56,9 +56,7 @@ var _ = Describe("Test controllers", func() {
 		}, Timeout.Seconds())
 		It("should add and remove volume objects from volumeGroup objects when created before vg", func(done Done) {
 			By("Creating volume objects before volumeGroup objects")
-			err := utils.CreateResourceObject(Secret, k8sClient)
-			Expect(err).NotTo(HaveOccurred())
-			err = utils.CreateResourceObject(StorageClass, k8sClient)
+			err := createNonVolumeK8SResources()
 			Expect(err).NotTo(HaveOccurred())
 
 			err = createVolumeObjects()
