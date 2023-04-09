@@ -39,7 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	ibm_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	community_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
 	vgcontroller "github.com/IBM/csi-volume-group-operator/controllers/vg_controller"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
 	//+kubebuilder:scaffold:imports
@@ -60,7 +61,8 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(volumegroupv1.AddToScheme(scheme))
+	utilruntime.Must(ibm_volumegroupv1.AddToScheme(scheme))
+	utilruntime.Must(community_volumegroupv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

@@ -19,7 +19,7 @@ package utils
 import (
 	"context"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -55,7 +55,7 @@ func convertMap(oldMap map[string][]byte) map[string]string {
 	return newMap
 }
 
-func GetSecretDataFromClass(client client.Client, vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) (map[string]string, error) {
+func GetSecretDataFromClass(client client.Client, vgClass abstract.VolumeGroupClass, logger logr.Logger) (map[string]string, error) {
 	secretName, secretNamespace := GetSecretCred(vgClass)
 	secret := make(map[string]string)
 	var err error
@@ -68,7 +68,7 @@ func GetSecretDataFromClass(client client.Client, vgClass *volumegroupv1.VolumeG
 	return secret, nil
 }
 
-func GetSecretCred(vgClass *volumegroupv1.VolumeGroupClass) (string, string) {
+func GetSecretCred(vgClass abstract.VolumeGroupClass) (string, string) {
 	secretName := vgClass.GetParameters()[PrefixedVGSecretNameKey]
 	secretNamespace := vgClass.GetParameters()[PrefixedVGSecretNamespaceKey]
 	return secretName, secretNamespace

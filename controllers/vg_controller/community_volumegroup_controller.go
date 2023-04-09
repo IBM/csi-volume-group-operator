@@ -67,10 +67,10 @@ func (r *CommunityVolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl
 		Scheme:       r.Scheme,
 		DriverConfig: r.DriverConfig,
 		GRPCClient:   r.GRPCClient,
+		VGClient:     r.VGClient,
 		VGObjects:    vgObjects,
 	}
-	reconciler.Reconcile(ctx, req)
-	return ctrl.Result{}, nil
+	return reconciler.Reconcile(ctx, req)
 }
 
 func (r *CommunityVolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {

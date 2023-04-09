@@ -49,7 +49,7 @@ func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace 
 	return vg, nil
 }
 
-func IsVgExist(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) (bool, error) {
+func IsVgExist(client client.Client, logger logr.Logger, vgc abstract.VolumeGroupContent) (bool, error) {
 	if !vgc.GetVGRef().IsNil() {
 		if vg, err := GetVG(client, logger, vgc.GetVGRefName(), vgc.GetVGRefNamespace()); err != nil {
 			if !errors.IsNotFound(err) {
@@ -140,27 +140,27 @@ func vgRetryOnConflictFunc(client client.Client, vg abstract.VolumeGroup, logger
 	return err
 }
 
-func GetVGs(logger logr.Logger, client client.Client, driver string) ([]abstract.VolumeGroup, error) {
+func GetVGs(logger logr.Logger, client client.Client, driver string,
+	vgList abstract.VolumeGroupList, vgClass abstract.VolumeGroupClass) ([]abstract.VolumeGroup, error) {
 	logger.Info(messages.ListVGs)
-	vg := &volumegroupv1.VolumeGroupList{}
-	err := client.List(context.TODO(), vg)
+	err := client.List(context.TODO(), vgList)
 	if err != nil {
-		return []volumegroupv1.VolumeGroup{}, err
+		return []abstract.VolumeGroup{}, err
 	}
-	vgs, err := getProvisionedVGs(logger, client, vg.GetItems(), driver)
+	vgs, err := getProvisionedVGs(logger, client, vgList.GetItems(), driver, vgClass)
 	if err != nil {
-		return []volumegroupv1.VolumeGroup{}, err
+		return []abstract.VolumeGroup{}, err
 	}
 	return vgs, nil
 }
 
-func getProvisionedVGs(logger logr.Logger, client client.Client, vgs []volumegroupv1.VolumeGroup,
-	driver string) ([]volumegroupv1.VolumeGroup, error) {
-	newVGs := []volumegroupv1.VolumeGroup{}
+func getProvisionedVGs(logger logr.Logger, client client.Client, vgs []abstract.VolumeGroup,
+	driver string, vgClass abstract.VolumeGroupClass) ([]abstract.VolumeGroup, error) {
+	newVGs := []abstract.VolumeGroup{}
 	for _, vg := range vgs {
-		isVGHasMatchingDriver, err := isVGHasMatchingDriver(logger, client, vg, driver)
+		isVGHasMatchingDriver, err := isVGHasMatchingDriver(logger, client, vg, driver, vgClass)
 		if err != nil {
-			return []volumegroupv1.VolumeGroup{}, err
+			return []abstract.VolumeGroup{}, err
 		}
 		if isVGHasMatchingDriver {
 			newVGs = append(newVGs, vg)
@@ -169,9 +169,9 @@ func getProvisionedVGs(logger logr.Logger, client client.Client, vgs []volumegro
 	return newVGs, nil
 }
 
-func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegroupv1.VolumeGroup,
-	driver string) (bool, error) {
-	vgClassDriver, err := getVGClassDriver(client, logger, vg.GetVGCLassName())
+func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
+	driver string, vgClass abstract.VolumeGroupClass) (bool, error) {
+	vgClassDriver, err := getVGClassDriver(client, logger, vg.GetVGCLassName(), vgClass)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -271,7 +271,7 @@ func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.Persistent
 	return pvcListInVG
 }
 
-func IsPVCPartAnyVG(pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) bool {
+func IsPVCPartAnyVG(pvc *corev1.PersistentVolumeClaim, vgs []abstract.VolumeGroup) bool {
 	for _, vg := range vgs {
 		if IsPVCInPVCList(pvc, vg.GetPVCList()) {
 			return true

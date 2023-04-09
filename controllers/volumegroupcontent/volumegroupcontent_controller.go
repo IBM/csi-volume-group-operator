@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
@@ -71,7 +72,7 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
-	vgClass, err := utils.GetVGClass(r.Client, logger, vgClassName)
+	vgClass, err := utils.GetVGClass(r.Client, logger, vgClassName, &volumegroupv1.VolumeGroupClass{})
 	if err != nil {
 		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, vgcReconcile)
 	}
@@ -118,7 +119,7 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 	return ctrl.Result{}, nil
 }
 
-func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, secret map[string]string) error {
+func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger logr.Logger, vgc abstract.VolumeGroupContent, secret map[string]string) error {
 	if isVgExist, err := utils.IsVgExist(r.Client, logger, vgc); err != nil {
 		return err
 	} else if isVgExist {
@@ -138,7 +139,7 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 	return nil
 }
 
-func (r *VolumeGroupContentReconciler) removeVGC(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, secret map[string]string) error {
+func (r *VolumeGroupContentReconciler) removeVGC(logger logr.Logger, vgc abstract.VolumeGroupContent, secret map[string]string) error {
 	if vgc.GetDeletionPolicy() == common.VolumeGroupContentDelete {
 		vgId := vgc.GetVGHandle()
 		if err := r.deleteVG(logger, vgId, secret); err != nil {
@@ -171,7 +172,7 @@ func (r *VolumeGroupContentReconciler) deleteVG(logger logr.Logger, vgId string,
 	return nil
 }
 
-func (r *VolumeGroupContentReconciler) handleCreateVG(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, vgClass *volumegroupv1.VolumeGroupClass, secret map[string]string) error {
+func (r *VolumeGroupContentReconciler) handleCreateVG(logger logr.Logger, vgc abstract.VolumeGroupContent, vgClass abstract.VolumeGroupClass, secret map[string]string) error {
 	parameters := utils.FilterPrefixedParameters(utils.VGAsPrefix, vgClass.GetParameters())
 	createVGResponse := r.createVG(vgc.GetName(), parameters, secret)
 	if createVGResponse.Error != nil {
@@ -202,7 +203,7 @@ func (r *VolumeGroupContentReconciler) createVG(vgName string, parameters, secre
 	return resp
 }
 
-func (r *VolumeGroupContentReconciler) handleStaticProvisionedVGC(vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) (error, bool) {
+func (r *VolumeGroupContentReconciler) handleStaticProvisionedVGC(vgc abstract.VolumeGroupContent, logger logr.Logger) (error, bool) {
 	if vgcSource := vgc.GetSource(); !vgcSource.IsNil() {
 		if vgc.GetVGHandle() != "" {
 			return r.updateStaticVGC(vgc, logger), true
@@ -211,7 +212,7 @@ func (r *VolumeGroupContentReconciler) handleStaticProvisionedVGC(vgc *volumegro
 	return nil, false
 }
 
-func (r *VolumeGroupContentReconciler) updateStaticVGC(vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
+func (r *VolumeGroupContentReconciler) updateStaticVGC(vgc abstract.VolumeGroupContent, logger logr.Logger) error {
 	if err := r.updateStaticVGCSpec(vgc, logger); err != nil {
 		return err
 	}
@@ -221,8 +222,8 @@ func (r *VolumeGroupContentReconciler) updateStaticVGC(vgc *volumegroupv1.Volume
 	return nil
 }
 
-func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
-	vgClass, err := utils.GetVGClass(r.Client, logger, vgc.GetVGCLassName())
+func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc abstract.VolumeGroupContent, logger logr.Logger) error {
+	vgClass, err := utils.GetVGClass(r.Client, logger, vgc.GetVGCLassName(), &volumegroupv1.VolumeGroupClass{})
 	if err != nil {
 		return err
 	}

@@ -17,7 +17,6 @@ limitations under the License.
 package utils
 
 import (
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -64,7 +63,7 @@ func HandlePVCErrorMessage(logger logr.Logger, client client.Client, pvc *corev1
 	return nil
 }
 
-func HandleVGCErrorMessage(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent,
+func HandleVGCErrorMessage(logger logr.Logger, client client.Client, vgc abstract.VolumeGroupContent,
 	err error, reason string) error {
 	if err != nil {
 		errorMessage := GetMessageFromError(err)

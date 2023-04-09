@@ -20,26 +20,27 @@ import (
 	"context"
 	"fmt"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getVGClassDriver(client client.Client, logger logr.Logger, vgClassName string) (string, error) {
-	vgClass, err := GetVGClass(client, logger, vgClassName)
+func getVGClassDriver(client client.Client, logger logr.Logger, vgClassName string,
+	vgClass abstract.VolumeGroupClass) (string, error) {
+	vgClass, err := GetVGClass(client, logger, vgClassName, vgClass)
 	if err != nil {
 		return "", err
 	}
 	return vgClass.GetDriver(), nil
 }
 
-func GetVGClass(client client.Client, logger logr.Logger, vgClassName string) (*volumegroupv1.VolumeGroupClass, error) {
+func GetVGClass(client client.Client, logger logr.Logger, vgClassName string,
+	vgClass abstract.VolumeGroupClass) (abstract.VolumeGroupClass, error) {
 	if vgClassName == "" {
 		return nil, fmt.Errorf("VolumeGroupClass name is empty")
 	}
-	vgClass := &volumegroupv1.VolumeGroupClass{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: vgClassName}, vgClass)
 	if err != nil {
 		if apierrors.IsNotFound(err) {

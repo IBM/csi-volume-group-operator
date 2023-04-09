@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
+	pkg_utils "github.com/IBM/csi-volume-group-operator/pkg/utils"
 	csi "github.com/IBM/csi-volume-group/lib/go/volumegroup"
 
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
@@ -69,20 +70,20 @@ func GetVGC(client client.Client, logger logr.Logger, vgcName string, vgcNamespa
 	return vgc, nil
 }
 
-func CreateVGC(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
+func CreateVGC(client client.Client, logger logr.Logger, vgc abstract.VolumeGroupContent) error {
 	err := client.Create(context.TODO(), vgc)
 	if err != nil {
 		if errors.IsAlreadyExists(err) {
 			logger.Info("VolumeGroupContent is already exists")
 			return nil
 		}
-		logger.Error(err, "VolumeGroupContent creation failed", "VolumeGroupContent Name")
+		logger.Error(err, "VolumeGroupContent creation failed")
 		return err
 	}
 	return err
 }
 
-func CreateSuccessVGCEvent(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent) error {
+func CreateSuccessVGCEvent(logger logr.Logger, client client.Client, vgc abstract.VolumeGroupContent) error {
 	vgc.UpdateAPIVersion(APIVersion)
 	vgc.UpdateKind(vgcKind)
 	message := fmt.Sprintf(messages.VGCCreated, vgc.GetNamespace(), vgc.GetName())
@@ -93,7 +94,7 @@ func CreateSuccessVGCEvent(logger logr.Logger, client client.Client, vgc *volume
 	return nil
 }
 
-func UpdateVGCStatus(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, groupCreationTime *metav1.Time, ready bool) error {
+func UpdateVGCStatus(client client.Client, logger logr.Logger, vgc abstract.VolumeGroupContent, groupCreationTime *metav1.Time, ready bool) error {
 	updateVGCStatusFields(vgc, groupCreationTime, ready)
 	if err := UpdateObjectStatus(client, vgc); err != nil {
 		logger.Error(err, "failed to update status")
@@ -102,69 +103,12 @@ func UpdateVGCStatus(client client.Client, logger logr.Logger, vgc *volumegroupv
 	return nil
 }
 
-func updateVGCStatusFields(vgc *volumegroupv1.VolumeGroupContent, groupCreationTime *metav1.Time, ready bool) {
+func updateVGCStatusFields(vgc abstract.VolumeGroupContent, groupCreationTime *metav1.Time, ready bool) {
 	vgc.UpdateGroupCreationTime(groupCreationTime)
 	vgc.UpdateReady(ready)
 }
 
-func GenerateVGC(vgname string, instance abstract.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, secretName string, secretNamespace string) *volumegroupv1.VolumeGroupContent {
-	return &volumegroupv1.VolumeGroupContent{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      vgname,
-			Namespace: instance.GetNamespace(),
-		},
-		Spec: generateVGCSpec(instance, vgClass, secretName, secretNamespace),
-	}
-}
-
-func generateVGCSpec(instance abstract.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass,
-	secretName string, secretNamespace string) volumegroupv1.VolumeGroupContentSpec {
-	vgClassName := instance.GetVGCLassName()
-	supportVolumeGroupSnapshot := false
-	return volumegroupv1.VolumeGroupContentSpec{
-		VolumeGroupClassName:       &vgClassName,
-		VolumeGroupRef:             generateObjectReference(instance),
-		Source:                     generateVGCSource(vgClass),
-		VolumeGroupDeletionPolicy:  getVolumeGroupDeletionPolicy(vgClass),
-		SupportVolumeGroupSnapshot: &supportVolumeGroupSnapshot,
-		VolumeGroupSecretRef:       generateSecretReference(secretName, secretNamespace),
-	}
-}
-
-func getVolumeGroupDeletionPolicy(vgClass *volumegroupv1.VolumeGroupClass) *common.VolumeGroupDeletionPolicy {
-	defaultDeletionPolicy := common.VolumeGroupContentDelete
-	deletionPolicy := vgClass.GetDeletionPolicy()
-	if deletionPolicy != "" {
-		return &deletionPolicy
-	}
-	return &defaultDeletionPolicy
-}
-
-func generateObjectReference(instance abstract.VolumeGroup) *corev1.ObjectReference {
-	return &corev1.ObjectReference{
-		Kind:            instance.GetObjectKind().GroupVersionKind().Kind,
-		Namespace:       instance.GetNamespace(),
-		Name:            instance.GetName(),
-		UID:             instance.GetUID(),
-		APIVersion:      instance.GetApiVersion(),
-		ResourceVersion: instance.GetResourceVersion(),
-	}
-}
-
-func generateSecretReference(secretName string, secretNamespace string) *corev1.SecretReference {
-	return &corev1.SecretReference{
-		Name:      secretName,
-		Namespace: secretNamespace,
-	}
-}
-
-func generateVGCSource(vgClass *volumegroupv1.VolumeGroupClass) *volumegroupv1.VolumeGroupContentSource {
-	return &volumegroupv1.VolumeGroupContentSource{
-		Driver: vgClass.GetDriver(),
-	}
-}
-
-func RemovePVFromVGC(logger logr.Logger, client client.Client, pv *corev1.PersistentVolume, vgc *volumegroupv1.VolumeGroupContent) error {
+func RemovePVFromVGC(logger logr.Logger, client client.Client, pv *corev1.PersistentVolume, vgc abstract.VolumeGroupContent) error {
 	logger.Info(fmt.Sprintf(messages.RemovePVFromVGC, pv.Name, vgc.GetNamespace(), vgc.GetName()))
 	vgc.UpdatePVList(removeFromPVList(pv, vgc.GetPVList()))
 	err := updateVGCStatusPVList(client, vgc, logger, vgc.GetPVList())
@@ -188,7 +132,7 @@ func removeFromPVList(pv *corev1.PersistentVolume, pvList []corev1.PersistentVol
 }
 
 func addPVToVGC(logger logr.Logger, client client.Client, pv *corev1.PersistentVolume,
-	vgc *volumegroupv1.VolumeGroupContent) error {
+	vgc abstract.VolumeGroupContent) error {
 	logger.Info(fmt.Sprintf(messages.AddPVToVG, pv.Name, vgc.GetNamespace(), vgc.GetName()))
 	vgc.UpdatePVList(appendPV(vgc.GetPVList(), *pv))
 	err := updateVGCStatusPVList(client, vgc, logger, vgc.GetPVList())
@@ -211,7 +155,7 @@ func appendPV(pvListInVGC []corev1.PersistentVolume, pv corev1.PersistentVolume)
 	return pvListInVGC
 }
 
-func updateVGCStatusPVList(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger,
+func updateVGCStatusPVList(client client.Client, vgc abstract.VolumeGroupContent, logger logr.Logger,
 	pvList []corev1.PersistentVolume) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vgc.UpdatePVList(pvList)
@@ -225,7 +169,7 @@ func updateVGCStatusPVList(client client.Client, vgc *volumegroupv1.VolumeGroupC
 	return nil
 }
 
-func UpdateVGCStatusError(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger, message string) error {
+func UpdateVGCStatusError(client client.Client, vgc abstract.VolumeGroupContent, logger logr.Logger, message string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		vgc.UpdateError(&common.VolumeGroupError{Message: &message})
 		err := vgcRetryOnConflictFunc(client, vgc, logger)
@@ -234,7 +178,7 @@ func UpdateVGCStatusError(client client.Client, vgc *volumegroupv1.VolumeGroupCo
 	return err
 }
 
-func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) error {
+func vgcRetryOnConflictFunc(client client.Client, vgc abstract.VolumeGroupContent, logger logr.Logger) error {
 	err := UpdateObjectStatus(client, vgc)
 	if apierrors.IsConflict(err) {
 		uErr := getNamespacedObject(client, vgc)
@@ -246,12 +190,12 @@ func vgcRetryOnConflictFunc(client client.Client, vgc *volumegroupv1.VolumeGroup
 	return err
 }
 
-func UpdateStaticVGCFromVG(client client.Client, vg abstract.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
+func UpdateStaticVGCFromVG(client client.Client, vg abstract.VolumeGroup, vgClass abstract.VolumeGroupClass, logger logr.Logger) error {
 	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
 	if err != nil {
 		return err
 	}
-	vgc.UpdateVGRef(generateObjectReference(vg))
+	vgc.UpdateVGRef(pkg_utils.GenerateObjectReference(vg))
 	updateStaticVGCSpec(vgClass, vgc)
 	if err = UpdateObject(client, vgc); err != nil {
 		return err
@@ -260,7 +204,7 @@ func UpdateStaticVGCFromVG(client client.Client, vg abstract.VolumeGroup, vgClas
 }
 
 func UpdateStaticVGC(client client.Client, vgcNamespace, vgcName string,
-	vgClass *volumegroupv1.VolumeGroupClass, logger logr.Logger) error {
+	vgClass abstract.VolumeGroupClass, logger logr.Logger) error {
 	vgc, err := GetVGC(client, logger, vgcName, vgcNamespace)
 	if err != nil {
 		return err
@@ -272,17 +216,17 @@ func UpdateStaticVGC(client client.Client, vgcNamespace, vgcName string,
 	return nil
 }
 
-func updateStaticVGCSpec(vgClass *volumegroupv1.VolumeGroupClass, vgc *volumegroupv1.VolumeGroupContent) {
+func updateStaticVGCSpec(vgClass abstract.VolumeGroupClass, vgc abstract.VolumeGroupContent) {
 	secretName, secretNamespace := GetSecretCred(vgClass)
 	if vgc.GetVGCLassName() == "" {
 		vgClassName := vgClass.GetName()
 		vgc.UpdateVGClassName(vgClassName)
 	}
 	if vgc.GetVGSecretRef() == nil {
-		vgc.UpdateSecretRef(generateSecretReference(secretName, secretNamespace))
+		vgc.UpdateSecretRef(pkg_utils.GenerateSecretReference(secretName, secretNamespace))
 	}
 	if vgc.GetDeletionPolicy() == "" {
-		vgc.UpdateDeletionPolicy(getVolumeGroupDeletionPolicy(vgClass))
+		vgc.UpdateDeletionPolicy(pkg_utils.GetVolumeGroupDeletionPolicy(vgClass))
 	}
 }
 
@@ -298,14 +242,14 @@ func UpdateThinVGC(client client.Client, vgcNamespace, vgcName string, logger lo
 	return nil
 }
 
-func updateThinVGCSpec(vgc *volumegroupv1.VolumeGroupContent) {
+func updateThinVGCSpec(vgc abstract.VolumeGroupContent) {
 	if vgc.GetDeletionPolicy() == "" {
 		defaultDeletionPolicy := common.VolumeGroupContentRetain
 		vgc.UpdateDeletionPolicy(&defaultDeletionPolicy)
 	}
 }
 
-func UpdateVGCByResponse(client client.Client, vgc *volumegroupv1.VolumeGroupContent, resp *volumegroup.Response) error {
+func UpdateVGCByResponse(client client.Client, vgc abstract.VolumeGroupContent, resp *volumegroup.Response) error {
 	CreateVGResponse := resp.Response.(*csi.CreateVolumeGroupResponse)
 	vgc.UpdateVGHandle(CreateVGResponse.VolumeGroup.VolumeGroupId)
 	vgc.UpdateVGAttributes(CreateVGResponse.VolumeGroup.VolumeGroupContext)
@@ -315,7 +259,7 @@ func UpdateVGCByResponse(client client.Client, vgc *volumegroupv1.VolumeGroupCon
 	return nil
 }
 
-func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, vgc *volumegroupv1.VolumeGroupContent, driver string) error {
+func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, vgc abstract.VolumeGroupContent, driver string) error {
 	logger.Info(fmt.Sprintf(messages.DeletePVCsUnderVGC, vgc.GetNamespace(), vgc.GetName()))
 	for _, pv := range vgc.GetPVList() {
 		pvcName := getPVCNameFromPV(pv)

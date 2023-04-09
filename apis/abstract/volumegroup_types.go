@@ -23,6 +23,8 @@ import (
 )
 
 type VolumeGroup interface {
+	metav1.Object
+	runtime.Object
 	GetVGCName() string
 	GetVGCLassName() string
 	GetApiVersion() string
@@ -35,8 +37,7 @@ type VolumeGroup interface {
 	UpdateReady(ready bool)
 	UpdateError(vgError *common.VolumeGroupError)
 	UpdatePVCList(PVCList []corev1.PersistentVolumeClaim)
-	metav1.Object
-	runtime.Object
+	Copy() VolumeGroup
 }
 
 type VolumeGroupList interface {

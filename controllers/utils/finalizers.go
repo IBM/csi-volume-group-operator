@@ -42,7 +42,7 @@ func AddFinalizerToVG(client runtimeclient.Client, logger logr.Logger, vg abstra
 	return nil
 }
 
-func AddFinalizerToVGC(client runtimeclient.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
+func AddFinalizerToVGC(client runtimeclient.Client, logger logr.Logger, vgc abstract.VolumeGroupContent) error {
 	if !Contains(vgc.GetFinalizers(), VgcFinalizer) {
 		logger.Info("adding finalizer to volumeGroupContent object", "Name", vgc.GetName(), "Finalizer", VgcFinalizer)
 		vgc.SetFinalizers(append(vgc.GetFinalizers(), VgcFinalizer))
@@ -68,7 +68,7 @@ func RemoveFinalizerFromVG(client runtimeclient.Client, logger logr.Logger, vg a
 	return nil
 }
 
-func RemoveFinalizerFromVGC(client runtimeclient.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) error {
+func RemoveFinalizerFromVGC(client runtimeclient.Client, logger logr.Logger, vgc abstract.VolumeGroupContent) error {
 	if Contains(vgc.GetFinalizers(), VgcFinalizer) {
 		logger.Info("removing finalizer from VolumeGroupContent object", "Name", vgc.GetName(), "Finalizer", VgcFinalizer)
 		vgc.SetFinalizers(remove(vgc.GetFinalizers(), VgcFinalizer))
@@ -123,7 +123,7 @@ func isFinalizerShouldBeREmovedFromPVC(logger logr.Logger, client runtimeclient.
 	if err != nil {
 		return false, err
 	}
-	vgs, err := GetVGs(logger, client, driver)
+	vgs, err := GetVGs(logger, client, driver, &volumegroupv1.VolumeGroupList{}, &volumegroupv1.VolumeGroupClass{})
 	if err != nil {
 		return false, err
 	}
