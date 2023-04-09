@@ -140,7 +140,7 @@ var _ = BeforeSuite(func() {
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
-		Log:          ctrl.Log.WithName("VolumeGroupContentController"),
+		Log:          ctrl.Log.WithName("PersistentVolumeClaimController"),
 		GRPCClient:   csiConn,
 		VGClient:     mockVolumeGroup,
 	}).SetupWithManager(mgr, driverConfig)
@@ -161,11 +161,31 @@ var _ = AfterSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 })
 
-func createVolumeGroupObjects() error {
+func createNonVolumeK8SResources() error {
+	err := utils.CreateResourceObject(Secret, k8sClient)
+	if err != nil {
+		return err
+	}
+	return utils.CreateResourceObject(StorageClass, k8sClient)
+}
+
+func createVolumeGroupObjects(deletionPolicy volumegroupv1.VolumeGroupDeletionPolicy) error {
 	err := utils.CreateResourceObject(VGClass, k8sClient)
 	if err != nil {
 		return err
 	}
+
+	vgclass := &volumegroupv1.VolumeGroupClass{}
+	err = utils.GetNamespacedResourceObject(VGClassName, Namespace, vgclass, k8sClient)
+	if err != nil {
+		return err
+	}
+	vgclass.VolumeGroupDeletionPolicy = &deletionPolicy
+	err = k8sClient.Update(context.TODO(), vgclass)
+	if err != nil {
+		return err
+	}
+
 	err = utils.CreateResourceObject(VG, k8sClient)
 	return err
 }
