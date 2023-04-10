@@ -40,7 +40,6 @@ import (
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
-	"github.com/IBM/csi-volume-group-operator/controllers/persistentvolumeclaim"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
 	"github.com/IBM/csi-volume-group-operator/pkg/client/fake"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
@@ -136,16 +135,6 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(mgr, driverConfig)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&persistentvolumeclaim.PersistentVolumeClaimReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		DriverConfig: driverConfig,
-		Log:          ctrl.Log.WithName("VolumeGroupContentController"),
-		GRPCClient:   csiConn,
-		VGClient:     mockVolumeGroup,
-	}).SetupWithManager(mgr, driverConfig)
-	Expect(err).ToNot(HaveOccurred())
-
 	go func() {
 		err = mgr.Start(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -161,11 +150,31 @@ var _ = AfterSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 })
 
-func createVolumeGroupObjects() error {
+func createNonVolumeK8SResources() error {
+	err := utils.CreateResourceObject(Secret, k8sClient)
+	if err != nil {
+		return err
+	}
+	return utils.CreateResourceObject(StorageClass, k8sClient)
+}
+
+func createVolumeGroupObjects(deletionPolicy volumegroupv1.VolumeGroupDeletionPolicy) error {
 	err := utils.CreateResourceObject(VGClass, k8sClient)
 	if err != nil {
 		return err
 	}
+
+	vgclass := &volumegroupv1.VolumeGroupClass{}
+	err = utils.GetNamespacedResourceObject(VGClassName, Namespace, vgclass, k8sClient)
+	if err != nil {
+		return err
+	}
+	vgclass.VolumeGroupDeletionPolicy = &deletionPolicy
+	err = k8sClient.Update(context.TODO(), vgclass)
+	if err != nil {
+		return err
+	}
+
 	err = utils.CreateResourceObject(VG, k8sClient)
 	return err
 }
