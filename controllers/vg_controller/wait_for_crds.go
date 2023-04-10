@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func waitForCrds(logger logr.Logger, client client.Client, vgGroup, vgVersion string) error {
+func waitForCRDs(logger logr.Logger, client client.Client, vgGroup, vgVersion string) error {
 	err := waitForVGResource(logger, client, VolumeGroup, vgGroup, vgVersion)
 	if err != nil {
 		logger.Error(err, "failed to wait for VolumeGroup CRD")

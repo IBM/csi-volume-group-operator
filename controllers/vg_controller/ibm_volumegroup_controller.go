@@ -19,14 +19,18 @@ package vgcontroller
 import (
 	"context"
 
+	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -75,17 +79,19 @@ func (r *IBMVolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 func (r *IBMVolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {
 	logger := r.Log.WithName("SetupWithManager")
-	err := waitForCrds(logger, r.Client, volumegroupv1.GroupVersion.Group, volumegroupv1.GroupVersion.Version)
+	err := waitForCRDs(logger, r.Client, volumegroupv1.GroupVersion.Group, volumegroupv1.GroupVersion.Version)
 	if err != nil {
 		r.Log.Error(err, "failed to wait for crds")
 
 		return err
 	}
-	pred := predicate.GenerationChangedPredicate{}
+	generationPred := predicate.GenerationChangedPredicate{}
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate)
 
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&volumegroupv1.VolumeGroup{}).
-		WithEventFilter(pred).Complete(r)
+		For(&volumegroupv1.VolumeGroup{}, builder.WithPredicates(pred)).
+		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, utils.CreateRequests(r.Client), builder.WithPredicates(utils.PvcPredicate)).
+		Complete(r)
 }

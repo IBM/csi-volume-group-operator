@@ -30,6 +30,7 @@ import (
 
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
+	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -83,7 +84,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 
 	} else {
-		if utils.Contains(instance.GetFinalizers(), utils.VGFinalizer) {
+		if commonUtils.Contains(instance.GetFinalizers(), utils.VGFinalizer) {
 			if err = r.removeInstance(logger, instance); err != nil {
 				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
 			}

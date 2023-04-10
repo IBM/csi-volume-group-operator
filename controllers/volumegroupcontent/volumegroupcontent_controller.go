@@ -23,6 +23,7 @@ import (
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
@@ -125,7 +126,7 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 	} else if isVgExist {
 		return fmt.Errorf(messages.VgIsStillExist, vgc.GetName(), vgc.GetNamespace())
 	}
-	if utils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) {
+	if commonUtils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) && !utils.IsContainOtherFinalizers(vgc, logger) {
 		if r.DriverConfig.DisableDeletePvcs == "false" {
 			if err := utils.DeletePVCsUnderVGC(logger, r.Client, vgc, r.DriverConfig.DriverName); err != nil {
 				return err
@@ -134,8 +135,8 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 		if err := r.removeVGC(logger, vgc, secret); err != nil {
 			return err
 		}
+		logger.Info("VolumeGroupContent object is terminated, skipping reconciliation")
 	}
-	logger.Info("VolumeGroupContent object is terminated, skipping reconciliation")
 	return nil
 }
 
@@ -236,7 +237,8 @@ func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc abstract.VolumeGr
 func (r *VolumeGroupContentReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {
 	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
 
-	pred := predicate.GenerationChangedPredicate{}
+	generationPred := predicate.GenerationChangedPredicate{}
+	pred := predicate.Or(generationPred, utils.FinalizerPredicate)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroupContent{}, builder.WithPredicates(pred)).

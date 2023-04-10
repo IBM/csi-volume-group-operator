@@ -82,24 +82,6 @@ func generateString() string {
 	return string(b)
 }
 
-func AddVolumesToVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
-	pvcs []corev1.PersistentVolumeClaim, vg abstract.VolumeGroup, vgClass abstract.VolumeGroupClass) error {
-	logger.Info(fmt.Sprintf(messages.AddVolumeToVG, vg.GetNamespace(), vg.GetName()))
-	newPVCList := appendMultiplePVCs(vg.GetPVCList(), pvcs)
-	if IsPVCListEqual(newPVCList, vg.GetPVCList()) {
-		return nil
-	}
-	vg.UpdatePVCList(newPVCList)
-
-	err := ModifyVG(logger, client, vg, vgClient, vgClass)
-	if err != nil {
-		vg.UpdatePVCList(removeMultiplePVCs(vg.GetPVCList(), pvcs))
-		return err
-	}
-	logger.Info(fmt.Sprintf(messages.AddedVolumeToVG, vg.GetNamespace(), vg.GetName()))
-	return nil
-}
-
 func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
 	pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
 	err := AddPVCToVG(logger, client, pvc, vg)
@@ -118,24 +100,6 @@ func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
 
 	message := fmt.Sprintf(messages.AddedPVCToVG, pvc.Namespace, pvc.Name, vg.GetNamespace(), vg.GetName())
 	return HandleSuccessMessage(logger, client, vg, message, addingPVC)
-}
-
-func RemoveVolumeFromVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
-	pvcs []corev1.PersistentVolumeClaim, vg abstract.VolumeGroup, vgClass abstract.VolumeGroupClass) error {
-	logger.Info(fmt.Sprintf(messages.RemoveVolumeFromVG, vg.GetNamespace(), vg.GetName()))
-	newPVCList := removeMultiplePVCs(vg.GetPVCList(), pvcs)
-	if IsPVCListEqual(newPVCList, vg.GetPVCList()) {
-		return nil
-	}
-	vg.UpdatePVCList(newPVCList)
-
-	err := ModifyVG(logger, client, vg, vgClient, vgClass)
-	if err != nil {
-		vg.UpdatePVCList(appendMultiplePVCs(vg.GetPVCList(), pvcs))
-		return err
-	}
-	logger.Info(fmt.Sprintf(messages.RemovedVolumeFromVG, vg.GetNamespace(), vg.GetName()))
-	return nil
 }
 
 func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, driver string,

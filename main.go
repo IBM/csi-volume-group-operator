@@ -21,7 +21,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/IBM/csi-volume-group-operator/controllers/persistentvolumeclaim"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
@@ -54,7 +53,6 @@ const (
 var (
 	scheme        = runtime.NewScheme()
 	setupLog      = ctrl.Log.WithName("setup")
-	pvcController = "PersistentVolumeClaimController"
 	vgcController = "VolumeGroupContentController"
 )
 
@@ -121,15 +119,6 @@ func main() {
 		GRPCClient:   grpcClientInstance,
 	}).SetupWithManager(mgr, cfg)
 	exitWithError(err, messages.UnableToCreateVGCController)
-
-	err = (&persistentvolumeclaim.PersistentVolumeClaimReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		Log:          ctrl.Log.WithName(pvcController),
-		DriverConfig: cfg,
-		GRPCClient:   grpcClientInstance,
-	}).SetupWithManager(mgr, cfg)
-	exitWithError(err, messages.UnableToCreatePVCController)
 
 	//+kubebuilder:scaffold:builder
 
