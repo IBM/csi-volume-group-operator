@@ -40,7 +40,6 @@ import (
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
-	"github.com/IBM/csi-volume-group-operator/controllers/persistentvolumeclaim"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
 	"github.com/IBM/csi-volume-group-operator/pkg/client/fake"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
@@ -131,16 +130,6 @@ var _ = BeforeSuite(func() {
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
 		Log:          ctrl.Log.WithName("VolumeGroupContentController"),
-		GRPCClient:   csiConn,
-		VGClient:     mockVolumeGroup,
-	}).SetupWithManager(mgr, driverConfig)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&persistentvolumeclaim.PersistentVolumeClaimReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		DriverConfig: driverConfig,
-		Log:          ctrl.Log.WithName("PersistentVolumeClaimController"),
 		GRPCClient:   csiConn,
 		VGClient:     mockVolumeGroup,
 	}).SetupWithManager(mgr, driverConfig)
