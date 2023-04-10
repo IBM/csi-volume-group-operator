@@ -205,7 +205,7 @@ func (r *VolumeGroupContentReconciler) createVG(vgName string, parameters, secre
 
 func (r *VolumeGroupContentReconciler) handleStaticProvisionedVGC(vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger) (error, bool) {
 	if vgcSpec := utils.GetObjectField(vgc.Spec, "Source"); !vgcSpec.IsNil() {
-		if Spec.Source.VolumeGroupHandle != "" {
+		if vgc.Spec.Source.VolumeGroupHandle != "" {
 			return r.updateStaticVGC(vgc, logger), true
 		}
 	}
