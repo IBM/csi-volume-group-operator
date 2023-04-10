@@ -17,11 +17,7 @@ limitations under the License.
 package messages
 
 var (
-	ReconcilePVC                   = "Reconciling PersistentVolumeClaim"
 	ReconcileVG                    = "Reconciling VolumeGroup"
-	RequestName                    = "Request.Name"
-	RequestNamespace               = "Request.Namespace"
-	UnableToCreatePVCController    = "Unable to create persistentvolumeclaim controller"
 	UnableToCreateVGController     = "Unable to create VolumeGroup controller"
 	UnableToCreateVGCController    = "Unable to create VolumeGroupContent controller"
 	PVCNotFound                    = "%s/%s persistentVolumeClaim not found"
@@ -42,8 +38,6 @@ var (
 	AddedPVCToVG                   = "Successfully added %s/%s persistentVolumeClaim to %s/%s volumeGroup"
 	AddPVToVG                      = "Adding %s persistentVolume to %s/%s volumeGroup"
 	AddedPVToVGC                   = "Successfully added %s persistentVolume to %s/%s volumeGroupContent"
-	RemoveVolumeFromVG             = "Removing volume of persistentVolumeClaim from %s/%s volumeGroup"
-	RemovedVolumeFromVG            = "Successfully Removed volume of persistentVolumeClaim from %s/%s volumeGroup"
 	ModifyVG                       = "Modifying %s volumeGroupID with %v volumeIDs"
 	ModifiedVG                     = "Successfully modified %s volumeGroupID"
 	CreateEventForNamespacedObject = "Creating event for %s/%s %s, with [%s] message"
@@ -51,8 +45,6 @@ var (
 	UpdateVGStatus                 = "Updating status of %s/%s volumeGroup"
 	GetPVC                         = "Getting %s/%s persistentVolumeClaim"
 	GetPV                          = "Getting %s persistentVolume"
-	AddVolumeToVG                  = "Adding volume of persistentVolumeClaim to %s/%s volumeGroup"
-	AddedVolumeToVG                = "Successfully added volume of persistentVolumeClaim to %s/%s volumeGroup"
 	PVCIsNotInBoundPhase           = "PersistentVolumeClaim is not in bound phase, stopping the reconcile, when it will be in bound phase, reconcile will continue"
 	StorageClassHasVGParameter     = "StorageClass %s contain parameter volume_group for claim %s/%s. volumegroup feature is not supported"
 	ListPVCs                       = "Listing PersistentVolumeClaims"
