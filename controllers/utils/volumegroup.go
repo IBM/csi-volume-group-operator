@@ -213,14 +213,6 @@ func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.Persi
 	return nil
 }
 
-func removeMultiplePVCs(pvcList []corev1.PersistentVolumeClaim,
-	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
-	for _, pvc := range pvcs {
-		pvcList = removeFromPVCList(&pvc, pvcList)
-	}
-	return pvcList
-}
-
 func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
 	for index, pvcFromList := range pvcList {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
@@ -255,14 +247,6 @@ func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.Persistent
 	return nil
 }
 
-func appendMultiplePVCs(pvcListInVG []corev1.PersistentVolumeClaim,
-	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
-	for _, pvc := range pvcs {
-		pvcListInVG = appendPVC(pvcListInVG, pvc)
-	}
-	return pvcListInVG
-}
-
 func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
 	for _, pvcFromList := range pvcListInVG {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
@@ -289,8 +273,4 @@ func IsPVCInPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persiste
 		}
 	}
 	return false
-}
-
-func IsVgReady(vg volumegroupv1.VolumeGroup) bool {
-	return vg.Status.Ready != nil && *vg.Status.Ready
 }
