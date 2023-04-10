@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
@@ -123,7 +124,7 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 	} else if isVgExist {
 		return fmt.Errorf(messages.VgIsStillExist, vgc.Name, vgc.Namespace)
 	}
-	if utils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) && !utils.IsContainOtherFinalizers(vgc, logger) {
+	if commonUtils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) && !utils.IsContainOtherFinalizers(vgc, logger) {
 		if r.DriverConfig.DisableDeletePvcs == "false" {
 			if err := utils.DeletePVCsUnderVGC(logger, r.Client, vgc, r.DriverConfig.DriverName); err != nil {
 				return err

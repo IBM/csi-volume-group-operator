@@ -22,6 +22,7 @@ import (
 	"time"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
@@ -103,7 +104,7 @@ func (r *VolumeGroupReconciler) Reconcile(_ context.Context, req ctrl.Request) (
 		}
 
 	} else {
-		if utils.Contains(instance.GetFinalizers(), utils.VGFinalizer) && !utils.IsContainOtherFinalizers(instance, logger) {
+		if commonUtils.Contains(instance.GetFinalizers(), utils.VGFinalizer) && !utils.IsContainOtherFinalizers(instance, logger) {
 			if err = r.removeInstance(logger, instance); err != nil {
 				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
 			}
