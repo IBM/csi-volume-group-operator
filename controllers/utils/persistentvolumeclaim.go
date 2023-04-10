@@ -71,6 +71,39 @@ func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeCl
 	return nil
 }
 
+func IsPVCNeedToBeHandled(reqLogger logr.Logger, pvc *corev1.PersistentVolumeClaim, client runtimeclient.Client, driverName string) (bool, error) {
+	isPVCHasMatchingDriver, err := IsPVCHasMatchingDriver(reqLogger, client, pvc, driverName)
+	if err != nil {
+		return false, err
+	}
+	if !isPVCHasMatchingDriver {
+		return false, nil
+	}
+	if pvc.Status.Phase != corev1.ClaimBound {
+		reqLogger.Info(messages.PVCIsNotInBoundPhase)
+		return false, nil
+	}
+	isSCHasVGParam, err := IsPVCInStaticVG(reqLogger, client, pvc)
+	if err != nil {
+		return false, err
+	}
+	if isSCHasVGParam {
+		storageClassName, sErr := GetPVCClass(pvc)
+		if sErr != nil {
+			return false, sErr
+		}
+		msg := fmt.Sprintf(messages.StorageClassHasVGParameter, storageClassName, pvc.Namespace, pvc.Name)
+		reqLogger.Info(msg)
+		mErr := fmt.Errorf(msg)
+		err = HandlePVCErrorMessage(reqLogger, client, pvc, mErr, addingPVC)
+		if err != nil {
+			return false, err
+		}
+		return false, nil
+	}
+	return true, nil
+}
+
 func IsPVCInStaticVG(logger logr.Logger, client runtimeclient.Client, pvc *corev1.PersistentVolumeClaim) (bool, error) {
 	storageClassName, sErr := GetPVCClass(pvc)
 	if sErr != nil {
