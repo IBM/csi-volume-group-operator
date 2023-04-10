@@ -25,11 +25,12 @@ var (
 	FailedToAddPVCToVG                   = "Could not add %s/%s persistentVolumeClaim to %s/%s volumeGroup"
 	FailedToAddPVToVGC                   = "Could not add %s persistentVolume to %s/%s volumeGroupContent"
 	FailedToCreateEvent                  = "Failed to create %s/%s event"
-	FailedToGetPVC                       = "Failed to get %s/%s persistentVolumeClaim"
 	FailedToGetPV                        = "Failed to get %s persistentVolume"
 	PVCIsAlreadyBelongToGroup            = "Failed to add %s/%s persistentVolumeClaim to VolumeGroups %v Because it belongs to other VolumeGroups %v"
 	PVCMatchedWithMultipleNewGroups      = "Failed to add %s/%s persistentVolumeClaim to VolumeGroups %v Because it matched more than one new VolumeGroups"
 	FailedToGetStorageClass              = "Failed to get %s storageClass"
 	FailedToListPVC                      = "Failed to list persistentVolumeClaim"
 	FailedToGetStorageClassName          = "Failed to get storageClass name from persistentVolumeClaim %s"
+	CannotFindMatchingPVCForPV           = "Cannot find matching persistentVolumeClaim for %s persistentVolume"
+	FailToRemovePVCObject                = "Fail To remove %s/%s persistentVolumeClaim object"
 )

@@ -2,9 +2,9 @@ FROM golang:1.19
 
 ENV GO111MODULE=on \
     GOROOT=/usr/local/go \
-    WORKDIR=/go/src/github.com/IBM/volume-group-operator
+    WORKDIR=/go/src/github.com/IBM/csi-volume-group-operator
 WORKDIR $WORKDIR
-RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.1.4 \
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.9.0 \
     && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.0.0-20220322150744-c46b410039fd
 COPY Makefile .
 
