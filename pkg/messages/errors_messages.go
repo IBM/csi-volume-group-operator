@@ -25,7 +25,6 @@ var (
 	FailedToAddPVCToVG                   = "Could not add %s/%s persistentVolumeClaim to %s/%s volumeGroup"
 	FailedToAddPVToVGC                   = "Could not add %s persistentVolume to %s/%s volumeGroupContent"
 	FailedToCreateEvent                  = "Failed to create %s/%s event"
-	FailedToGetPVC                       = "Failed to get %s/%s persistentVolumeClaim"
 	FailedToGetPV                        = "Failed to get %s persistentVolume"
 	PVCIsAlreadyBelongToGroup            = "Failed to add %s/%s persistentVolumeClaim to VolumeGroups %v Because it belongs to other VolumeGroups %v"
 	PVCMatchedWithMultipleNewGroups      = "Failed to add %s/%s persistentVolumeClaim to VolumeGroups %v Because it matched more than one new VolumeGroups"
