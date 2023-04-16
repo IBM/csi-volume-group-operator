@@ -114,7 +114,7 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 	if err != nil {
 		return err
 	}
-	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace(), vgObjects.VGC)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,8 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 }
 
 func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
-	matchingPVCs []corev1.PersistentVolumeClaim, vg abstract.VolumeGroup, vgClass abstract.VolumeGroupClass) error {
+	matchingPVCs []corev1.PersistentVolumeClaim, vgObjects abstract.VolumeGroupObjects) error {
+	vg := vgObjects.VG
 
 	newVG := vg.Copy()
 	currentList := make([]corev1.PersistentVolumeClaim, len(newVG.GetPVCList()))
@@ -143,7 +144,7 @@ func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcCl
 
 	newVG.UpdatePVCList(matchingPVCs)
 
-	err := ModifyVG(logger, client, newVG, vgClient, vgClass)
+	err := ModifyVG(logger, client, newVG, vgClient, vgObjects)
 	if err != nil {
 		newVG.UpdatePVCList(currentList)
 		return err

@@ -24,7 +24,6 @@ import (
 
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -35,9 +34,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace string) (*volumegroupv1.VolumeGroup, error) {
+func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace string,
+	vg abstract.VolumeGroup) (abstract.VolumeGroup, error) {
 	logger.Info(fmt.Sprintf(messages.GetVG, vgName, vgNamespace))
-	vg := &volumegroupv1.VolumeGroup{}
 	namespacedVG := types.NamespacedName{Name: vgName, Namespace: vgNamespace}
 	err := client.Get(context.TODO(), namespacedVG, vg)
 	if err != nil {
@@ -49,9 +48,10 @@ func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace 
 	return vg, nil
 }
 
-func IsVgExist(client client.Client, logger logr.Logger, vgc abstract.VolumeGroupContent) (bool, error) {
+func IsVgExist(client client.Client, logger logr.Logger, vgc abstract.VolumeGroupContent,
+	vg abstract.VolumeGroup) (bool, error) {
 	if !vgc.GetVGRef().IsNil() {
-		if vg, err := GetVG(client, logger, vgc.GetVGRefName(), vgc.GetVGRefNamespace()); err != nil {
+		if vg, err := GetVG(client, logger, vgc.GetVGRefName(), vgc.GetVGRefNamespace(), vg); err != nil {
 			if !errors.IsNotFound(err) {
 				return false, err
 			}

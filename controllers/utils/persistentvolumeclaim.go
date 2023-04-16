@@ -200,7 +200,8 @@ func getPVCNamespaceFromPV(pv corev1.PersistentVolume) string {
 	return GetStringField(pv.Spec.ClaimRef, "Namespace")
 }
 
-func deletePVC(logger logr.Logger, client runtimeclient.Client, name, namespace, driver string) error {
+func deletePVC(logger logr.Logger, client runtimeclient.Client, name, namespace, driver string,
+	vgList abstract.VolumeGroupList, vgClass abstract.VolumeGroupClass) error {
 	logger.Info(fmt.Sprintf(messages.DeletePVC, namespace, name))
 	pvc, err := GetPVC(logger, client, name, namespace)
 	if err != nil {
@@ -209,7 +210,7 @@ func deletePVC(logger logr.Logger, client runtimeclient.Client, name, namespace,
 		}
 		return err
 	}
-	err = RemoveFinalizerFromPVC(client, logger, driver, pvc)
+	err = RemoveFinalizerFromPVC(client, logger, driver, pvc, vgList, vgClass)
 	if err != nil {
 		return err
 	}

@@ -49,7 +49,7 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 	logger := r.Log.WithValues("Request.Name", req.Name, "Request.Namespace", req.Namespace)
 	logger.Info(messages.ReconcileVG)
 
-	vgc, err := utils.GetVGC(r.Client, logger, req.Name, req.Namespace)
+	vgc, err := utils.GetVGC(r.Client, logger, req.Name, req.Namespace, r.VGObjects.VGC)
 	if err != nil {
 		if errors.IsNotFound(err) {
 
@@ -97,7 +97,7 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 			return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, createVGC)
 		}
 	} else {
-		if err = r.handleVGCWithDeletionTimestamp(logger, vgc, secret); err != nil {
+		if err = r.handleVGCWithDeletionTimestamp(logger, vgc, r.VGObjects.VG, secret); err != nil {
 			return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, deleteVGC)
 		}
 		return ctrl.Result{}, nil
@@ -118,15 +118,16 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 	return ctrl.Result{}, nil
 }
 
-func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger logr.Logger, vgc abstract.VolumeGroupContent, secret map[string]string) error {
-	if isVgExist, err := utils.IsVgExist(r.Client, logger, vgc); err != nil {
+func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger logr.Logger, vgc abstract.VolumeGroupContent,
+	vg abstract.VolumeGroup, secret map[string]string) error {
+	if isVgExist, err := utils.IsVgExist(r.Client, logger, vgc, vg); err != nil {
 		return err
 	} else if isVgExist {
 		return fmt.Errorf(messages.VgIsStillExist, vgc.GetName(), vgc.GetNamespace())
 	}
 	if commonUtils.Contains(vgc.GetFinalizers(), utils.VgcFinalizer) && !utils.IsContainOtherFinalizers(vgc, logger) {
 		if r.DriverConfig.DisableDeletePvcs == "false" {
-			if err := utils.DeletePVCsUnderVGC(logger, r.Client, vgc, r.DriverConfig.DriverName); err != nil {
+			if err := utils.DeletePVCsUnderVGC(logger, r.Client, r.VGObjects, r.DriverConfig.DriverName); err != nil {
 				return err
 			}
 		}

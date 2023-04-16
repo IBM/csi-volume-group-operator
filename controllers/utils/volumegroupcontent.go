@@ -26,7 +26,6 @@ import (
 
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -55,9 +54,9 @@ func AddMatchingPVToMatchingVGC(logger logr.Logger, client client.Client,
 	return nil
 }
 
-func GetVGC(client client.Client, logger logr.Logger, vgcName string, vgcNamespace string) (*volumegroupv1.VolumeGroupContent, error) {
+func GetVGC(client client.Client, logger logr.Logger, vgcName string, vgcNamespace string,
+	vgc abstract.VolumeGroupContent) (abstract.VolumeGroupContent, error) {
 	logger.Info(fmt.Sprintf(messages.GetVGC, vgcName, vgcNamespace))
-	vgc := &volumegroupv1.VolumeGroupContent{}
 	namespacedVGC := types.NamespacedName{Name: vgcName, Namespace: vgcNamespace}
 	err := client.Get(context.TODO(), namespacedVGC, vgc)
 	if err != nil {
@@ -259,7 +258,9 @@ func UpdateVGCByResponse(client client.Client, vgc abstract.VolumeGroupContent, 
 	return nil
 }
 
-func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, vgc abstract.VolumeGroupContent, driver string) error {
+func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, VGObjects abstract.VolumeGroupObjects, driver string) error {
+	vgc := VGObjects.VGC
+
 	logger.Info(fmt.Sprintf(messages.DeletePVCsUnderVGC, vgc.GetNamespace(), vgc.GetName()))
 	for _, pv := range vgc.GetPVList() {
 		pvcName := getPVCNameFromPV(pv)
@@ -276,7 +277,7 @@ func DeletePVCsUnderVGC(logger logr.Logger, client client.Client, vgc abstract.V
 			pvcName = pvc.Name
 			pvcNamespace = pvc.Namespace
 		}
-		err := deletePVC(logger, client, pvcName, pvcNamespace, driver)
+		err := deletePVC(logger, client, pvcName, pvcNamespace, driver, VGObjects.VGList, VGObjects.VGClass)
 		if err != nil {
 			return err
 		}

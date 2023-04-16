@@ -28,8 +28,8 @@ import (
 )
 
 func ModifyVG(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
-	vgClient grpcClient.VolumeGroup, vgClass abstract.VolumeGroupClass) error {
-	params, err := generateModifyVGParams(logger, client, vg, vgClient, vgClass)
+	vgClient grpcClient.VolumeGroup, vgObjects abstract.VolumeGroupObjects) error {
+	params, err := generateModifyVGParams(logger, client, vg, vgClient, vgObjects)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func ModifyVG(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
 	return nil
 }
 func generateModifyVGParams(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
-	vgClient grpcClient.VolumeGroup, vgClass abstract.VolumeGroupClass) (volumegroup.CommonRequestParameters, error) {
+	vgClient grpcClient.VolumeGroup, vgObjects abstract.VolumeGroupObjects) (volumegroup.CommonRequestParameters, error) {
 	vgId, err := getVgId(logger, client, vg)
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err

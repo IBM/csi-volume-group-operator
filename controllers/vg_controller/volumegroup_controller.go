@@ -144,7 +144,7 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger) error {
 	if utils.IsPVCListEqual(matchingPvcs, vg.GetPVCList()) {
 		return nil
 	}
-	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, vg, r.VGObjects.VGClass)
+	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, r.VGObjects)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
