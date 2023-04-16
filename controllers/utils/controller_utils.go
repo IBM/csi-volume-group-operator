@@ -103,7 +103,9 @@ func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
 }
 
 func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, driver string,
-	pvc corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
+	pvc corev1.PersistentVolumeClaim, vgObjects abstract.VolumeGroupObjects) error {
+	vg := vgObjects.VG
+
 	err := RemovePVCFromVG(logger, client, &pvc, vg)
 	if err != nil {
 		return err
@@ -123,7 +125,7 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 			return err
 		}
 	}
-	err = RemoveFinalizerFromPVC(client, logger, driver, &pvc)
+	err = RemoveFinalizerFromPVC(client, logger, driver, &pvc, vgObjects.VGList, vgObjects.VGClass)
 	if err != nil {
 		return err
 	}
@@ -150,15 +152,16 @@ func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcCl
 	return nil
 }
 
-func UpdatePvcAndPvList(logger logr.Logger, vg abstract.VolumeGroup, client client.Client, driver string,
+func UpdatePvcAndPvList(logger logr.Logger, vgObjects abstract.VolumeGroupObjects, client client.Client, driver string,
 	matchingPVCs []corev1.PersistentVolumeClaim) error {
+	vg := vgObjects.VG
 
 	vgPvcList := make([]corev1.PersistentVolumeClaim, len(vg.GetPVCList()))
 	copy(vgPvcList, vg.GetPVCList())
 
 	for _, pvc := range vgPvcList {
 		if !IsPVCInPVCList(&pvc, matchingPVCs) {
-			err := RemoveVolumeFromPvcListAndPvList(logger, client, driver, pvc, vg)
+			err := RemoveVolumeFromPvcListAndPvList(logger, client, driver, pvc, vgObjects)
 			if err != nil {
 				return HandleErrorMessage(logger, client, vg, err, removingPVC)
 			}

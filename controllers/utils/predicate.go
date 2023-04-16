@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,21 +47,20 @@ func isPhaseChanged(oldObject, newObject runtimeclient.Object) bool {
 		newObject.(*corev1.PersistentVolumeClaim).Status.Phase)
 }
 
-func CreateRequests(client runtimeclient.Client) handler.EventHandler {
+func CreateRequests(client runtimeclient.Client, vgList abstract.VolumeGroupList) handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(
 		func(object runtimeclient.Object) []reconcile.Request {
-			var vgList volumegroupv1.VolumeGroupList
-			if err := client.List(context.TODO(), &vgList); err != nil {
+			if err := client.List(context.TODO(), vgList); err != nil {
 				return []ctrl.Request{}
 			}
 			// TODO CSI-5437 - add a label selector check to the VolumeGroup to filter the list
 			// Create a reconcile request for each matching VolumeGroup.
-			requests := make([]ctrl.Request, len(vgList.Items))
-			for _, vg := range vgList.Items {
+			requests := make([]ctrl.Request, len(vgList.GetItems()))
+			for _, vg := range vgList.GetItems() {
 				requests = append(requests, ctrl.Request{
 					NamespacedName: types.NamespacedName{
-						Namespace: vg.Namespace,
-						Name:      vg.Name,
+						Namespace: vg.GetNamespace(),
+						Name:      vg.GetName(),
 					},
 				})
 			}

@@ -92,6 +92,6 @@ func (r *IBMVolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *confi
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroup{}, builder.WithPredicates(pred)).
-		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, utils.CreateRequests(r.Client), builder.WithPredicates(utils.PvcPredicate)).
-		Complete(r)
+		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, utils.CreateRequests(r.Client, &volumegroupv1.VolumeGroupList{}),
+			builder.WithPredicates(utils.PvcPredicate)).Complete(r)
 }
