@@ -122,7 +122,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	err = r.updatePVCs(logger, instance)
+	err = r.updatePVCs(logger)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -134,7 +134,9 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg abstract.VolumeGroup) error {
+func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger) error {
+	vg := r.VGObjects.VG
+
 	matchingPvcs, err := r.getMatchingPVCs(logger, vg)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
@@ -146,7 +148,7 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg abstract.Volum
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
-	err = utils.UpdatePvcAndPvList(logger, vg, r.Client, r.DriverConfig.DriverName, matchingPvcs)
+	err = utils.UpdatePvcAndPvList(logger, r.VGObjects, r.Client, r.DriverConfig.DriverName, matchingPvcs)
 	if err != nil {
 		return err
 	}
@@ -163,7 +165,7 @@ func (r *VolumeGroupReconciler) handleStaticProvisionedVG(vg abstract.VolumeGrou
 		if err != nil {
 			return err, true
 		}
-		err = r.updatePVCs(logger, vg)
+		err = r.updatePVCs(logger)
 		if err != nil {
 			return err, true
 		}
