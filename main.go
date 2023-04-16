@@ -41,7 +41,7 @@ import (
 	ibm_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	community_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
 	vgcontroller "github.com/IBM/csi-volume-group-operator/controllers/vg_controller"
-	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
+	vgccontroller "github.com/IBM/csi-volume-group-operator/controllers/vgc_controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -101,6 +101,14 @@ func main() {
 		GRPCClient:   grpcClientInstance,
 	}).SetupWithManager(mgr, cfg)
 	exitWithError(err, messages.UnableToCreateVGController)
+	err = (&vgccontroller.CommunityVolumeGroupContentReconciler{
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName(vgcController),
+		Scheme:       mgr.GetScheme(),
+		DriverConfig: cfg,
+		GRPCClient:   grpcClientInstance,
+	}).SetupWithManager(mgr, cfg)
+	exitWithError(err, messages.UnableToCreateVGCController)
 
 	err = (&vgcontroller.IBMVolumeGroupReconciler{
 		Client:       mgr.GetClient(),
@@ -110,8 +118,7 @@ func main() {
 		GRPCClient:   grpcClientInstance,
 	}).SetupWithManager(mgr, cfg)
 	exitWithError(err, messages.UnableToCreateVGController)
-
-	err = (&volumegroupcontent.VolumeGroupContentReconciler{
+	err = (&vgccontroller.IBMVolumeGroupContentReconciler{
 		Client:       mgr.GetClient(),
 		Log:          ctrl.Log.WithName(vgcController),
 		Scheme:       mgr.GetScheme(),

@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
@@ -97,8 +96,8 @@ func AddFinalizerToPVC(client runtimeclient.Client, logger logr.Logger, pvc *cor
 }
 
 func RemoveFinalizerFromPVC(client runtimeclient.Client, logger logr.Logger, driver string,
-	pvc *corev1.PersistentVolumeClaim) error {
-	removeFinalizer, err := isFinalizerShouldBeREmovedFromPVC(logger, client, driver, pvc)
+	pvc *corev1.PersistentVolumeClaim, vgList abstract.VolumeGroupList, vgClass abstract.VolumeGroupClass) error {
+	removeFinalizer, err := isFinalizerShouldBeREmovedFromPVC(logger, client, driver, pvc, vgList, vgClass)
 	if err != nil {
 		return err
 	}
@@ -120,12 +119,12 @@ func RemoveFinalizerFromPVC(client runtimeclient.Client, logger logr.Logger, dri
 }
 
 func isFinalizerShouldBeREmovedFromPVC(logger logr.Logger, client runtimeclient.Client, driver string,
-	pvc *corev1.PersistentVolumeClaim) (bool, error) {
+	pvc *corev1.PersistentVolumeClaim, vgList abstract.VolumeGroupList, vgClass abstract.VolumeGroupClass) (bool, error) {
 	pvc, err := GetPVC(logger, client, pvc.Name, pvc.Namespace)
 	if err != nil {
 		return false, err
 	}
-	vgs, err := GetVGs(logger, client, driver, &volumegroupv1.VolumeGroupList{}, &volumegroupv1.VolumeGroupClass{})
+	vgs, err := GetVGs(logger, client, driver, vgList, vgClass)
 	if err != nil {
 		return false, err
 	}

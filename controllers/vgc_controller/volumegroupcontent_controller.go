@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package volumegroupcontent
+package vgccontroller
 
 import (
 	"context"
@@ -22,7 +22,6 @@ import (
 
 	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
@@ -33,9 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 type VolumeGroupContentReconciler struct {
@@ -45,6 +42,7 @@ type VolumeGroupContentReconciler struct {
 	DriverConfig *config.DriverConfig
 	GRPCClient   *grpcClient.Client
 	VGClient     grpcClient.VolumeGroup
+	VGObjects    abstract.VolumeGroupObjects
 }
 
 func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -73,7 +71,7 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
-	vgClass, err := utils.GetVGClass(r.Client, logger, vgClassName, &volumegroupv1.VolumeGroupClass{})
+	vgClass, err := utils.GetVGClass(r.Client, logger, vgClassName, r.VGObjects.VGClass)
 	if err != nil {
 		return ctrl.Result{}, utils.HandleVGCErrorMessage(logger, r.Client, vgc, err, vgcReconcile)
 	}
@@ -224,7 +222,7 @@ func (r *VolumeGroupContentReconciler) updateStaticVGC(vgc abstract.VolumeGroupC
 }
 
 func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc abstract.VolumeGroupContent, logger logr.Logger) error {
-	vgClass, err := utils.GetVGClass(r.Client, logger, vgc.GetVGCLassName(), &volumegroupv1.VolumeGroupClass{})
+	vgClass, err := utils.GetVGClass(r.Client, logger, vgc.GetVGCLassName(), r.VGObjects.VGClass)
 	if err != nil {
 		return err
 	}
@@ -232,15 +230,4 @@ func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc abstract.VolumeGr
 		return err
 	}
 	return nil
-}
-
-func (r *VolumeGroupContentReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.DriverConfig) error {
-	r.VGClient = grpcClient.NewVolumeGroupClient(r.GRPCClient.Client, cfg.RPCTimeout)
-
-	generationPred := predicate.GenerationChangedPredicate{}
-	pred := predicate.Or(generationPred, utils.FinalizerPredicate)
-
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&volumegroupv1.VolumeGroupContent{}, builder.WithPredicates(pred)).
-		Complete(r)
 }
