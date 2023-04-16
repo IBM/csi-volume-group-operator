@@ -62,7 +62,7 @@ func (r *VolumeGroupContentReconciler) Reconcile(_ context.Context, req ctrl.Req
 
 	vgClassName := vgc.GetVGCLassName()
 	if vgClassName == "" {
-		if err := utils.UpdateThinVGC(r.Client, vgc.GetNamespace(), vgc.GetName(), logger); err != nil {
+		if err := utils.UpdateThinVGC(r.Client, logger, vgc.GetNamespace(), vgc.GetName(), vgc); err != nil {
 			return ctrl.Result{}, err
 		}
 		if err := utils.UpdateVGCStatus(r.Client, logger, vgc, utils.GetCurrentTime(), false); err != nil {
@@ -227,7 +227,7 @@ func (r *VolumeGroupContentReconciler) updateStaticVGCSpec(vgc abstract.VolumeGr
 	if err != nil {
 		return err
 	}
-	if err = utils.UpdateStaticVGC(r.Client, vgc.GetNamespace(), vgc.GetName(), vgClass, logger); err != nil {
+	if err = utils.UpdateStaticVGC(r.Client, logger, vgc.GetNamespace(), vgc.GetName(), vgClass, vgc); err != nil {
 		return err
 	}
 	return nil

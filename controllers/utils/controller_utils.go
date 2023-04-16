@@ -83,13 +83,15 @@ func generateString() string {
 }
 
 func AddVolumeToPvcListAndPvList(logger logr.Logger, client client.Client,
-	pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
+	pvc *corev1.PersistentVolumeClaim, vgObjects abstract.VolumeGroupObjects) error {
+	vg := vgObjects.VG
+
 	err := AddPVCToVG(logger, client, pvc, vg)
 	if err != nil {
 		return err
 	}
 
-	err = AddMatchingPVToMatchingVGC(logger, client, pvc, vg)
+	err = AddMatchingPVToMatchingVGC(logger, client, pvc, vgObjects)
 	if err != nil {
 		return err
 	}
@@ -143,10 +145,11 @@ func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcCl
 	copy(currentList, vg.GetPVCList())
 
 	newVG.UpdatePVCList(matchingPVCs)
+	newVGObjects := vgObjects
+	newVGObjects.VG = newVG
 
-	err := ModifyVG(logger, client, newVG, vgClient, vgObjects)
+	err := ModifyVG(logger, client, vgClient, vgObjects)
 	if err != nil {
-		newVG.UpdatePVCList(currentList)
 		return err
 	}
 
@@ -170,7 +173,7 @@ func UpdatePvcAndPvList(logger logr.Logger, vgObjects abstract.VolumeGroupObject
 	}
 	for _, pvc := range matchingPVCs {
 		if !IsPVCInPVCList(&pvc, vgPvcList) {
-			err := AddVolumeToPvcListAndPvList(logger, client, &pvc, vg)
+			err := AddVolumeToPvcListAndPvList(logger, client, &pvc, vgObjects)
 			if err != nil {
 				return HandleErrorMessage(logger, client, vg, err, addingPVC)
 			}

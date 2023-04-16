@@ -27,9 +27,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ModifyVG(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
-	vgClient grpcClient.VolumeGroup, vgObjects abstract.VolumeGroupObjects) error {
-	params, err := generateModifyVGParams(logger, client, vg, vgClient, vgObjects)
+func ModifyVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
+	vgObjects abstract.VolumeGroupObjects) error {
+	vg := vgObjects.VG
+
+	params, err := generateModifyVGParams(logger, client, vgClient, vgObjects)
 	if err != nil {
 		return err
 	}
@@ -44,9 +46,11 @@ func ModifyVG(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
 	logger.Info(fmt.Sprintf(messages.ModifiedVG, params.VolumeGroupID))
 	return nil
 }
-func generateModifyVGParams(logger logr.Logger, client client.Client, vg abstract.VolumeGroup,
-	vgClient grpcClient.VolumeGroup, vgObjects abstract.VolumeGroupObjects) (volumegroup.CommonRequestParameters, error) {
-	vgId, err := getVgId(logger, client, vg)
+func generateModifyVGParams(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
+	vgObjects abstract.VolumeGroupObjects) (volumegroup.CommonRequestParameters, error) {
+	vg := vgObjects.VG
+
+	vgId, err := getVgId(logger, client, vgObjects)
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err
 	}
@@ -54,7 +58,7 @@ func generateModifyVGParams(logger logr.Logger, client client.Client, vg abstrac
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err
 	}
-	secrets, err := getSecrets(logger, client, vg, vgClass)
+	secrets, err := getSecrets(logger, client, vg, vgObjects.VGClass)
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err
 	}

@@ -38,12 +38,14 @@ import (
 )
 
 func AddMatchingPVToMatchingVGC(logger logr.Logger, client client.Client,
-	pvc *corev1.PersistentVolumeClaim, vg abstract.VolumeGroup) error {
+	pvc *corev1.PersistentVolumeClaim, vgObjects abstract.VolumeGroupObjects) error {
+	vg := vgObjects.VG
+
 	pv, err := GetPVFromPVC(logger, client, pvc)
 	if err != nil {
 		return err
 	}
-	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace(), vgObjects.VGC)
 	if err != nil {
 		return err
 	}
@@ -189,22 +191,24 @@ func vgcRetryOnConflictFunc(client client.Client, vgc abstract.VolumeGroupConten
 	return err
 }
 
-func UpdateStaticVGCFromVG(client client.Client, vg abstract.VolumeGroup, vgClass abstract.VolumeGroupClass, logger logr.Logger) error {
-	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
+func UpdateStaticVGCFromVG(client client.Client, logger logr.Logger, vgObjects abstract.VolumeGroupObjects) error {
+	vg := vgObjects.VG
+
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace(), vgObjects.VGC)
 	if err != nil {
 		return err
 	}
 	vgc.UpdateVGRef(pkg_utils.GenerateObjectReference(vg))
-	updateStaticVGCSpec(vgClass, vgc)
+	updateStaticVGCSpec(vgObjects.VGClass, vgc)
 	if err = UpdateObject(client, vgc); err != nil {
 		return err
 	}
 	return nil
 }
 
-func UpdateStaticVGC(client client.Client, vgcNamespace, vgcName string,
-	vgClass abstract.VolumeGroupClass, logger logr.Logger) error {
-	vgc, err := GetVGC(client, logger, vgcName, vgcNamespace)
+func UpdateStaticVGC(client client.Client, logger logr.Logger, vgcNamespace, vgcName string,
+	vgClass abstract.VolumeGroupClass, vgc abstract.VolumeGroupContent) error {
+	vgc, err := GetVGC(client, logger, vgcName, vgcNamespace, vgc)
 	if err != nil {
 		return err
 	}
@@ -229,13 +233,14 @@ func updateStaticVGCSpec(vgClass abstract.VolumeGroupClass, vgc abstract.VolumeG
 	}
 }
 
-func UpdateThinVGC(client client.Client, vgcNamespace, vgcName string, logger logr.Logger) error {
-	vgc, err := GetVGC(client, logger, vgcName, vgcNamespace)
+func UpdateThinVGC(client client.Client, logger logr.Logger, vgcNamespace, vgcName string,
+	vgc abstract.VolumeGroupContent) error {
+	vgcFromCluster, err := GetVGC(client, logger, vgcName, vgcNamespace, vgc)
 	if err != nil {
 		return err
 	}
-	updateThinVGCSpec(vgc)
-	if err = UpdateObject(client, vgc); err != nil {
+	updateThinVGCSpec(vgcFromCluster)
+	if err = UpdateObject(client, vgcFromCluster); err != nil {
 		return err
 	}
 	return nil

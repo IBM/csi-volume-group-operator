@@ -85,7 +85,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	} else {
 		if commonUtils.Contains(instance.GetFinalizers(), utils.VGFinalizer) {
-			if err = r.removeInstance(logger, instance); err != nil {
+			if err = r.removeInstance(logger); err != nil {
 				return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, deleteVG)
 			}
 		}
@@ -95,7 +95,8 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	groupCreationTime := utils.GetCurrentTime()
 
-	err, isStaticProvisioned := r.handleStaticProvisionedVG(instance, logger, groupCreationTime, vgClass)
+	r.VGObjects.VGClass = vgClass
+	err, isStaticProvisioned := r.handleStaticProvisionedVG(logger, groupCreationTime)
 	if isStaticProvisioned {
 		return ctrl.Result{}, err
 	}
@@ -155,13 +156,15 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger) error {
 	return nil
 }
 
-func (r *VolumeGroupReconciler) handleStaticProvisionedVG(vg abstract.VolumeGroup, logger logr.Logger, groupCreationTime *metav1.Time, vgClass abstract.VolumeGroupClass) (error, bool) {
+func (r *VolumeGroupReconciler) handleStaticProvisionedVG(logger logr.Logger, groupCreationTime *metav1.Time) (error, bool) {
+	vg := r.VGObjects.VG
+
 	if vg.GetVGCName() != "" {
 		err := r.updateItems(vg, logger, groupCreationTime, vg.GetVGCName())
 		if err != nil {
 			return err, true
 		}
-		err = utils.UpdateStaticVGCFromVG(r.Client, vg, vgClass, logger)
+		err = utils.UpdateStaticVGCFromVG(r.Client, logger, r.VGObjects)
 		if err != nil {
 			return err, true
 		}
@@ -184,8 +187,10 @@ func (r *VolumeGroupReconciler) updateItems(instance abstract.VolumeGroup, logge
 	return nil
 }
 
-func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance abstract.VolumeGroup) error {
-	vgc, err := utils.GetVGC(r.Client, logger, instance.GetVGCName(), instance.GetNamespace())
+func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger) error {
+	vg := r.VGObjects.VG
+
+	vgc, err := utils.GetVGC(r.Client, logger, vg.GetVGCName(), vg.GetNamespace(), r.VGObjects.VGC)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
@@ -197,7 +202,7 @@ func (r *VolumeGroupReconciler) removeInstance(logger logr.Logger, instance abst
 			return err
 		}
 	}
-	if err = utils.RemoveFinalizerFromVG(r.Client, logger, instance); err != nil {
+	if err = utils.RemoveFinalizerFromVG(r.Client, logger, vg); err != nil {
 		return err
 	}
 	return nil
@@ -285,7 +290,7 @@ func (r *VolumeGroupReconciler) getMatchingPVCs(logger logr.Logger, vg abstract.
 }
 
 func (r *VolumeGroupReconciler) isVGCReady(logger logr.Logger, vgc abstract.VolumeGroupContent) (bool, error) {
-	vgcFromCluster, err := utils.GetVGC(r.Client, logger, vgc.GetName(), vgc.GetNamespace())
+	vgcFromCluster, err := utils.GetVGC(r.Client, logger, vgc.GetName(), vgc.GetNamespace(), vgc)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return false, err

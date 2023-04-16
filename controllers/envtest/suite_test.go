@@ -41,7 +41,7 @@ import (
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
 	vgcontroller "github.com/IBM/csi-volume-group-operator/controllers/vg_controller"
-	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
+	vgccontroller "github.com/IBM/csi-volume-group-operator/controllers/vgc_controller"
 	"github.com/IBM/csi-volume-group-operator/pkg/client/fake"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/tests/mock_grpc_server"
@@ -126,7 +126,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(mgr, driverConfig)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&volumegroupcontent.VolumeGroupContentReconciler{
+	err = (&vgccontroller.IBMVolumeGroupContentReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,

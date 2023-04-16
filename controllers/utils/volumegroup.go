@@ -231,8 +231,10 @@ func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persi
 	return pvcList
 }
 
-func getVgId(logger logr.Logger, client client.Client, vg abstract.VolumeGroup) (string, error) {
-	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace())
+func getVgId(logger logr.Logger, client client.Client, vgObjects abstract.VolumeGroupObjects) (string, error) {
+	vg := vgObjects.VG
+
+	vgc, err := GetVGC(client, logger, vg.GetVGCName(), vg.GetNamespace(), vgObjects.VGC)
 	if err != nil {
 		return "", err
 	}
