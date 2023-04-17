@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/IBM/csi-volume-group-operator/apis/common"
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

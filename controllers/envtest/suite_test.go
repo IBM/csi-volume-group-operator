@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/IBM/csi-volume-group-operator/apis/common"
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
 	vgcontroller "github.com/IBM/csi-volume-group-operator/controllers/vg_controller"
 	vgccontroller "github.com/IBM/csi-volume-group-operator/controllers/vgc_controller"
@@ -116,7 +116,7 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
-	err = (&vgcontroller.IBMVolumeGroupReconciler{
+	err = (&vgcontroller.CommunityVolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
@@ -126,7 +126,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(mgr, driverConfig)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&vgccontroller.IBMVolumeGroupContentReconciler{
+	err = (&vgccontroller.CommunityVolumeGroupContentReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,

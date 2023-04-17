@@ -17,7 +17,7 @@ limitations under the License.
 package envtest
 
 import (
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
