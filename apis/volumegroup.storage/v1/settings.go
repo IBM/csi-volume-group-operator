@@ -13,26 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package abstract
+package v1
 
-import (
-	"github.com/IBM/csi-volume-group-operator/apis/common"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+const (
+	vgGroupName                  = "volumegroup.storage.k8s.io"
+	vgAsPrefix                   = vgGroupName + "/"
+	PrefixedVGSecretNameKey      = vgAsPrefix + "secret-name"      // name key for secret
+	PrefixedVGSecretNamespaceKey = vgAsPrefix + "secret-namespace" // namespace key secret
 )
-
-type VolumeGroupClass interface {
-	metav1.Object
-	runtime.Object
-	GetDriver() string
-	GetParameters() map[string]string
-	GetDeletionPolicy() common.VolumeGroupDeletionPolicy
-	GetSecretCred() (string, string)
-	FilterPrefixedParameters() map[string]string
-	ValidatePrefixedParameters() error
-}
-
-type VolumeGroupClassList interface {
-	metav1.ListInterface
-	runtime.Object
-}

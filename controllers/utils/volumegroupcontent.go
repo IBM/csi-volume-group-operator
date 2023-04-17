@@ -220,7 +220,7 @@ func UpdateStaticVGC(client client.Client, logger logr.Logger, vgcNamespace, vgc
 }
 
 func updateStaticVGCSpec(vgClass abstract.VolumeGroupClass, vgc abstract.VolumeGroupContent) {
-	secretName, secretNamespace := GetSecretCred(vgClass)
+	secretName, secretNamespace := vgClass.GetSecretCred()
 	if vgc.GetVGCLassName() == "" {
 		vgClassName := vgClass.GetName()
 		vgc.UpdateVGClassName(vgClassName)

@@ -16,23 +16,21 @@ limitations under the License.
 
 package utils
 
+import commonSettings "github.com/IBM/csi-volume-group-operator/pkg/settings"
+
 const (
-	VGNamePrefix                 = "volumegroup"
-	vgGroupName                  = "volumegroup.storage.ibm.io"
-	VGFinalizer                  = vgGroupName
-	VGAsPrefix                   = vgGroupName + "/"
-	VgcFinalizer                 = VGAsPrefix + "vgc-protection"
-	pvcVGFinalizer               = VGAsPrefix + "pvc-protection"
-	PrefixedVGSecretNameKey      = VGAsPrefix + "secret-name"      // name key for secret
-	PrefixedVGSecretNamespaceKey = VGAsPrefix + "secret-namespace" // namespace key secret
-	letterBytes                  = "0123456789abcdefghijklmnopqrstuvwxyz"
-	vgController                 = "volumeGroupController"
-	warningEventType             = "Warning"
-	normalEventType              = "Normal"
-	storageClassVGParameter      = "volume_group"
-	addingPVC                    = "addPVC"
-	removingPVC                  = "removePVC"
-	createVGC                    = "creatingVGC"
-	vgcKind                      = "VolumeGroupContent"
-	APIVersion                   = "csi.ibm.com/v1"
+	VGNamePrefix            = "volumegroup"
+	VGFinalizer             = commonSettings.IBMvgGroupName
+	VgcFinalizer            = commonSettings.IBMvgAsPrefix + "vgc-protection"
+	pvcVGFinalizer          = commonSettings.IBMvgAsPrefix + "pvc-protection"
+	letterBytes             = "0123456789abcdefghijklmnopqrstuvwxyz"
+	vgController            = "volumeGroupController"
+	warningEventType        = "Warning"
+	normalEventType         = "Normal"
+	storageClassVGParameter = "volume_group"
+	addingPVC               = "addPVC"
+	removingPVC             = "removePVC"
+	createVGC               = "creatingVGC"
+	vgcKind                 = "VolumeGroupContent"
+	APIVersion              = "csi.ibm.com/v1"
 )

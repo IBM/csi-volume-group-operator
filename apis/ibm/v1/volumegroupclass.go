@@ -17,6 +17,7 @@ package v1
 
 import (
 	"github.com/IBM/csi-volume-group-operator/apis/common"
+	commonSettings "github.com/IBM/csi-volume-group-operator/pkg/settings"
 	"github.com/IBM/csi-volume-group-operator/pkg/utils"
 )
 
@@ -31,4 +32,16 @@ func (vgc *VolumeGroupClass) GetDeletionPolicy() common.VolumeGroupDeletionPolic
 		return common.VolumeGroupContentDelete
 	}
 	return common.VolumeGroupContentRetain
+}
+func (vgc *VolumeGroupClass) GetSecretCred() (string, string) {
+	secretName := vgc.GetParameters()[commonSettings.IBMPrefixedVGSecretNameKey]
+	secretNamespace := vgc.GetParameters()[commonSettings.IBMPrefixedVGSecretNamespaceKey]
+	return secretName, secretNamespace
+}
+func (vgc *VolumeGroupClass) FilterPrefixedParameters() map[string]string {
+	return utils.FilterPrefixedParameters(commonSettings.IBMvgAsPrefix, vgc.GetParameters())
+}
+func (vgc *VolumeGroupClass) ValidatePrefixedParameters() error {
+	return utils.ValidatePrefixedParameters(vgc.GetParameters(), commonSettings.IBMvgAsPrefix,
+		commonSettings.IBMPrefixedVGSecretNameKey, commonSettings.IBMPrefixedVGSecretNamespaceKey)
 }

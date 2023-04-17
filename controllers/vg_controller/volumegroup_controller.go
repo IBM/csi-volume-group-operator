@@ -70,7 +70,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	}
 
-	if err = utils.ValidatePrefixedParameters(vgClass.GetParameters()); err != nil {
+	if err = vgClass.ValidatePrefixedParameters(); err != nil {
 		logger.Error(err, "failed to validate parameters of volumegroupClass", "VGClassName", vgClass.GetName())
 		if uErr := utils.UpdateVGStatusError(r.Client, instance, logger, err.Error()); uErr != nil {
 			return ctrl.Result{}, uErr
@@ -105,7 +105,7 @@ func (r *VolumeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVG)
 	}
-	secretName, secretNamespace := utils.GetSecretCred(vgClass)
+	secretName, secretNamespace := vgClass.GetSecretCred()
 	r.VGObjects.VGC.GenerateVGC(vgName, instance, vgClass, secretName, secretNamespace)
 	vgc := r.VGObjects.VGC
 	logger.Info("GenerateVolumeGroupContent", "vgc", vgc)

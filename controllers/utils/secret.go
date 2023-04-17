@@ -56,7 +56,7 @@ func convertMap(oldMap map[string][]byte) map[string]string {
 }
 
 func GetSecretDataFromClass(client client.Client, vgClass abstract.VolumeGroupClass, logger logr.Logger) (map[string]string, error) {
-	secretName, secretNamespace := GetSecretCred(vgClass)
+	secretName, secretNamespace := vgClass.GetSecretCred()
 	secret := make(map[string]string)
 	var err error
 	if secretName != "" && secretNamespace != "" {
@@ -66,10 +66,4 @@ func GetSecretDataFromClass(client client.Client, vgClass abstract.VolumeGroupCl
 		}
 	}
 	return secret, nil
-}
-
-func GetSecretCred(vgClass abstract.VolumeGroupClass) (string, string) {
-	secretName := vgClass.GetParameters()[PrefixedVGSecretNameKey]
-	secretNamespace := vgClass.GetParameters()[PrefixedVGSecretNamespaceKey]
-	return secretName, secretNamespace
 }
