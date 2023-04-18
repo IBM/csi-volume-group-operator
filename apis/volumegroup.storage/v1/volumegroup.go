@@ -53,6 +53,9 @@ func (vg *VolumeGroup) UpdateError(vgError *common.VolumeGroupError) {
 func (vg *VolumeGroup) UpdatePVCList(PVCList []corev1.PersistentVolumeClaim) {
 	vg.Status.PVCList = PVCList
 }
+func (vg *VolumeGroup) Copy() abstract.VolumeGroup {
+	return vg.DeepCopy()
+}
 
 func (vgList *VolumeGroupList) GetItems() []abstract.VolumeGroup {
 	vgs := []abstract.VolumeGroup{}
