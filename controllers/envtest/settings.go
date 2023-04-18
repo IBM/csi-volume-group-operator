@@ -34,8 +34,8 @@ var (
 	SCName                 = "fake-storage-class-name"
 	DriverName             = "driver.name"
 	StorageClassParameters = map[string]string{
-		"volumegroup.storage.k8s.io/secret-name":      SecretName,
-		"volumegroup.storage.k8s.io/secret-namespace": Namespace,
+		"volumegroup.storage.openshift.io/secret-name":      SecretName,
+		"volumegroup.storage.openshift.io/secret-namespace": Namespace,
 	}
 	FakeMatchLabels = map[string]string{
 		"fake-label": "fake-value",
