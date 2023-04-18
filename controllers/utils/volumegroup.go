@@ -20,15 +20,45 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func GetVG(client client.Client, logger logr.Logger, vgName string, vgNamespace string) (*volumegroupv1.VolumeGroup, error) {
+	logger.Info(fmt.Sprintf(messages.GetVG, vgName, vgNamespace))
+	vg := &volumegroupv1.VolumeGroup{}
+	namespacedVG := types.NamespacedName{Name: vgName, Namespace: vgNamespace}
+	err := client.Get(context.TODO(), namespacedVG, vg)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Error(err, "VolumeGroup not found", "VolumeGroup Name", vgName)
+		}
+		return nil, err
+	}
+	return vg, nil
+}
+
+func IsVgExist(client client.Client, logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent) (bool, error) {
+	if !GetObjectField(vgc.Spec, "VolumeGroupRef").IsNil() {
+		if vg, err := GetVG(client, logger, vgc.Spec.VolumeGroupRef.Name, vgc.Spec.VolumeGroupRef.Namespace); err != nil {
+			if !errors.IsNotFound(err) {
+				return false, err
+			}
+		} else {
+			return vg != nil, nil
+		}
+	}
+	return false, nil
+}
 
 func UpdateVGSourceContent(client client.Client, instance *volumegroupv1.VolumeGroup,
 	vgcName string, logger logr.Logger) error {
@@ -52,10 +82,10 @@ func updateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, logger 
 	return nil
 }
 
-func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgc *volumegroupv1.VolumeGroupContent,
+func UpdateVGStatus(client client.Client, vg *volumegroupv1.VolumeGroup, vgcName string,
 	groupCreationTime *metav1.Time, ready bool, logger logr.Logger) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		vg.Status.BoundVolumeGroupContentName = &vgc.Name
+		vg.Status.BoundVolumeGroupContentName = &vgcName
 		vg.Status.GroupCreationTime = groupCreationTime
 		vg.Status.Ready = &ready
 		vg.Status.Error = nil
@@ -183,14 +213,6 @@ func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.Persi
 	return nil
 }
 
-func removeMultiplePVCs(pvcList []corev1.PersistentVolumeClaim,
-	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
-	for _, pvc := range pvcs {
-		pvcList = removeFromPVCList(&pvc, pvcList)
-	}
-	return pvcList
-}
-
 func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
 	for index, pvcFromList := range pvcList {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
@@ -202,7 +224,7 @@ func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persi
 }
 
 func getVgId(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (string, error) {
-	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Name, vg.Namespace)
+	vgc, err := GetVGC(client, logger, GetStringField(vg.Spec.Source, "VolumeGroupContentName"), vg.Namespace)
 	if err != nil {
 		return "", err
 	}
@@ -223,14 +245,6 @@ func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.Persistent
 	logger.Info(fmt.Sprintf(messages.AddedPVCToVG,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 	return nil
-}
-
-func appendMultiplePVCs(pvcListInVG []corev1.PersistentVolumeClaim,
-	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
-	for _, pvc := range pvcs {
-		pvcListInVG = appendPVC(pvcListInVG, pvc)
-	}
-	return pvcListInVG
 }
 
 func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
@@ -259,8 +273,4 @@ func IsPVCInPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persiste
 		}
 	}
 	return false
-}
-
-func IsVgReady(vg volumegroupv1.VolumeGroup) bool {
-	return vg.Status.Ready != nil && *vg.Status.Ready
 }

@@ -31,11 +31,9 @@ import (
 
 func GetPVFromPVC(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim) (*corev1.PersistentVolume, error) {
 	logger.Info(fmt.Sprintf(messages.GetPVOfPVC, pvc.Namespace, pvc.Name))
-	pvName, err := getPVName(logger, client, pvc)
-	if err != nil {
-		return nil, err
-	}
+	pvName := getPVNameFromPVC(pvc)
 	if pvName == "" {
+		logger.Info(messages.PVCDoesNotHavePV)
 		return nil, nil
 	}
 
@@ -49,12 +47,8 @@ func GetPVFromPVC(logger logr.Logger, client client.Client, pvc *corev1.Persiste
 	return pv, nil
 }
 
-func getPVName(logger logr.Logger, client client.Client, pvc *corev1.PersistentVolumeClaim) (string, error) {
-	pvName := pvc.Spec.VolumeName
-	if pvName == "" {
-		logger.Info(messages.PVCDoesNotHavePV)
-	}
-	return pvName, nil
+func getPVNameFromPVC(pvc *corev1.PersistentVolumeClaim) string {
+	return GetStringField(pvc.Spec, "VolumeName")
 }
 
 func getPV(logger logr.Logger, client client.Client, pvName string) (*corev1.PersistentVolume, error) {
