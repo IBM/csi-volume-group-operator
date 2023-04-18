@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,10 @@ package v1
 import (
 	"reflect"
 
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
 	"github.com/IBM/csi-volume-group-operator/apis/common"
 	"github.com/IBM/csi-volume-group-operator/pkg/utils"
+	pkg_utils "github.com/IBM/csi-volume-group-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -88,4 +90,33 @@ func (vgc *VolumeGroupContent) UpdateAPIVersion(apiVersion string) {
 }
 func (vgc *VolumeGroupContent) UpdateKind(kind string) {
 	vgc.Kind = kind
+}
+
+func (vgc *VolumeGroupContent) GenerateVGC(vgName string, vg abstract.VolumeGroup, vgClass abstract.VolumeGroupClass,
+	secretName, secretNamespace string) {
+	vgc.ObjectMeta = metav1.ObjectMeta{
+		Name:      vgName,
+		Namespace: vg.GetNamespace(),
+	}
+	vgc.Spec = generateVGCSpec(vg, vgClass, secretName, secretNamespace)
+}
+
+func generateVGCSpec(vg abstract.VolumeGroup, vgClass abstract.VolumeGroupClass,
+	secretName, secretNamespace string) VolumeGroupContentSpec {
+	vgClassName := vg.GetVGCLassName()
+	supportVolumeGroupSnapshot := false
+	return VolumeGroupContentSpec{
+		VolumeGroupClassName:       &vgClassName,
+		VolumeGroupRef:             pkg_utils.GenerateObjectReference(vg),
+		Source:                     generateVGCSource(vgClass.GetDriver()),
+		VolumeGroupDeletionPolicy:  pkg_utils.GetVolumeGroupDeletionPolicy(vgClass),
+		SupportVolumeGroupSnapshot: &supportVolumeGroupSnapshot,
+		VolumeGroupSecretRef:       pkg_utils.GenerateSecretReference(secretName, secretNamespace),
+	}
+}
+
+func generateVGCSource(driver string) *VolumeGroupContentSource {
+	return &VolumeGroupContentSource{
+		Driver: driver,
+	}
 }

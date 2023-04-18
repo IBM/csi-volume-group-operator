@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,13 @@ limitations under the License.
 */
 package utils
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/IBM/csi-volume-group-operator/apis/abstract"
+	"github.com/IBM/csi-volume-group-operator/apis/common"
+	corev1 "k8s.io/api/core/v1"
+)
 
 func GetStringField(object interface{}, fieldName string) string {
 	fieldValue := GetObjectField(object, fieldName)
@@ -58,4 +64,31 @@ func GetObjectField(object interface{}, fieldName string) reflect.Value {
 		}
 	}
 	return reflect.ValueOf(nil)
+}
+
+func GenerateSecretReference(secretName string, secretNamespace string) *corev1.SecretReference {
+	return &corev1.SecretReference{
+		Name:      secretName,
+		Namespace: secretNamespace,
+	}
+}
+
+func GetVolumeGroupDeletionPolicy(vgClass abstract.VolumeGroupClass) *common.VolumeGroupDeletionPolicy {
+	defaultDeletionPolicy := common.VolumeGroupContentDelete
+	deletionPolicy := vgClass.GetDeletionPolicy()
+	if deletionPolicy != "" {
+		return &deletionPolicy
+	}
+	return &defaultDeletionPolicy
+}
+
+func GenerateObjectReference(vg abstract.VolumeGroup) *corev1.ObjectReference {
+	return &corev1.ObjectReference{
+		Kind:            vg.GetObjectKind().GroupVersionKind().Kind,
+		Namespace:       vg.GetNamespace(),
+		Name:            vg.GetName(),
+		UID:             vg.GetUID(),
+		APIVersion:      vg.GetApiVersion(),
+		ResourceVersion: vg.GetResourceVersion(),
+	}
 }
