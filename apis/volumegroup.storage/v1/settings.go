@@ -16,7 +16,7 @@ limitations under the License.
 package v1
 
 const (
-	vgGroupName                  = "volumegroup.storage.k8s.io"
+	vgGroupName                  = "volumegroup.storage.openshift.io"
 	vgAsPrefix                   = vgGroupName + "/"
 	PrefixedVGSecretNameKey      = vgAsPrefix + "secret-name"      // name key for secret
 	PrefixedVGSecretNamespaceKey = vgAsPrefix + "secret-namespace" // namespace key secret
