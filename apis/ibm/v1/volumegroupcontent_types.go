@@ -87,7 +87,8 @@ type VolumeGroupContentStatus struct {
 
 // VolumeGroupContent is the Schema for the volumegroupcontents API
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Namespaced,shortName=vgc
+// +kubebuilder:resource:scope=Namespaced
+// +kubebuilder:deprecatedversion:warning="csi.ibm.com/v1 VolumeGroupContent is deprecated, use volumegroup.storage.openshift.io/v1 VolumeGroupContent"
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Ready",type=boolean,JSONPath=`.status.ready`
 // +kubebuilder:printcolumn:name="DeletionPolicy",type=string,JSONPath=`.spec.volumeGroupDeletionPolicy`

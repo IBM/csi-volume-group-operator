@@ -71,7 +71,8 @@ type VolumeGroupStatus struct {
 // VolumeGroup is a user's request for a group of volumes
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced,shortName=vg
+// +kubebuilder:resource:scope=Namespaced
+// +kubebuilder:deprecatedversion:warning="csi.ibm.com/v1 VolumeGroup is deprecated, use volumegroup.storage.openshift.io/v1 VolumeGroup"
 // +kubebuilder:printcolumn:name="Ready",type=boolean,JSONPath=`.status.ready`
 // +kubebuilder:printcolumn:name="VolumeGroupClass",type=string,JSONPath=`.spec.volumeGroupClassName`
 // +kubebuilder:printcolumn:name="VolumeGroupContent",type=string,JSONPath=`.status.boundVolumeGroupContentName`

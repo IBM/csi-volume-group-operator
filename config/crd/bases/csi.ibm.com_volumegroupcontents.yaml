@@ -16,8 +16,6 @@ spec:
     kind: VolumeGroupContent
     listKind: VolumeGroupContentList
     plural: volumegroupcontents
-    shortNames:
-    - vgc
     singular: volumegroupcontent
   scope: Namespaced
   versions:
@@ -40,6 +38,8 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    deprecated: true
+    deprecationWarning: csi.ibm.com/v1 VolumeGroupContent is deprecated, use volumegroup.storage.openshift.io/v1 VolumeGroupContent
     name: v1
     schema:
       openAPIV3Schema:
