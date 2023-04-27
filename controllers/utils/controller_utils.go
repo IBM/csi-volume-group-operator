@@ -141,14 +141,11 @@ func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcCl
 	vg := vgObjects.VG
 
 	newVG := vg.Copy()
-	currentList := make([]corev1.PersistentVolumeClaim, len(newVG.GetPVCList()))
-	copy(currentList, vg.GetPVCList())
-
 	newVG.UpdatePVCList(matchingPVCs)
 	newVGObjects := vgObjects
 	newVGObjects.VG = newVG
 
-	err := ModifyVG(logger, client, vgClient, vgObjects)
+	err := ModifyVG(logger, client, vgClient, newVGObjects)
 	if err != nil {
 		return err
 	}
