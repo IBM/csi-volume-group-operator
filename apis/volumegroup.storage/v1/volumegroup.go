@@ -60,7 +60,8 @@ func (vg *VolumeGroup) Copy() abstract.VolumeGroup {
 func (vgList *VolumeGroupList) GetItems() []abstract.VolumeGroup {
 	vgs := []abstract.VolumeGroup{}
 	for _, vg := range vgList.Items {
-		vgs = append(vgs, &vg)
+		vgCopy := vg.Copy()
+		vgs = append(vgs, vgCopy)
 	}
 	return vgs
 }
