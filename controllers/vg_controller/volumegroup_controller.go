@@ -277,7 +277,11 @@ func (r *VolumeGroupReconciler) getMatchingPVCs(logger logr.Logger, vg abstract.
 		if err != nil {
 			return nil, err
 		}
-		if isPVCShouldBeInVg && !utils.IsPVCInPVCList(&pvc, matchingPvcs) {
+		isPVCShouldBeHandled, err := utils.IsPVCNeedToBeHandled(logger, &pvc, r.Client, r.DriverConfig.DriverName)
+		if err != nil {
+			return nil, err
+		}
+		if isPVCShouldBeInVg && !utils.IsPVCInPVCList(&pvc, matchingPvcs) && isPVCShouldBeHandled {
 			matchingPvcs = append(matchingPvcs, pvc)
 		}
 	}
