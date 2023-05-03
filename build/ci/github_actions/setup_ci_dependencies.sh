@@ -1,7 +1,7 @@
 #!/bin/bash -xe
 set +o pipefail
 
-triggering_branch=$(echo $CI_ACTION_REF_NAME| sed 's|/|.|g')
+triggering_branch=$(echo $GITHUB_HEAD_REF| sed 's|/|.|g')
 image_version=${IMAGE_VERSION}
 build_number=${BUILD_NUMBER}
 commit_hash=${GITHUB_SHA:0:7}
