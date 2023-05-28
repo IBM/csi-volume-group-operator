@@ -1,4 +1,4 @@
-# Volume Group Operator
+# CSI Volume Group Operator
 
 ## Overview
 
