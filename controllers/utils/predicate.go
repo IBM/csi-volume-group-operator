@@ -6,6 +6,8 @@ import (
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -54,16 +56,29 @@ func CreateRequests(client runtimeclient.Client) handler.EventHandler {
 			if err := client.List(context.TODO(), &vgList); err != nil {
 				return []ctrl.Request{}
 			}
-			// TODO CSI-5437 - add a label selector check to the VolumeGroup to filter the list
+			pvc := &corev1.PersistentVolumeClaim{}
+			if err := client.Get(context.TODO(), types.NamespacedName{
+				Namespace: object.GetNamespace(),
+				Name:      object.GetName(),
+			}, pvc); err != nil {
+				return []ctrl.Request{}
+			}
 			// Create a reconcile request for each matching VolumeGroup.
 			requests := make([]ctrl.Request, len(vgList.Items))
+
 			for _, vg := range vgList.Items {
-				requests = append(requests, ctrl.Request{
-					NamespacedName: types.NamespacedName{
-						Namespace: vg.Namespace,
-						Name:      vg.Name,
-					},
-				})
+				selector, err := metav1.LabelSelectorAsSelector(vg.Spec.Source.Selector)
+				if err != nil {
+					continue
+				}
+				if selector.Matches(labels.Set(pvc.Labels)) {
+					requests = append(requests, ctrl.Request{
+						NamespacedName: types.NamespacedName{
+							Namespace: vg.Namespace,
+							Name:      vg.Name,
+						},
+					})
+				}
 			}
 			return requests
 		})
