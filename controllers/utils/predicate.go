@@ -56,22 +56,14 @@ func CreateRequests(client runtimeclient.Client) handler.EventHandler {
 			if err := client.List(context.TODO(), &vgList); err != nil {
 				return []ctrl.Request{}
 			}
-			pvc := &corev1.PersistentVolumeClaim{}
-			if err := client.Get(context.TODO(), types.NamespacedName{
-				Namespace: object.GetNamespace(),
-				Name:      object.GetName(),
-			}, pvc); err != nil {
-				return []ctrl.Request{}
-			}
 			// Create a reconcile request for each matching VolumeGroup.
-			requests := make([]ctrl.Request, len(vgList.Items))
-
+			var requests []ctrl.Request
 			for _, vg := range vgList.Items {
 				selector, err := metav1.LabelSelectorAsSelector(vg.Spec.Source.Selector)
 				if err != nil {
-					continue
+					return []ctrl.Request{}
 				}
-				if selector.Matches(labels.Set(pvc.Labels)) {
+				if selector.Matches(labels.Set(object.GetLabels())) {
 					requests = append(requests, ctrl.Request{
 						NamespacedName: types.NamespacedName{
 							Namespace: vg.Namespace,
