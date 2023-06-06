@@ -6,8 +6,6 @@ import (
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -59,11 +57,14 @@ func CreateRequests(client runtimeclient.Client) handler.EventHandler {
 			// Create a reconcile request for each matching VolumeGroup.
 			var requests []ctrl.Request
 			for _, vg := range vgList.Items {
-				selector, err := metav1.LabelSelectorAsSelector(vg.Spec.Source.Selector)
+				if vg.Spec.Source.Selector == nil {
+					continue
+				}
+				isVgMatchPvc, err := areLabelsMatchLabelSelector(object.GetLabels(), *vg.Spec.Source.Selector)
 				if err != nil {
 					return []ctrl.Request{}
 				}
-				if selector.Matches(labels.Set(object.GetLabels())) {
+				if isVgMatchPvc {
 					requests = append(requests, ctrl.Request{
 						NamespacedName: types.NamespacedName{
 							Namespace: vg.Namespace,
