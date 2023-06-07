@@ -43,14 +43,13 @@ func getPVCListVolumeIds(logger logr.Logger, client runtimeclient.Client, pvcLis
 	return volumeIds, nil
 }
 
-func IsPVCCanBeAddedToVG(logger logr.Logger, client runtimeclient.Client,
-	pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) error {
+func IsPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) error {
 	vgsWithPVC := []string{}
 	newVGsForPVC := []string{}
 	for _, vg := range vgs {
 		if IsPVCInPVCList(pvc, vg.Status.PVCList) {
 			vgsWithPVC = append(vgsWithPVC, vg.Name)
-		} else if isPVCMatchesVG, _ := IsPVCMatchesVG(logger, client, pvc, vg); isPVCMatchesVG {
+		} else if isPVCMatchesVG, _ := IsPVCMatchesVG(logger, pvc, vg); isPVCMatchesVG {
 			newVGsForPVC = append(newVGsForPVC, vg.Name)
 		}
 	}

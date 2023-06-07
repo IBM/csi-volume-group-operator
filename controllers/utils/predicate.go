@@ -54,16 +54,24 @@ func CreateRequests(client runtimeclient.Client) handler.EventHandler {
 			if err := client.List(context.TODO(), &vgList); err != nil {
 				return []ctrl.Request{}
 			}
-			// TODO CSI-5437 - add a label selector check to the VolumeGroup to filter the list
 			// Create a reconcile request for each matching VolumeGroup.
-			requests := make([]ctrl.Request, len(vgList.Items))
+			var requests []ctrl.Request
 			for _, vg := range vgList.Items {
-				requests = append(requests, ctrl.Request{
-					NamespacedName: types.NamespacedName{
-						Namespace: vg.Namespace,
-						Name:      vg.Name,
-					},
-				})
+				if vg.Spec.Source.Selector == nil {
+					continue
+				}
+				isVgMatchPvc, err := areLabelsMatchLabelSelector(object.GetLabels(), *vg.Spec.Source.Selector)
+				if err != nil {
+					return []ctrl.Request{}
+				}
+				if isVgMatchPvc {
+					requests = append(requests, ctrl.Request{
+						NamespacedName: types.NamespacedName{
+							Namespace: vg.Namespace,
+							Name:      vg.Name,
+						},
+					})
+				}
 			}
 			return requests
 		})

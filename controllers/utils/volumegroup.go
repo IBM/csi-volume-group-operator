@@ -178,13 +178,11 @@ func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegr
 	}
 	return vgClassDriver == driver, nil
 }
-func IsPVCMatchesVG(logger logr.Logger, client client.Client,
-	pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) (bool, error) {
+func IsPVCMatchesVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) (bool, error) {
 
 	logger.Info(fmt.Sprintf(messages.CheckIfPVCMatchesVG,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	areLabelsMatchLabelSelector, err := areLabelsMatchLabelSelector(
-		client, pvc.ObjectMeta.Labels, *vg.Spec.Source.Selector)
+	areLabelsMatchLabelSelector, err := areLabelsMatchLabelSelector(pvc.ObjectMeta.Labels, *vg.Spec.Source.Selector)
 
 	if areLabelsMatchLabelSelector {
 		logger.Info(fmt.Sprintf(messages.PVCMatchedToVG,
