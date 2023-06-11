@@ -20,11 +20,9 @@ import (
 	"github.com/IBM/csi-volume-group-operator/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func areLabelsMatchLabelSelector(client client.Client, labelsToCheck map[string]string,
-	labelSelector metav1.LabelSelector) (bool, error) {
+func areLabelsMatchLabelSelector(labelsToCheck map[string]string, labelSelector metav1.LabelSelector) (bool, error) {
 	selector, err := metav1.LabelSelectorAsSelector(&labelSelector)
 	if err != nil {
 		return false, &errors.MatchingLabelsAndLabelSelectorError{ErrorMessage: err.Error()}

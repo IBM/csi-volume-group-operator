@@ -237,7 +237,7 @@ func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, v
 		return false, nil
 	}
 
-	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
+	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, pvc, vg)
 	if err != nil {
 		return false, err
 	}
@@ -247,7 +247,7 @@ func (r *VolumeGroupReconciler) isPVCShouldBeRemovedFromVg(logger logr.Logger, v
 func (r *VolumeGroupReconciler) isPVCShouldBeInVg(logger logr.Logger, vg volumegroupv1.VolumeGroup,
 	pvc *corev1.PersistentVolumeClaim) (bool, error) {
 
-	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, r.Client, pvc, vg)
+	isPVCMatchesVG, err := utils.IsPVCMatchesVG(logger, pvc, vg)
 	if err != nil {
 		return false, err
 	}
@@ -270,7 +270,7 @@ func (r VolumeGroupReconciler) isPVCCanBeAddedToVG(logger logr.Logger, pvc *core
 	if err != nil {
 		return err
 	}
-	err = utils.IsPVCCanBeAddedToVG(logger, r.Client, pvc, vgList.Items)
+	err = utils.IsPVCCanBeAddedToVG(logger, pvc, vgList.Items)
 	return err
 }
 
