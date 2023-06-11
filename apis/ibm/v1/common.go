@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package common
+package v1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -41,26 +41,4 @@ type VolumeGroupError struct {
 	// message details the encountered error
 	// +optional
 	Message *string `json:"message,omitempty"`
-}
-
-func (in *VolumeGroupError) DeepCopyInto(out *VolumeGroupError) {
-	*out = *in
-	if in.Time != nil {
-		in, out := &in.Time, &out.Time
-		*out = (*in).DeepCopy()
-	}
-	if in.Message != nil {
-		in, out := &in.Message, &out.Message
-		*out = new(string)
-		**out = **in
-	}
-}
-
-func (in *VolumeGroupError) DeepCopy() *VolumeGroupError {
-	if in == nil {
-		return nil
-	}
-	out := new(VolumeGroupError)
-	in.DeepCopyInto(out)
-	return out
 }

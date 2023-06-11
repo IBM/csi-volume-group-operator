@@ -17,7 +17,6 @@ limitations under the License.
 package v1
 
 import (
-	"github.com/IBM/csi-volume-group-operator/apis/common"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -65,7 +64,7 @@ type VolumeGroupStatus struct {
 
 	// Last error encountered during group creation
 	// +optional
-	Error *common.VolumeGroupError `json:"error,omitempty"`
+	Error *VolumeGroupError `json:"error,omitempty"`
 }
 
 // VolumeGroup is a user's request for a group of volumes

@@ -32,7 +32,6 @@ resources:
   kind: VolumeGroupContent
   path: github.com/IBM/csi-volume-group-operator/apis/ibm/v1
   version: v1
-version: "3"
 - api:
     crdVersion: v1
     namespaced: true
@@ -41,7 +40,6 @@ version: "3"
   kind: VolumeGroup
   path: github.com/IBM/csi-volume-group-operator/apis/ibm/v1
   version: v1
-version: "3"
 - api:
     crdVersion: v1
     namespaced: true
@@ -50,7 +48,6 @@ version: "3"
   kind: VolumeGroupClass
   path: github.com/IBM/csi-volume-group-operator/apis/ibm/v1
   version: v1
-version: "3"
 - api:
     crdVersion: v1
     namespaced: true
