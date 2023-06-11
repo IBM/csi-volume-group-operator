@@ -24,7 +24,8 @@ import (
 //+kubebuilder:subresource:status
 
 // VolumeGroupClass is the Schema for the volumegroupclasses API
-// +kubebuilder:resource:scope=Cluster,shortName=vgclass
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:deprecatedversion:warning="csi.ibm.com/v1 VolumeGroupClass is deprecated, use volumegroup.storage.openshift.io/v1 VolumeGroupClass"
 // +kubebuilder:printcolumn:name="Driver",type=string,JSONPath=`.driver`
 // +kubebuilder:printcolumn:name="DeletionPolicy",type=string,JSONPath=`.volumeGroupDeletionPolicy`
 // +kubebuilder:printcolumn:name="SupportVolumeGroupSnapshot",type=boolean,JSONPath=`.supportVolumeGroupSnapshot`
