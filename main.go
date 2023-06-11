@@ -27,6 +27,7 @@ import (
 	"github.com/go-logr/logr"
 
 	uberzap "go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -39,11 +40,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	ibm_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	ibmcontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm"
-	ibmvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm/volumegroupcontent"
 	community_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
 	communitycontroller "github.com/IBM/csi-volume-group-operator/controllers/community"
 	communityvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/community/volumegroupcontent"
+	ibmcontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm"
+	ibmvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm/volumegroupcontent"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -115,21 +116,25 @@ func main() {
 
 	err = (&ibmcontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("controllers").WithName("CommunityVolumeGroup"),
+		Log:          ctrl.Log.WithName("controllers").WithName("IBMVolumeGroup"),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: cfg,
 		GRPCClient:   grpcClientInstance,
 	}).SetupWithManager(mgr, cfg)
-	exitWithError(err, messages.UnableToCreateVGController)
-
-	err = (&ibmvgccontroller.VolumeGroupContentReconciler{
-		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("IBM" + vgcController),
-		Scheme:       mgr.GetScheme(),
-		DriverConfig: cfg,
-		GRPCClient:   grpcClientInstance,
-	}).SetupWithManager(mgr, cfg)
-	exitWithError(err, messages.UnableToCreateVGCController)
+	if err == nil {
+		err = (&ibmvgccontroller.VolumeGroupContentReconciler{
+			Client:       mgr.GetClient(),
+			Log:          ctrl.Log.WithName(vgcController),
+			Scheme:       mgr.GetScheme(),
+			DriverConfig: cfg,
+			GRPCClient:   grpcClientInstance,
+		}).SetupWithManager(mgr, cfg)
+		exitWithError(err, messages.UnableToCreateVGCController)
+	} else if errors.IsForbidden(err) {
+		setupLog.Info(messages.ForbiddenToListVGObject)
+	} else {
+		exitWithError(err, messages.UnableToCreateVGController)
+	}
 
 	//+kubebuilder:scaffold:builder
 
