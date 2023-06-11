@@ -38,9 +38,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	"github.com/IBM/csi-volume-group-operator/controllers"
-	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
-	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
+	ibmcontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm"
+	"github.com/IBM/csi-volume-group-operator/controllers/ibm/envtest/utils"
+	ibmvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm/volumegroupcontent"
 	"github.com/IBM/csi-volume-group-operator/pkg/client/fake"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/tests/mock_grpc_server"
@@ -115,7 +115,7 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
-	err = (&controllers.VolumeGroupReconciler{
+	err = (&ibmcontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
@@ -125,7 +125,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(mgr, driverConfig)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&volumegroupcontent.VolumeGroupContentReconciler{
+	err = (&ibmvgccontroller.VolumeGroupContentReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,

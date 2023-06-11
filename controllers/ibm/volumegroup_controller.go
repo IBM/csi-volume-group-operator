@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package ibmcontroller
 
 import (
 	"context"
@@ -22,8 +22,8 @@ import (
 	"time"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
-	"github.com/IBM/csi-volume-group-operator/controllers/utils"
+	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/ibm/common/utils"
+	"github.com/IBM/csi-volume-group-operator/controllers/ibm/utils"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"

@@ -39,8 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	"github.com/IBM/csi-volume-group-operator/controllers"
-	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
+	ibmcontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm"
+	ibmvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm/volumegroupcontent"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -91,7 +91,7 @@ func main() {
 	grpcClientInstance, err := getControllerGrpcClient(cfg, log)
 	exitWithError(err, "failed to get controller GRPC client")
 
-	err = (&controllers.VolumeGroupReconciler{
+	err = (&ibmcontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Log:          log,
 		Scheme:       mgr.GetScheme(),
@@ -100,7 +100,7 @@ func main() {
 	}).SetupWithManager(mgr, cfg)
 	exitWithError(err, messages.UnableToCreateVGController)
 
-	err = (&volumegroupcontent.VolumeGroupContentReconciler{
+	err = (&ibmvgccontroller.VolumeGroupContentReconciler{
 		Client:       mgr.GetClient(),
 		Log:          ctrl.Log.WithName(vgcController),
 		Scheme:       mgr.GetScheme(),

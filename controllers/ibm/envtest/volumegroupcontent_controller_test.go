@@ -21,7 +21,7 @@ import (
 	"time"
 
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
+	"github.com/IBM/csi-volume-group-operator/controllers/ibm/envtest/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"

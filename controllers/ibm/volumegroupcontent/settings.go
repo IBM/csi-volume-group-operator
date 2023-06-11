@@ -13,16 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-package controllers
+package ibmvgccontroller
 
 var (
-	addingPVC      = "addPVC"
-	removingPVC    = "removePVC"
-	vgReconcile    = "vgReconcile"
-	deleteVG       = "deletingVG"
-	createVG       = "creatingVG"
-	createVGC      = "creatingVGC"
-	updateVGC      = "updatingVGC"
-	updateStatusVG = "updatingStatusVG"
+	vgcReconcile    = "vgcReconcile"
+	deleteVGC       = "deletingVG"
+	createVGC       = "creatingVG"
+	updateStatusVGC = "updatingStatusVGC"
 )
