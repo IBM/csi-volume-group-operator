@@ -33,13 +33,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -75,7 +74,6 @@ func (r *VolumeGroupReconciler) Reconcile(_ context.Context, req ctrl.Request) (
 	if err := r.Client.Get(context.TODO(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("VolumeGroup resource not found")
-
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, vgReconcile)
