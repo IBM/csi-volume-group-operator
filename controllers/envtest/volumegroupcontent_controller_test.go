@@ -20,7 +20,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
 	. "github.com/onsi/ginkgo/v2"
@@ -41,7 +40,7 @@ var _ = Describe("Test controllers", func() {
 			err := utils.CreateResourceObject(Secret, k8sClient)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = createVolumeGroupObjects(common.VolumeGroupContentRetain)
+			err = createVolumeGroupObjects(volumegroupv1.VolumeGroupContentRetain)
 			Expect(err).NotTo(HaveOccurred())
 
 			vgObj := &volumegroupv1.VolumeGroup{}
@@ -70,7 +69,7 @@ var _ = Describe("Test controllers", func() {
 			By("Creating a volumeGroup and volume resources")
 			err := createNonVolumeK8SResources()
 			Expect(err).NotTo(HaveOccurred())
-			err = createVolumeGroupObjects(common.VolumeGroupContentDelete)
+			err = createVolumeGroupObjects(volumegroupv1.VolumeGroupContentDelete)
 			Expect(err).NotTo(HaveOccurred())
 			err = createVolumeObjects()
 			Expect(err).NotTo(HaveOccurred())
