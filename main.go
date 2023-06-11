@@ -115,7 +115,7 @@ func main() {
 
 	err = (&ibmcontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("controllers").WithName("CommunityVolumeGroup"),
+		Log:          ctrl.Log.WithName("controllers").WithName("IBMVolumeGroup"),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: cfg,
 		GRPCClient:   grpcClientInstance,
