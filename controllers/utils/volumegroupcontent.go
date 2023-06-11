@@ -23,7 +23,6 @@ import (
 	"github.com/IBM/csi-volume-group-operator/controllers/volumegroup"
 	csi "github.com/IBM/csi-volume-group/lib/go/volumegroup"
 
-	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	"github.com/IBM/csi-volume-group-operator/pkg/messages"
 	"github.com/go-logr/logr"
@@ -130,8 +129,8 @@ func generateVGCSpec(instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1
 	}
 }
 
-func getVolumeGroupDeletionPolicy(vgClass *volumegroupv1.VolumeGroupClass) *common.VolumeGroupDeletionPolicy {
-	defaultDeletionPolicy := common.VolumeGroupContentDelete
+func getVolumeGroupDeletionPolicy(vgClass *volumegroupv1.VolumeGroupClass) *volumegroupv1.VolumeGroupDeletionPolicy {
+	defaultDeletionPolicy := volumegroupv1.VolumeGroupContentDelete
 	if vgClass.VolumeGroupDeletionPolicy != nil {
 		return vgClass.VolumeGroupDeletionPolicy
 	}
@@ -230,7 +229,7 @@ func updateVGCStatusPVList(client client.Client, vgc *volumegroupv1.VolumeGroupC
 
 func UpdateVGCStatusError(client client.Client, vgc *volumegroupv1.VolumeGroupContent, logger logr.Logger, message string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		vgc.Status.Error = &common.VolumeGroupError{Message: &message}
+		vgc.Status.Error = &volumegroupv1.VolumeGroupError{Message: &message}
 		err := vgcRetryOnConflictFunc(client, vgc, logger)
 		return err
 	})
@@ -303,7 +302,7 @@ func UpdateThinVGC(client client.Client, vgcNamespace, vgcName string, logger lo
 
 func updateThinVGCSpec(vgc *volumegroupv1.VolumeGroupContent) {
 	if GetStringField(vgc.Spec, "VolumeGroupDeletionPolicy") == "" {
-		defaultDeletionPolicy := common.VolumeGroupContentRetain
+		defaultDeletionPolicy := volumegroupv1.VolumeGroupContentRetain
 		vgc.Spec.VolumeGroupDeletionPolicy = &defaultDeletionPolicy
 	}
 }

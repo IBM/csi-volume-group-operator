@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/IBM/csi-volume-group-operator/apis/common"
 	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
@@ -140,7 +139,7 @@ func (r *VolumeGroupContentReconciler) handleVGCWithDeletionTimestamp(logger log
 }
 
 func (r *VolumeGroupContentReconciler) removeVGC(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, secret map[string]string) error {
-	if *vgc.Spec.VolumeGroupDeletionPolicy == common.VolumeGroupContentDelete {
+	if *vgc.Spec.VolumeGroupDeletionPolicy == volumegroupv1.VolumeGroupContentDelete {
 		vgId := vgc.Spec.Source.VolumeGroupHandle
 		if err := r.deleteVG(logger, vgId, secret); err != nil {
 			return err
