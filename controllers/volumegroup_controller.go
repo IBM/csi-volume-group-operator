@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/api/v1"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
 	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
 	"github.com/IBM/csi-volume-group-operator/controllers/utils"
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
