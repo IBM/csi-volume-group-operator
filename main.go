@@ -39,11 +39,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	ibm_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	ibmcontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm"
-	ibmvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm/volumegroupcontent"
 	community_volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
 	communitycontroller "github.com/IBM/csi-volume-group-operator/controllers/community"
 	communityvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/community/volumegroupcontent"
+	ibmcontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm"
+	ibmvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/ibm/volumegroupcontent"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -95,24 +95,6 @@ func main() {
 	grpcClientInstance, err := getControllerGrpcClient(cfg, log)
 	exitWithError(err, "failed to get controller GRPC client")
 
-	err = (&communitycontroller.VolumeGroupReconciler{
-		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("controllers").WithName("CommunityVolumeGroup"),
-		Scheme:       mgr.GetScheme(),
-		DriverConfig: cfg,
-		GRPCClient:   grpcClientInstance,
-	}).SetupWithManager(mgr, cfg)
-	exitWithError(err, messages.UnableToCreateVGController)
-
-	err = (&communityvgccontroller.VolumeGroupContentReconciler{
-		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("Community" + vgcController),
-		Scheme:       mgr.GetScheme(),
-		DriverConfig: cfg,
-		GRPCClient:   grpcClientInstance,
-	}).SetupWithManager(mgr, cfg)
-	exitWithError(err, messages.UnableToCreateVGCController)
-
 	err = (&ibmcontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Log:          ctrl.Log.WithName("controllers").WithName("IBMVolumeGroup"),
@@ -125,6 +107,24 @@ func main() {
 	err = (&ibmvgccontroller.VolumeGroupContentReconciler{
 		Client:       mgr.GetClient(),
 		Log:          ctrl.Log.WithName("IBM" + vgcController),
+		Scheme:       mgr.GetScheme(),
+		DriverConfig: cfg,
+		GRPCClient:   grpcClientInstance,
+	}).SetupWithManager(mgr, cfg)
+	exitWithError(err, messages.UnableToCreateVGCController)
+
+	err = (&communitycontroller.VolumeGroupReconciler{
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName("controllers").WithName("CommunityVolumeGroup"),
+		Scheme:       mgr.GetScheme(),
+		DriverConfig: cfg,
+		GRPCClient:   grpcClientInstance,
+	}).SetupWithManager(mgr, cfg)
+	exitWithError(err, messages.UnableToCreateVGController)
+
+	err = (&communityvgccontroller.VolumeGroupContentReconciler{
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName("Community" + vgcController),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: cfg,
 		GRPCClient:   grpcClientInstance,
