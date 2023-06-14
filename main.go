@@ -27,6 +27,7 @@ import (
 	"github.com/go-logr/logr"
 
 	uberzap "go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -102,16 +103,20 @@ func main() {
 		DriverConfig: cfg,
 		GRPCClient:   grpcClientInstance,
 	}).SetupWithManager(mgr, cfg)
-	exitWithError(err, messages.UnableToCreateVGController)
-
-	err = (&ibmvgccontroller.VolumeGroupContentReconciler{
-		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("IBM" + vgcController),
-		Scheme:       mgr.GetScheme(),
-		DriverConfig: cfg,
-		GRPCClient:   grpcClientInstance,
-	}).SetupWithManager(mgr, cfg)
-	exitWithError(err, messages.UnableToCreateVGCController)
+	if err == nil {
+		err = (&ibmvgccontroller.VolumeGroupContentReconciler{
+			Client:       mgr.GetClient(),
+			Log:          ctrl.Log.WithName(vgcController),
+			Scheme:       mgr.GetScheme(),
+			DriverConfig: cfg,
+			GRPCClient:   grpcClientInstance,
+		}).SetupWithManager(mgr, cfg)
+		exitWithError(err, messages.UnableToCreateVGCController)
+	} else if errors.IsForbidden(err) {
+		setupLog.Info(messages.ForbiddenToListVGObject)
+	} else {
+		exitWithError(err, messages.UnableToCreateVGController)
+	}
 
 	err = (&communitycontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),

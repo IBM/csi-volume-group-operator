@@ -33,4 +33,5 @@ var (
 	FailedToGetStorageClassName          = "Failed to get storageClass name from persistentVolumeClaim %s"
 	CannotFindMatchingPVCForPV           = "Cannot find matching persistentVolumeClaim for %s persistentVolume"
 	FailToRemovePVCObject                = "Fail To remove %s/%s persistentVolumeClaim object"
+	ForbiddenToListVGObject              = "Failed to list ibm volumeGroup objects, because it is forbidden"
 )
