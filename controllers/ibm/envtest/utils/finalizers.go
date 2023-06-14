@@ -18,7 +18,7 @@ package utils
 import (
 	"context"
 
-	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/common/utils"
+	commonUtils "github.com/IBM/csi-volume-group-operator/controllers/ibm/common/utils"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"

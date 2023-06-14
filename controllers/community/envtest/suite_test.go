@@ -37,10 +37,10 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/ibm/v1"
-	"github.com/IBM/csi-volume-group-operator/controllers"
-	"github.com/IBM/csi-volume-group-operator/controllers/envtest/utils"
-	"github.com/IBM/csi-volume-group-operator/controllers/volumegroupcontent"
+	volumegroupv1 "github.com/IBM/csi-volume-group-operator/apis/volumegroup.storage/v1"
+	communitycontroller "github.com/IBM/csi-volume-group-operator/controllers/community"
+	"github.com/IBM/csi-volume-group-operator/controllers/community/envtest/utils"
+	communityvgccontroller "github.com/IBM/csi-volume-group-operator/controllers/community/volumegroupcontent"
 	"github.com/IBM/csi-volume-group-operator/pkg/client/fake"
 	"github.com/IBM/csi-volume-group-operator/pkg/config"
 	"github.com/IBM/csi-volume-group-operator/tests/mock_grpc_server"
@@ -68,7 +68,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
 	}
 
@@ -115,7 +115,7 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
-	err = (&controllers.VolumeGroupReconciler{
+	err = (&communitycontroller.VolumeGroupReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
@@ -125,7 +125,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(mgr, driverConfig)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&volumegroupcontent.VolumeGroupContentReconciler{
+	err = (&communityvgccontroller.VolumeGroupContentReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		DriverConfig: driverConfig,
