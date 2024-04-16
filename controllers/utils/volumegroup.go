@@ -178,13 +178,11 @@ func isVGHasMatchingDriver(logger logr.Logger, client client.Client, vg volumegr
 	}
 	return vgClassDriver == driver, nil
 }
-func IsPVCMatchesVG(logger logr.Logger, client client.Client,
-	pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) (bool, error) {
+func IsPVCMatchesVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) (bool, error) {
 
 	logger.Info(fmt.Sprintf(messages.CheckIfPVCMatchesVG,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
-	areLabelsMatchLabelSelector, err := areLabelsMatchLabelSelector(
-		client, pvc.ObjectMeta.Labels, *vg.Spec.Source.Selector)
+	areLabelsMatchLabelSelector, err := areLabelsMatchLabelSelector(pvc.ObjectMeta.Labels, *vg.Spec.Source.Selector)
 
 	if areLabelsMatchLabelSelector {
 		logger.Info(fmt.Sprintf(messages.PVCMatchedToVG,
@@ -211,14 +209,6 @@ func RemovePVCFromVG(logger logr.Logger, client client.Client, pvc *corev1.Persi
 	logger.Info(fmt.Sprintf(messages.RemovedPVCFromVG,
 		pvc.Namespace, pvc.Name, vg.Namespace, vg.Name))
 	return nil
-}
-
-func removeMultiplePVCs(pvcList []corev1.PersistentVolumeClaim,
-	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
-	for _, pvc := range pvcs {
-		pvcList = removeFromPVCList(&pvc, pvcList)
-	}
-	return pvcList
 }
 
 func removeFromPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
@@ -255,14 +245,6 @@ func AddPVCToVG(logger logr.Logger, client client.Client, pvc *corev1.Persistent
 	return nil
 }
 
-func appendMultiplePVCs(pvcListInVG []corev1.PersistentVolumeClaim,
-	pvcs []corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
-	for _, pvc := range pvcs {
-		pvcListInVG = appendPVC(pvcListInVG, pvc)
-	}
-	return pvcListInVG
-}
-
 func appendPVC(pvcListInVG []corev1.PersistentVolumeClaim, pvc corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
 	for _, pvcFromList := range pvcListInVG {
 		if pvcFromList.Name == pvc.Name && pvcFromList.Namespace == pvc.Namespace {
@@ -289,8 +271,4 @@ func IsPVCInPVCList(pvc *corev1.PersistentVolumeClaim, pvcList []corev1.Persiste
 		}
 	}
 	return false
-}
-
-func IsVgReady(vg volumegroupv1.VolumeGroup) bool {
-	return vg.Status.Ready != nil && *vg.Status.Ready
 }

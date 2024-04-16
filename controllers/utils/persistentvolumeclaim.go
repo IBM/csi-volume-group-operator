@@ -43,14 +43,13 @@ func getPVCListVolumeIds(logger logr.Logger, client runtimeclient.Client, pvcLis
 	return volumeIds, nil
 }
 
-func IsPVCCanBeAddedToVG(logger logr.Logger, client runtimeclient.Client,
-	pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) error {
+func IsPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeClaim, vgs []volumegroupv1.VolumeGroup) error {
 	vgsWithPVC := []string{}
 	newVGsForPVC := []string{}
 	for _, vg := range vgs {
 		if IsPVCInPVCList(pvc, vg.Status.PVCList) {
 			vgsWithPVC = append(vgsWithPVC, vg.Name)
-		} else if isPVCMatchesVG, _ := IsPVCMatchesVG(logger, client, pvc, vg); isPVCMatchesVG {
+		} else if isPVCMatchesVG, _ := IsPVCMatchesVG(logger, pvc, vg); isPVCMatchesVG {
 			newVGsForPVC = append(newVGsForPVC, vg.Name)
 		}
 	}
@@ -69,6 +68,39 @@ func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeCl
 		return fmt.Errorf(message)
 	}
 	return nil
+}
+
+func IsPVCNeedToBeHandled(reqLogger logr.Logger, pvc *corev1.PersistentVolumeClaim, client runtimeclient.Client, driverName string) (bool, error) {
+	isPVCHasMatchingDriver, err := IsPVCHasMatchingDriver(reqLogger, client, pvc, driverName)
+	if err != nil {
+		return false, err
+	}
+	if !isPVCHasMatchingDriver {
+		return false, nil
+	}
+	if pvc.Status.Phase != corev1.ClaimBound {
+		reqLogger.Info(messages.PVCIsNotInBoundPhase)
+		return false, nil
+	}
+	isSCHasVGParam, err := IsPVCInStaticVG(reqLogger, client, pvc)
+	if err != nil {
+		return false, err
+	}
+	if isSCHasVGParam {
+		storageClassName, sErr := GetPVCClass(pvc)
+		if sErr != nil {
+			return false, sErr
+		}
+		msg := fmt.Sprintf(messages.StorageClassHasVGParameter, storageClassName, pvc.Namespace, pvc.Name)
+		reqLogger.Info(msg)
+		mErr := fmt.Errorf(msg)
+		err = HandlePVCErrorMessage(reqLogger, client, pvc, mErr, addingPVC)
+		if err != nil {
+			return false, err
+		}
+		return false, nil
+	}
+	return true, nil
 }
 
 func IsPVCInStaticVG(logger logr.Logger, client runtimeclient.Client, pvc *corev1.PersistentVolumeClaim) (bool, error) {
