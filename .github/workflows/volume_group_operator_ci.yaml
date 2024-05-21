@@ -70,7 +70,7 @@ jobs:
           username: '${{ secrets.CSIBLOCK_DOCKER_REGISTRY_USERNAME }}'
           password: '${{ secrets.CSIBLOCK_DOCKER_REGISTRY_PASSWORD }}'
       - name: Build and push volume-group-operator
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/ppc64le,linux/s390x
