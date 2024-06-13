@@ -1,6 +1,6 @@
 module github.com/IBM/csi-volume-group-operator
 
-go 1.23
+go 1.22
 
 require (
 	github.com/IBM/csi-volume-group v0.9.1
