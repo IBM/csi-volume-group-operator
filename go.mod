@@ -2,8 +2,6 @@ module github.com/IBM/csi-volume-group-operator
 
 go 1.23
 
-toolchain go1.22.4
-
 require (
 	github.com/IBM/csi-volume-group v0.9.1
 	github.com/go-logr/logr v1.4.1
