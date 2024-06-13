@@ -1,8 +1,8 @@
 module github.com/IBM/csi-volume-group-operator
 
-go 1.22.0
+go 1.23
 
-toolchain go1.22.3
+toolchain go1.22.4
 
 require (
 	github.com/IBM/csi-volume-group v0.9.1
