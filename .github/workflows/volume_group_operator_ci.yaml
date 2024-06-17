@@ -27,7 +27,7 @@ jobs:
       STAGING_REPOSITORY: csiblock/volume-group-operator-staging
     steps:
        - name: Checkout code
-         uses: actions/checkout@v4.1.6
+         uses: actions/checkout@v4.1.7
        - name: Setup dependencies
          id: setup_dependencies
          run: |
@@ -46,7 +46,7 @@ jobs:
       - prepare_env
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
