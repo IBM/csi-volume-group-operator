@@ -2,8 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.10.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.16.5
   labels:
     app.kubernetes.io/instance: volume-group-operator
     app.kubernetes.io/managed-by: volume-group-operator
@@ -43,13 +42,23 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: VolumeGroupContent is the Schema for the volumegroupcontents API
+        description: VolumeGroupContent is the Schema for the volumegroupcontents
+          API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+               APIVersion defines the versioned schema of this representation of an object.
+               Servers should convert recognized schemas to the latest internal value, and
+               may reject unrecognized values.
+               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+               Kind is a string value representing the REST resource this object represents.
+               Servers may infer this from the endpoint the client submits requests to.
+               Cannot be updated.
+               In CamelCase.
+               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -67,60 +76,93 @@ spec:
                     description: Attributes of the volume group to publish.
                     type: object
                   volumeGroupHandle:
-                    description: VolumeGroupHandle is the unique volume group name returned by the CSI volume plugin’s CreateVolumeGroup to refer to the volume group on all subsequent calls.
+                    description: |-
+                       VolumeGroupHandle is the unique volume group name returned by the
+                       CSI volume plugin’s CreateVolumeGroup to refer to the volume group on
+                       all subsequent calls.
                     type: string
                 required:
                 - driver
                 - volumeGroupHandle
                 type: object
               supportVolumeGroupSnapshot:
-                description: This field specifies whether group snapshot is supported. The default is false.
+                description: |-
+                   This field specifies whether group snapshot is supported.
+                   The default is false.
                 type: boolean
               volumeGroupClassName:
                 type: string
               volumeGroupDeletionPolicy:
-                description: VolumeGroupDeletionPolicy describes a policy for end-of-life maintenance of volume group contents
+                description: |-
+                   VolumeGroupDeletionPolicy describes a policy for end-of-life maintenance of
+                   volume group contents
                 type: string
               volumeGroupRef:
-                description: VolumeGroupRef is part of a bi-directional binding between VolumeGroup and VolumeGroupContent.
+                description: VolumeGroupRef is part of a bi-directional binding between
+                  VolumeGroup and VolumeGroupContent.
                 properties:
                   apiVersion:
                     description: API version of the referent.
                     type: string
                   fieldPath:
-                    description: 'If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object. TODO: this design is not final and this field is subject to change in the future.'
+                    description: |-
+                       If referring to a piece of an object instead of an entire object, this string
+                       should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                       For example, if the object reference is to a container within a pod, this would take on a value like:
+                       "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                       the event) or if no container name is specified "spec.containers[2]" (container with
+                       index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                       referencing a part of an object.
                     type: string
                   kind:
-                    description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    description: |-
+                       Kind of the referent.
+                       More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                     type: string
                   name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                    description: |-
+                       Name of the referent.
+                       More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
                     type: string
                   namespace:
-                    description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                    description: |-
+                       Namespace of the referent.
+                       More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
                     type: string
                   resourceVersion:
-                    description: 'Specific resourceVersion to which this reference is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                    description: |-
+                       Specific resourceVersion to which this reference is made, if any.
+                       More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
                     type: string
                   uid:
-                    description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                    description: |-
+                       UID of the referent.
+                       More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
               volumeGroupSecretRef:
-                description: VolumeGroupSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI calls for VolumeGroups. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
+                description: |-
+                   VolumeGroupSecretRef is a reference to the secret object containing
+                   sensitive information to pass to the CSI driver to complete the CSI
+                   calls for VolumeGroups.
+                   This field is optional, and may be empty if no secret is required. If the
+                   secret object contains more than one secret, all secrets are passed.
                 properties:
                   name:
-                    description: name is unique within a namespace to reference a secret resource.
+                    description: name is unique within a namespace to reference a
+                      secret resource.
                     type: string
                   namespace:
-                    description: namespace defines the space within which the secret name must be unique.
+                    description: namespace defines the space within which the secret
+                      name must be unique.
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
             type: object
           status:
-            description: Status represents the current information about a volume group
+            description: Status represents the current information about a volume
+              group
             properties:
               error:
                 description: Last error encountered during group creation
@@ -139,16 +181,30 @@ spec:
               pvList:
                 description: A list of persistent volumes
                 items:
-                  description: 'PersistentVolume (PV) is a storage resource provisioned by an administrator. It is analogous to a node. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes'
+                  description: |-
+                     PersistentVolume (PV) is a storage resource provisioned by an administrator.
+                     It is analogous to a node.
+                     More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes
                   properties:
                     apiVersion:
-                      description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                      description: |-
+                         APIVersion defines the versioned schema of this representation of an object.
+                         Servers should convert recognized schemas to the latest internal value, and
+                         may reject unrecognized values.
+                         More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
                       type: string
                     kind:
-                      description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                      description: |-
+                         Kind is a string value representing the REST resource this object represents.
+                         Servers may infer this from the endpoint the client submits requests to.
+                         Cannot be updated.
+                         In CamelCase.
+                         More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                       type: string
                     metadata:
-                      description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
+                      description: |-
+                         Standard object's metadata.
+                         More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
                       properties:
                         annotations:
                           additionalProperties:
@@ -168,68 +224,115 @@ spec:
                           type: string
                       type: object
                     spec:
-                      description: 'spec defines a specification of a persistent volume owned by the cluster. Provisioned by an administrator. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes'
+                      description: |-
+                         spec defines a specification of a persistent volume owned by the cluster.
+                         Provisioned by an administrator.
+                         More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes
                       properties:
                         accessModes:
-                          description: 'accessModes contains all ways the volume can be mounted. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes'
+                          description: |-
+                             accessModes contains all ways the volume can be mounted.
+                             More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes
                           items:
                             type: string
                           type: array
                         awsElasticBlockStore:
-                          description: 'awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet''s host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore'
+                          description: |-
+                             awsElasticBlockStore represents an AWS Disk resource that is attached to a
+                             kubelet's host machine and then exposed to the pod.
+                             Deprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree
+                             awsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver.
+                             More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
                           properties:
                             fsType:
-                              description: 'fsType is the filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore TODO: how do we prevent errors in the filesystem from compromising the machine'
+                              description: |-
+                                 fsType is the filesystem type of the volume that you want to mount.
+                                 Tip: Ensure that the filesystem type is supported by the host operating system.
+                                 Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+                                 More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
                               type: string
                             partition:
-                              description: 'partition is the partition in the volume that you want to mount. If omitted, the default is to mount by volume name. Examples: For volume /dev/sda1, you specify the partition as "1". Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).'
+                              description: |-
+                                 partition is the partition in the volume that you want to mount.
+                                 If omitted, the default is to mount by volume name.
+                                 Examples: For volume /dev/sda1, you specify the partition as "1".
+                                 Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).
                               format: int32
                               type: integer
                             readOnly:
-                              description: 'readOnly value true will force the readOnly setting in VolumeMounts. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore'
+                              description: |-
+                                 readOnly value true will force the readOnly setting in VolumeMounts.
+                                 More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
                               type: boolean
                             volumeID:
-                              description: 'volumeID is unique ID of the persistent disk resource in AWS (Amazon EBS volume). More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore'
+                              description: |-
+                                 volumeID is unique ID of the persistent disk resource in AWS (Amazon EBS volume).
+                                 More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
                               type: string
                           required:
                           - volumeID
                           type: object
                         azureDisk:
-                          description: azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.
+                          description: |-
+                             azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.
+                             Deprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type
+                             are redirected to the disk.csi.azure.com CSI driver.
                           properties:
                             cachingMode:
-                              description: 'cachingMode is the Host Caching mode: None, Read Only, Read Write.'
+                              description: 'cachingMode is the Host Caching mode:
+                                None, Read Only, Read Write.'
                               type: string
                             diskName:
-                              description: diskName is the Name of the data disk in the blob storage
+                              description: diskName is the Name of the data disk in
+                                the blob storage
                               type: string
                             diskURI:
-                              description: diskURI is the URI of data disk in the blob storage
+                              description: diskURI is the URI of data disk in the
+                                blob storage
                               type: string
                             fsType:
-                              description: fsType is Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+                              default: ext4
+                               description: |-
+                                 fsType is Filesystem type to mount.
+                                 Must be a filesystem type supported by the host operating system.
+                                 Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
                               type: string
                             kind:
-                              description: 'kind expected values are Shared: multiple blob disks per storage account  Dedicated: single blob disk per storage account  Managed: azure managed data disk (only in managed availability set). defaults to shared'
+                              description: 'kind expected values are Shared: multiple
+                                 blob disks per storage account  Dedicated: single
+                                 blob disk per storage account  Managed: azure managed
+                                 data disk (only in managed availability set). defaults
+                                 to shared'
                               type: string
                             readOnly:
-                              description: readOnly Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+                              default: false
+                              description: |-
+                                 readOnly Defaults to false (read/write). ReadOnly here will force
+                                 the ReadOnly setting in VolumeMounts.
                               type: boolean
                           required:
                           - diskName
                           - diskURI
                           type: object
                         azureFile:
-                          description: azureFile represents an Azure File Service mount on the host and bind mount to the pod.
+                          description: |-
+                             azureFile represents an Azure File Service mount on the host and bind mount to the pod.
+                             Deprecated: AzureFile is deprecated. All operations for the in-tree azureFile type
+                             are redirected to the file.csi.azure.com CSI driver.
                           properties:
                             readOnly:
-                              description: readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+                              description: |-
+                                 readOnly defaults to false (read/write). ReadOnly here will force
+                                 the ReadOnly setting in VolumeMounts.
                               type: boolean
                             secretName:
-                              description: secretName is the name of secret that contains Azure Storage Account Name and Key
+                              description: secretName is the name of secret that contains
+                                Azure Storage Account Name and Key
                               type: string
                             secretNamespace:
-                              description: secretNamespace is the namespace of the secret that contains Azure Storage Account Name and Key default is the same as the Pod
+                              description: |-
+                                 secretNamespace is the namespace of the secret that contains Azure Storage Account Name and Key
+                                 default is the same as the Pod
                               type: string
                             shareName:
                               description: shareName is the azure Share Name
@@ -245,16 +348,24 @@ spec:
                             - type: string
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
-                          description: 'capacity is the description of the persistent volume''s resources and capacity. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity'
+                          description: |-
+                             capacity is the description of the persistent volume's resources and capacity.
+                             More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
                           type: object
                         cephfs:
-                          description: cephFS represents a Ceph FS mount on the host that shares a pod's lifetime
+                          description: |-
+                             cephFS represents a Ceph FS mount on the host that shares a pod's lifetime.
+                             Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.
                           properties:
                             monitors:
-                              description: 'monitors is Required: Monitors is a collection of Ceph monitors More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it'
+                              description: |-
+                                 monitors is Required: Monitors is a collection of Ceph monitors
+                                 More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+
                               items:
                                 type: string
                               type: array
+                              x-kubernetes-list-type: atomic
                             path:
                               description: 'path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /'
                               type: string
