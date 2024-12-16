@@ -92,7 +92,7 @@ jobs:
           echo ${{ env.REGISTRY }}/${{ needs.prepare_env.outputs.repository }} >> /tmp/images.txt
           echo ${{ needs.prepare_env.outputs.specific_tag }} >> /tmp/images.txt
           echo ${{ needs.prepare_env.outputs.global_tag }} >> /tmp/images.txt
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: images
           path: /tmp/images.txt
