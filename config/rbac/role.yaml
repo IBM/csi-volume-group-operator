@@ -35,13 +35,6 @@ rules:
   - csi.ibm.com
   resources:
   - volumegroupclasses
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - csi.ibm.com
-  resources:
   - volumegroupcontents
   verbs:
   - get
