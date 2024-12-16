@@ -22,5 +22,5 @@ cp -r $project_dirname ./$project_dirname-expected
 cd $project_dirname-expected/
 hack/update-config-yamls.sh
 cd ..
-diff -qr --exclude=bin $project_dirname $project_dirname-expected/
+diff -r --exclude=bin $project_dirname $project_dirname-expected/
 rm -rf $project_dirname-expected/
