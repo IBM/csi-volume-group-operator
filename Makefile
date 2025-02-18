@@ -30,7 +30,7 @@ CONTROLLER_GEN ?= controller-gen
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.5.0
-CONTROLLER_TOOLS_VERSION ?= v0.16.5
+CONTROLLER_TOOLS_VERSION ?= v0.17.2
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -67,7 +67,7 @@ build-unit-tests-image:
 run-unit-tests:
 	$(run_unit_tests_image) make test
 
-KUBERNETES_VERSION=1.23.1
+KUBERNETES_VERSION=1.32.x!
 .PHONY: test
 test: check-generated-manifests update
 test:
