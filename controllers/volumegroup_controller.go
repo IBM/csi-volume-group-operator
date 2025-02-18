@@ -39,7 +39,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -297,7 +296,7 @@ func (r *VolumeGroupReconciler) SetupWithManager(mgr ctrl.Manager, cfg *config.D
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&volumegroupv1.VolumeGroup{}, builder.WithPredicates(pred)).
-		Watches(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, utils.CreateRequests(r.Client), builder.WithPredicates(utils.PvcPredicate)).
+		Watches(&corev1.PersistentVolumeClaim{}, utils.CreateRequests(r.Client), builder.WithPredicates(utils.PvcPredicate)).
 		Complete(r)
 }
 

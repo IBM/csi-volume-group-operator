@@ -49,9 +49,9 @@ func isPhaseChanged(oldObject, newObject runtimeclient.Object) bool {
 
 func CreateRequests(client runtimeclient.Client) handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(
-		func(object runtimeclient.Object) []reconcile.Request {
+		func(ctx context.Context, object runtimeclient.Object) []reconcile.Request {
 			var vgList volumegroupv1.VolumeGroupList
-			if err := client.List(context.TODO(), &vgList); err != nil {
+			if err := client.List(ctx, &vgList); err != nil {
 				return []ctrl.Request{}
 			}
 			// Create a reconcile request for each matching VolumeGroup.

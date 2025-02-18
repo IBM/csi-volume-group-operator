@@ -4,7 +4,7 @@ ENV GO111MODULE=on \
     GOROOT=/usr/local/go \
     WORKDIR=/go/src/github.com/IBM/csi-volume-group-operator
 WORKDIR $WORKDIR
-RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.22.0 \
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.22.2 \
     && go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 COPY Makefile .
 

@@ -31,13 +31,16 @@ type Client struct {
 	Timeout time.Duration
 }
 
-func connect(address string) (*grpc.ClientConn, error) {
-	return connection.Connect(address, metrics.NewCSIMetricsManager(""), connection.OnConnectionLoss(connection.ExitOnConnectionLoss()))
+func connect(address string, timeout time.Duration) (*grpc.ClientConn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	return connection.Connect(ctx, address, metrics.NewCSIMetricsManager(""), connection.OnConnectionLoss(connection.ExitOnConnectionLoss()))
 }
 
 func New(address string, timeout time.Duration) (*Client, error) {
 	c := &Client{}
-	cc, err := connect(address)
+	cc, err := connect(address, timeout)
 	if err != nil {
 		return c, err
 	}
@@ -48,7 +51,10 @@ func New(address string, timeout time.Duration) (*Client, error) {
 }
 
 func (c *Client) Probe() error {
-	return rpc.ProbeForever(c.Client, c.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+
+	return rpc.ProbeForever(ctx, c.Client, c.Timeout)
 }
 
 func (c *Client) GetDriverName() (string, error) {
