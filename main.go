@@ -83,7 +83,6 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
-		Port:   9443,
 	})
 	exitWithError(err, "unable to start manager")
 
