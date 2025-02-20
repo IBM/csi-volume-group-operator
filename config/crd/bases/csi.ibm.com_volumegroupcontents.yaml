@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/instance: volume-group-operator
     app.kubernetes.io/managed-by: volume-group-operator
     app.kubernetes.io/name: volume-group-operator
-    release: v1.11.2
+    release: v1.12.2
   name: volumegroupcontents.csi.ibm.com
 spec:
   group: csi.ibm.com
