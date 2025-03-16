@@ -1,7 +1,6 @@
 module github.com/IBM/csi-volume-group-operator
 
 go 1.24.0
-
 require (
 	github.com/IBM/csi-volume-group v0.9.2
 	github.com/go-logr/logr v1.4.2
@@ -48,7 +47,7 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
