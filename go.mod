@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/IBM/csi-volume-group v0.9.2
 	github.com/go-logr/logr v1.4.2
-	github.com/onsi/ginkgo/v2 v2.23.0
+	github.com/onsi/ginkgo/v2 v2.23.3
 	github.com/onsi/gomega v1.36.2
 	k8s.io/api v0.32.3
 	k8s.io/apimachinery v0.32.3
