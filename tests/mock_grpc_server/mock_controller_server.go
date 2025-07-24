@@ -23,7 +23,7 @@ import (
 )
 
 type MockControllerServer struct {
-	*csi.UnimplementedControllerServer
+	csi.UnimplementedControllerServer
 }
 
 func (MockControllerServer) CreateVolumeGroup(context.Context, *csi.CreateVolumeGroupRequest) (*csi.CreateVolumeGroupResponse, error) {
@@ -50,4 +50,6 @@ func (MockControllerServer) ListVolumeGroups(context.Context, *csi.ListVolumeGro
 }
 func (MockControllerServer) ControllerGetVolumeGroup(context.Context, *csi.ControllerGetVolumeGroupRequest) (*csi.ControllerGetVolumeGroupResponse, error) {
 	return &csi.ControllerGetVolumeGroupResponse{}, nil
+}
+func (MockControllerServer) testEmbeddedByValue() {
 }
