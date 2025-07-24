@@ -1,11 +1,14 @@
-commonLabels:
-  app.kubernetes.io/name: volume-group-operator
-  app.kubernetes.io/instance: volume-group-operator
-  app.kubernetes.io/managed-by: volume-group-operator
-  release: v1.12.2
 
 resources:
-  - bases/csi.ibm.com_volumegroups.yaml
-  - bases/csi.ibm.com_volumegroupclasses.yaml
-  - bases/csi.ibm.com_volumegroupcontents.yaml
-#+kubebuilder:scaffold:crdkustomizeresource
+- bases/csi.ibm.com_volumegroups.yaml
+- bases/csi.ibm.com_volumegroupclasses.yaml
+- bases/csi.ibm.com_volumegroupcontents.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/instance: volume-group-operator
+    app.kubernetes.io/managed-by: volume-group-operator
+    app.kubernetes.io/name: volume-group-operator
+    release: v1.12.2
