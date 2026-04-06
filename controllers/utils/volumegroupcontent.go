@@ -105,18 +105,18 @@ func updateVGCStatusFields(vgc *volumegroupv1.VolumeGroupContent, groupCreationT
 	vgc.Status.Ready = &ready
 }
 
-func GenerateVGC(vgname string, instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, secretName string, secretNamespace string) *volumegroupv1.VolumeGroupContent {
+func GenerateVGC(vgname string, instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass, secretName string, secretNamespace string, volumeIds []string) *volumegroupv1.VolumeGroupContent {
 	return &volumegroupv1.VolumeGroupContent{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      vgname,
 			Namespace: instance.Namespace,
 		},
-		Spec: generateVGCSpec(instance, vgClass, secretName, secretNamespace),
+		Spec: generateVGCSpec(instance, vgClass, secretName, secretNamespace, volumeIds),
 	}
 }
 
 func generateVGCSpec(instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass,
-	secretName string, secretNamespace string) volumegroupv1.VolumeGroupContentSpec {
+	secretName string, secretNamespace string, volumeIds []string) volumegroupv1.VolumeGroupContentSpec {
 	vgClassName := GetStringField(instance.Spec, "VolumeGroupClassName")
 	supportVolumeGroupSnapshot := false
 	return volumegroupv1.VolumeGroupContentSpec{
@@ -126,6 +126,7 @@ func generateVGCSpec(instance *volumegroupv1.VolumeGroup, vgClass *volumegroupv1
 		VolumeGroupDeletionPolicy:  getVolumeGroupDeletionPolicy(vgClass),
 		SupportVolumeGroupSnapshot: &supportVolumeGroupSnapshot,
 		VolumeGroupSecretRef:       generateSecretReference(secretName, secretNamespace),
+		VolumeIds:                  volumeIds,
 	}
 }
 

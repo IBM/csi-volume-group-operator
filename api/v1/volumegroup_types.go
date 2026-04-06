@@ -45,6 +45,11 @@ type VolumeGroupSource struct {
 	// In Phase 1, when the label is added to PVC, the PVC will be added to the matching group.
 	// In Phase 2, this labelSelector will be used to find all PVCs with matching label and add them to the group when the group is being created.
 	Selector *metav1.LabelSelector `json:"selector,omitempty"`
+
+	// +optional
+	// VolumeIds is a list of existing CSI volume IDs to be added to the volume group at creation time.
+	// Corresponds to the volume_ids field in CreateVolumeGroupRequest.
+	VolumeIds []string `json:"volumeIds,omitempty"`
 }
 
 // VolumeGroupStatus defines the observed state of VolumeGroup

@@ -48,6 +48,11 @@ type VolumeGroupContentSpec struct {
 	// secret object contains more than one secret, all secrets are passed.
 	// +optional
 	VolumeGroupSecretRef *corev1.SecretReference `json:"volumeGroupSecretRef,omitempty"`
+
+	// +optional
+	// VolumeIds is the list of volume IDs passed to CreateVolumeGroup when the group was created.
+	// Propagated from VolumeGroupSource.VolumeIds.
+	VolumeIds []string `json:"volumeIds,omitempty"`
 }
 
 // VolumeGroupContentSource

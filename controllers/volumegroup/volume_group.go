@@ -29,6 +29,7 @@ func (r *volumeGroupRequest) Create() *Response {
 		r.Params.Name,
 		r.Params.Secrets,
 		r.Params.Parameters,
+		r.Params.VolumeIds,
 	)
 
 	return &Response{Response: resp, Error: err}
@@ -48,6 +49,7 @@ func (r *volumeGroupRequest) Modify() *Response {
 		r.Params.VolumeGroupID,
 		r.Params.VolumeIds,
 		r.Params.Secrets,
+		r.Params.Parameters,
 	)
 
 	return &Response{Response: resp, Error: err}

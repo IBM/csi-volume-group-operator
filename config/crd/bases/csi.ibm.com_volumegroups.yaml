@@ -119,6 +119,13 @@ spec:
                   volumeGroupContentName:
                     description: Pre-provisioned VolumeGroup
                     type: string
+                  volumeIds:
+                    description: |-
+                      VolumeIds is a list of existing CSI volume IDs to be added to the volume group at creation time.
+                      Corresponds to the volume_ids field in CreateVolumeGroupRequest.
+                    items:
+                      type: string
+                    type: array
                 type: object
               volumeGroupClassName:
                 type: string
