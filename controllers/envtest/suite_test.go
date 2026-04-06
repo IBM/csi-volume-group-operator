@@ -104,13 +104,13 @@ var _ = BeforeSuite(func() {
 		DisableDeletePvcs: "false",
 	}
 	mockVolumeGroup := fake.VolumeGroup{
-		CreateVolumeGroupMock: func(name string, secrets, parameters map[string]string) (*csi.CreateVolumeGroupResponse, error) {
+		CreateVolumeGroupMock: func(name string, secrets, parameters map[string]string, volumeIds []string) (*csi.CreateVolumeGroupResponse, error) {
 			return &csi.CreateVolumeGroupResponse{}, nil
 		},
 		DeleteVolumeGroupMock: func(volumeGroupId string, secrets map[string]string) (*csi.DeleteVolumeGroupResponse, error) {
 			return &csi.DeleteVolumeGroupResponse{}, nil
 		},
-		ModifyVolumeGroupMembershipMock: func(volumeGroupId string, volumeIds []string, secrets map[string]string) (*csi.ModifyVolumeGroupMembershipResponse, error) {
+		ModifyVolumeGroupMembershipMock: func(volumeGroupId string, volumeIds []string, secrets map[string]string, parameters map[string]string) (*csi.ModifyVolumeGroupMembershipResponse, error) {
 			return &csi.ModifyVolumeGroupMembershipResponse{}, nil
 		},
 	}

@@ -30,20 +30,21 @@ type volumeGroupClient struct {
 }
 
 type VolumeGroup interface {
-	CreateVolumeGroup(name string, secrets, parameters map[string]string) (*csi.CreateVolumeGroupResponse, error)
+	CreateVolumeGroup(name string, secrets, parameters map[string]string, volumeIds []string) (*csi.CreateVolumeGroupResponse, error)
 	DeleteVolumeGroup(volumeGroupId string, secrets map[string]string) (*csi.DeleteVolumeGroupResponse, error)
-	ModifyVolumeGroupMembership(volumeGroupId string, volumeIds []string, secrets map[string]string) (*csi.ModifyVolumeGroupMembershipResponse, error)
+	ModifyVolumeGroupMembership(volumeGroupId string, volumeIds []string, secrets map[string]string, parameters map[string]string) (*csi.ModifyVolumeGroupMembershipResponse, error)
 }
 
 func NewVolumeGroupClient(cc *grpc.ClientConn, timeout time.Duration) VolumeGroup {
 	return &volumeGroupClient{client: csi.NewControllerClient(cc), timeout: timeout}
 }
 
-func (rc *volumeGroupClient) CreateVolumeGroup(name string, secrets, parameters map[string]string) (*csi.CreateVolumeGroupResponse, error) {
+func (rc *volumeGroupClient) CreateVolumeGroup(name string, secrets, parameters map[string]string, volumeIds []string) (*csi.CreateVolumeGroupResponse, error) {
 	req := &csi.CreateVolumeGroupRequest{
 		Name:       name,
 		Parameters: parameters,
 		Secrets:    secrets,
+		VolumeIds:  volumeIds,
 	}
 
 	createCtx, cancel := context.WithTimeout(context.Background(), rc.timeout)
@@ -66,11 +67,12 @@ func (rc *volumeGroupClient) DeleteVolumeGroup(volumeGroupId string, secrets map
 	return resp, err
 }
 
-func (rc *volumeGroupClient) ModifyVolumeGroupMembership(volumeGroupId string, volumeIds []string, secrets map[string]string) (*csi.ModifyVolumeGroupMembershipResponse, error) {
+func (rc *volumeGroupClient) ModifyVolumeGroupMembership(volumeGroupId string, volumeIds []string, secrets map[string]string, parameters map[string]string) (*csi.ModifyVolumeGroupMembershipResponse, error) {
 	req := &csi.ModifyVolumeGroupMembershipRequest{
 		VolumeGroupId: volumeGroupId,
 		VolumeIds:     volumeIds,
 		Secrets:       secrets,
+		Parameters:    parameters,
 	}
 
 	createCtx, cancel := context.WithTimeout(context.Background(), rc.timeout)

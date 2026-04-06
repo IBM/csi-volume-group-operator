@@ -173,7 +173,7 @@ func (r *VolumeGroupContentReconciler) deleteVG(logger logr.Logger, vgId string,
 
 func (r *VolumeGroupContentReconciler) handleCreateVG(logger logr.Logger, vgc *volumegroupv1.VolumeGroupContent, vgClass *volumegroupv1.VolumeGroupClass, secret map[string]string) error {
 	parameters := utils.FilterPrefixedParameters(utils.VGAsPrefix, vgClass.Parameters)
-	createVGResponse := r.createVG(vgc.Name, parameters, secret)
+	createVGResponse := r.createVG(vgc.Name, parameters, secret, vgc.Spec.VolumeIds)
 	if createVGResponse.Error != nil {
 		logger.Error(createVGResponse.Error, "failed to create volume group")
 		return createVGResponse.Error
@@ -187,12 +187,13 @@ func (r *VolumeGroupContentReconciler) handleCreateVG(logger logr.Logger, vgc *v
 	return nil
 }
 
-func (r *VolumeGroupContentReconciler) createVG(vgName string, parameters, secrets map[string]string) *volumegroup.Response {
+func (r *VolumeGroupContentReconciler) createVG(vgName string, parameters, secrets map[string]string, volumeIds []string) *volumegroup.Response {
 	param := volumegroup.CommonRequestParameters{
 		Name:        vgName,
 		Parameters:  parameters,
 		Secrets:     secrets,
 		VolumeGroup: r.VGClient,
+		VolumeIds:   volumeIds,
 	}
 
 	volumeGroupRequest := volumegroup.NewVolumeGroupRequest(param)

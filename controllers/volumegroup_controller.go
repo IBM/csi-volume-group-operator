@@ -124,7 +124,7 @@ func (r *VolumeGroupReconciler) Reconcile(_ context.Context, req ctrl.Request) (
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVG)
 	}
 	secretName, secretNamespace := utils.GetSecretCred(vgClass)
-	vgc := utils.GenerateVGC(vgName, instance, vgClass, secretName, secretNamespace)
+	vgc := utils.GenerateVGC(vgName, instance, vgClass, secretName, secretNamespace, instance.Spec.Source.VolumeIds)
 	logger.Info("GenerateVolumeGroupContent", "vgc", vgc)
 	if err = utils.CreateVGC(r.Client, logger, vgc); err != nil {
 		return ctrl.Result{}, utils.HandleErrorMessage(logger, r.Client, instance, err, createVGC)
