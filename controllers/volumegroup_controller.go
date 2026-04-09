@@ -140,7 +140,7 @@ func (r *VolumeGroupReconciler) Reconcile(_ context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	err = r.updatePVCs(logger, instance)
+	err = r.updatePVCs(logger, instance, vgClass)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -152,7 +152,7 @@ func (r *VolumeGroupReconciler) Reconcile(_ context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
-func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1.VolumeGroup) error {
+func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1.VolumeGroup, vgClass *volumegroupv1.VolumeGroupClass) error {
 	matchingPvcs, err := r.getMatchingPVCs(logger, *vg)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
@@ -160,7 +160,8 @@ func (r *VolumeGroupReconciler) updatePVCs(logger logr.Logger, vg *volumegroupv1
 	if utils.IsPVCListEqual(matchingPvcs, vg.Status.PVCList) {
 		return nil
 	}
-	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, *vg)
+	vgClassParams := utils.FilterPrefixedParameters(utils.VGAsPrefix, vgClass.Parameters)
+	err = utils.ModifyVolumesInVG(logger, r.Client, r.VGClient, matchingPvcs, *vg, vgClassParams)
 	if err != nil {
 		return utils.HandleErrorMessage(logger, r.Client, vg, err, vgReconcile)
 	}
@@ -181,7 +182,7 @@ func (r *VolumeGroupReconciler) handleStaticProvisionedVG(vg *volumegroupv1.Volu
 		if err != nil {
 			return err, true
 		}
-		err = r.updatePVCs(logger, vg)
+		err = r.updatePVCs(logger, vg, vgClass)
 		if err != nil {
 			return err, true
 		}

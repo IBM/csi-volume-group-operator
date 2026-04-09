@@ -132,15 +132,15 @@ func RemoveVolumeFromPvcListAndPvList(logger logr.Logger, client client.Client, 
 	return HandleSuccessMessage(logger, client, vg, message, removingPVC)
 }
 
-func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup,
-	matchingPvcs []corev1.PersistentVolumeClaim, vg volumegroupv1.VolumeGroup) error {
+func ModifyVolumesInVG(logger logr.Logger, client client.Client, vgClient grpcClient.VolumeGroup, matchingPvcs []corev1.PersistentVolumeClaim, 
+	vg volumegroupv1.VolumeGroup, vgClassParams map[string]string) error {
 
 	currentList := make([]corev1.PersistentVolumeClaim, len(vg.Status.PVCList))
 	copy(currentList, vg.Status.PVCList)
 
 	vg.Status.PVCList = matchingPvcs
 
-	err := ModifyVG(logger, client, &vg, vgClient)
+	err := ModifyVG(logger, client, &vg, vgClient, vgClassParams)
 	if err != nil {
 		vg.Status.PVCList = currentList
 		return err

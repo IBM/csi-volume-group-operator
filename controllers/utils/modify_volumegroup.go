@@ -28,8 +28,8 @@ import (
 )
 
 func ModifyVG(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup,
-	vgClient grpcClient.VolumeGroup) error {
-	params, err := generateModifyVGParams(logger, client, vg, vgClient)
+	vgClient grpcClient.VolumeGroup, vgClassParams map[string]string) error {
+	params, err := generateModifyVGParams(logger, client, vg, vgClient, vgClassParams)
 	if err != nil {
 		return err
 	}
@@ -44,8 +44,8 @@ func ModifyVG(logger logr.Logger, client client.Client, vg *volumegroupv1.Volume
 	logger.Info(fmt.Sprintf(messages.ModifiedVG, params.VolumeGroupID))
 	return nil
 }
-func generateModifyVGParams(logger logr.Logger, client client.Client,
-	vg *volumegroupv1.VolumeGroup, vgClient grpcClient.VolumeGroup) (volumegroup.CommonRequestParameters, error) {
+func generateModifyVGParams(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup, 
+	vgClient grpcClient.VolumeGroup, vgClassParams map[string]string) (volumegroup.CommonRequestParameters, error) {
 	vgId, err := getVgId(logger, client, vg)
 	if err != nil {
 		return volumegroup.CommonRequestParameters{}, err
@@ -64,6 +64,7 @@ func generateModifyVGParams(logger logr.Logger, client client.Client,
 		VolumeGroup:   vgClient,
 		VolumeGroupID: vgId,
 		VolumeIds:     volumeIds,
+		Parameters:    vgClassParams,
 	}, nil
 }
 func getSecrets(logger logr.Logger, client client.Client, vg *volumegroupv1.VolumeGroup) (map[string]string, error) {
