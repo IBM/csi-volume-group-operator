@@ -85,5 +85,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-replace github.com/IBM/csi-volume-group v0.9.4 => github.com/parth982/csi-volume-group v0.9.4
