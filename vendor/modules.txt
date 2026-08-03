@@ -1,5 +1,5 @@
-# github.com/IBM/csi-volume-group v0.9.4
-## explicit; go 1.24.0
+# github.com/IBM/csi-volume-group v0.9.5
+## explicit; go 1.25.0
 github.com/IBM/csi-volume-group/lib/go/volumegroup
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11

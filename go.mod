@@ -1,9 +1,9 @@
 module github.com/IBM/csi-volume-group-operator
 
-go 1.24.0
+go 1.25.0
 
 require (
-	github.com/IBM/csi-volume-group v0.9.4
+	github.com/IBM/csi-volume-group v0.9.5
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.38.0
