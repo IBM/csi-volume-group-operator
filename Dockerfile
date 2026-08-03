@@ -42,7 +42,9 @@ WORKDIR /
 COPY --from=builder /workspace/manager .
 
 USER root
-RUN microdnf update -y
+RUN microdnf update -y --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+  && microdnf clean all \
+  && rm -rf /var/cache/yum /var/cache/dnf /var/lib/dnf/history* /tmp/*
 
 USER 65532:65532
 
