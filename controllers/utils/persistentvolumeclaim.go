@@ -60,12 +60,12 @@ func checkIfPVCCanBeAddedToVG(logger logr.Logger, pvc *corev1.PersistentVolumeCl
 	if len(vgsWithPVC) > 0 && len(newVGsForPVC) > 0 {
 		message := fmt.Sprintf(messages.PVCIsAlreadyBelongToGroup, pvc.Namespace, pvc.Name, newVGsForPVC, vgsWithPVC)
 		logger.Info(message)
-		return fmt.Errorf(message)
+		return fmt.Errorf("%s", message)
 	}
 	if len(newVGsForPVC) > 1 {
 		message := fmt.Sprintf(messages.PVCMatchedWithMultipleNewGroups, pvc.Namespace, pvc.Name, newVGsForPVC)
 		logger.Info(message)
-		return fmt.Errorf(message)
+		return fmt.Errorf("%s", message)
 	}
 	return nil
 }
@@ -93,7 +93,7 @@ func IsPVCNeedToBeHandled(reqLogger logr.Logger, pvc *corev1.PersistentVolumeCla
 		}
 		msg := fmt.Sprintf(messages.StorageClassHasVGParameter, storageClassName, pvc.Namespace, pvc.Name)
 		reqLogger.Info(msg)
-		mErr := fmt.Errorf(msg)
+		mErr := fmt.Errorf("%s", msg)
 		err = HandlePVCErrorMessage(reqLogger, client, pvc, mErr, addingPVC)
 		if err != nil {
 			return false, err

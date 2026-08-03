@@ -40,7 +40,11 @@ func GetPVFromPVC(logger logr.Logger, client client.Client, pvc *corev1.Persiste
 	pv, err := getPV(logger, client, pvName)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return nil, &vgerrors.PVDoesNotExist{pvName, pvc.Namespace, err.Error()}
+			return nil, &vgerrors.PVDoesNotExist{
+				PVName:       pvName,
+				PVNamespace:  pvc.Namespace,
+				ErrorMessage: err.Error(),
+			}
 		}
 		return nil, err
 	}
