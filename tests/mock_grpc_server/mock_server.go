@@ -46,7 +46,7 @@ func CreateMockServer() (*MockServer, error) {
 func tempDir() (string, error) {
 	dir, err := ioutil.TempDir("", "volume-group-operator-test-")
 	if err != nil {
-		return "", fmt.Errorf("not create temporary directory", err)
+		return "", fmt.Errorf("could not create temporary directory: %w", err)
 	}
 	return dir, nil
 }

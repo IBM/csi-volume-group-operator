@@ -148,7 +148,7 @@ func finalizerRetryOnConflictFunc(logger logr.Logger, client runtimeclient.Clien
 		if uErr != nil {
 			return uErr
 		}
-		logger.Info(fmt.Sprintf(messages.RetryUpdateFinalizer))
+		logger.Info(messages.RetryUpdateFinalizer)
 	}
 	return err
 }
