@@ -17,8 +17,8 @@ limitations under the License.
 package fake
 
 import (
-	"time"
 	"context"
+	"time"
 
 	grpcClient "github.com/IBM/csi-volume-group-operator/pkg/client"
 	"github.com/kubernetes-csi/csi-lib-utils/connection"
