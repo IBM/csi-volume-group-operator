@@ -26,11 +26,14 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 
 ## Tool Binaries
 KUSTOMIZE ?= $(GOBIN)/kustomize
-CONTROLLER_GEN ?= controller-gen
+CONTROLLER_GEN ?= $(GOBIN)/controller-gen
+GINKGO ?= $(GOBIN)/ginkgo
+SETUP_ENVTEST ?= $(GOBIN)/setup-envtest
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.5.0
 CONTROLLER_TOOLS_VERSION ?= v0.17.2
+GINKGO_VERSION ?= v2.23.4
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -41,7 +44,17 @@ $(KUSTOMIZE):
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN):
-	test -s controller-gen || go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+	test -s $(CONTROLLER_GEN) || go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+
+.PHONY: ginkgo
+ginkgo: $(GINKGO) ## Download ginkgo locally if necessary.
+$(GINKGO):
+	test -s $(GINKGO) || go install github.com/onsi/ginkgo/v2/ginkgo@$(GINKGO_VERSION)
+
+.PHONY: setup-envtest
+setup-envtest: $(SETUP_ENVTEST) ## Download setup-envtest locally if necessary.
+$(SETUP_ENVTEST):
+	test -s $(SETUP_ENVTEST) || go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 define go-get-tool
@@ -69,10 +82,10 @@ run-unit-tests:
 
 KUBERNETES_VERSION=1.32.x!
 .PHONY: test
-test: check-generated-manifests update
+test: check-generated-manifests update ginkgo setup-envtest
 test:
-	export KUBEBUILDER_ASSETS=$(shell setup-envtest use -p path ${KUBERNETES_VERSION});\
-	ginkgo -r -v
+	export KUBEBUILDER_ASSETS=$(shell $(SETUP_ENVTEST) use -p path ${KUBERNETES_VERSION});\
+	$(GINKGO) -r -v
 
 .PHONY: update
 update: kustomize
