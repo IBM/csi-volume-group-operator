@@ -18,10 +18,12 @@
 
 project_dirname=csi-volume-group-operator
 cd ..
+rm -rf ./$project_dirname-expected
 cp -r $project_dirname ./$project_dirname-expected
+rm -rf ./$project_dirname-expected/.git
 cd $project_dirname-expected/
 GOWORK=off hack/update-config-yamls.sh
 cd ..
-diff -ru --exclude=bin $project_dirname $project_dirname-expected/
+diff -ru --exclude=bin --exclude=.git $project_dirname $project_dirname-expected/
 
-rm -rf $project_dirname-expected/
+rm -rf ./$project_dirname-expected/
