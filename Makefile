@@ -70,6 +70,21 @@ rm -rf $$TMP_DIR ;\
 endef
 
 # custom
+IMG ?= volume-group-operator:latest
+VERSION ?= dev
+BUILD_NUMBER ?= 0
+
+.PHONY: docker-build
+docker-build: ## Build the operator image. Override IMG, VERSION, BUILD_NUMBER as needed.
+	docker build \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg BUILD_NUMBER=$(BUILD_NUMBER) \
+		-t $(IMG) .
+
+.PHONY: docker-push
+docker-push: ## Push the operator image.
+	docker push $(IMG)
+
 run_unit_tests_image=docker run --rm -v $(CURDIR):/go/src/github.com/IBM/volume-group-operator -t volume-group-operator-unittests
 
 .PHONY: build-unit-tests-image
