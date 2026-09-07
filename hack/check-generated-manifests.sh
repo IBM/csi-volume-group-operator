@@ -20,7 +20,7 @@ project_dirname=csi-volume-group-operator
 cd ..
 cp -r $project_dirname ./$project_dirname-expected
 cd $project_dirname-expected/
-hack/update-config-yamls.sh
+GOWORK=off hack/update-config-yamls.sh
 cd ..
 diff -ru --exclude=bin $project_dirname $project_dirname-expected/
 
