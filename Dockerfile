@@ -20,7 +20,7 @@ COPY controllers/ controllers/
 # Build
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager main.go
 
-FROM registry.access.redhat.com/ubi9-minimal:9.8-1781496742
+FROM registry.access.redhat.com/ubi9-minimal:9.8-1787647261
 
 ARG VERSION=1.12.2
 ARG BUILD_NUMBER=0
