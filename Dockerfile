@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.24 AS builder
+FROM golang:1.25 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
@@ -20,7 +20,7 @@ COPY controllers/ controllers/
 # Build
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager main.go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1739420147
+FROM registry.access.redhat.com/ubi9-minimal:9.8-1781496742
 
 ARG VERSION=1.12.2
 ARG BUILD_NUMBER=0
@@ -42,7 +42,9 @@ WORKDIR /
 COPY --from=builder /workspace/manager .
 
 USER root
-RUN microdnf update -y
+RUN microdnf update -y --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+  && microdnf clean all \
+  && rm -rf /var/cache/yum /var/cache/dnf /var/lib/dnf/history* /tmp/*
 
 USER 65532:65532
 
